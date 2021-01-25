@@ -49,7 +49,7 @@ export const validateGoogleToken = async (token: string) => {
     url: `${checkTokenUrl}${token}`,
     method: 'get',
     headers: {
-      'User-Agent': 'midom',
+      'User-Agent': 'vico',
       'Content-Type': 'application/json',
     },
   };
@@ -64,7 +64,7 @@ export const validateFacebookToken = async (id: string, token: string) => {
     url: `${checkTokenUrl}${token}`,
     method: 'get',
     headers: {
-      'User-Agent': 'midom',
+      'User-Agent': 'vico',
       'Content-Type': 'application/json',
     },
   };
