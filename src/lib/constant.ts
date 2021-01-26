@@ -13,9 +13,9 @@ enum EOrderSource {
   POS = 'pos',
 }
 
-enum EBlogStatus {
+enum EResourceStatus {
   PUBLISH = 'publish',
-  PRIVATE = 'private',
+  UNPUBLISH = 'unpublish',
 }
 
 enum EPaymentType {
@@ -28,4 +28,4 @@ enum EProductSugarOpt {
   SUGAR_10ML,
 }
 
-export { EShippingPlace, EOrderSource, EBlogStatus, EPaymentType, EProductSugarOpt };
+export { EShippingPlace, EOrderSource, EResourceStatus, EPaymentType, EProductSugarOpt };

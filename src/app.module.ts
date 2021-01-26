@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import * as redisStore from 'cache-manager-redis-store';
 import { RoleModule } from './role/role.module';
 import { CustomerModule } from './customer/customer.module';
+import { ResourceModule } from './resource/resource.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { CustomerModule } from './customer/customer.module';
     AuthModule,
     RoleModule,
     CustomerModule,
+    ResourceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
