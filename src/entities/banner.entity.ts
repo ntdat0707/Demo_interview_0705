@@ -46,15 +46,15 @@ export class BannerEntity {
   deletedAt: Date;
 
   setAttributes(object: any) {
-    if (object.title) this.title = object.title;
-    if (object.description) this.description = object.description;
-    if (object.textColor) this.textColor = object.textColor;
-    if (object.image) this.image = object.image;
-    if (object.imageAlt) this.imageAlt = object.imageAlt;
-    if (object.link) this.link = object.link;
-    if (object.position) this.position = object.position;
-    if (object.status) this.status = object.status;
-    if (object.validFrom) this.validFrom = object.validFrom;
-    if (object.validTo) this.validTo = object.validTo;
+    this.title = object.title;
+    this.description = object.description;
+    this.textColor = object.textColor;
+    this.image = object.image;
+    this.imageAlt = object.imageAlt;
+    this.link = object.link;
+    this.position = object.position;
+    this.status = object.status;
+    this.validFrom = object.validFrom;
+    this.validTo = object.validTo;
   }
 }

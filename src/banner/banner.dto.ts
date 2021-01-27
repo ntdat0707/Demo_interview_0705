@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateBannerInput {
+export class BannerInput {
   @ApiProperty({ required: true })
   readonly title: string;
 
@@ -25,9 +25,9 @@ export class CreateBannerInput {
   @ApiProperty({ required: false })
   readonly status: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ type: Date, required: false })
   readonly validFrom: Date;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ type: Date, required: false })
   readonly validTo: Date;
 }
