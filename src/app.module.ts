@@ -9,6 +9,7 @@ import * as redisStore from 'cache-manager-redis-store';
 import { RoleModule } from './role/role.module';
 import { CustomerModule } from './customer/customer.module';
 import { ResourceModule } from './resource/resource.module';
+import { BannerModule } from './banner/banner.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { ResourceModule } from './resource/resource.module';
     RoleModule,
     CustomerModule,
     ResourceModule,
+    BannerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
