@@ -10,6 +10,9 @@ import { RoleModule } from './role/role.module';
 import { CustomerModule } from './customer/customer.module';
 import { ResourceModule } from './resource/resource.module';
 import { BannerModule } from './banner/banner.module';
+import { LabelModule } from './label/label.module';
+import { AuthorModule } from './author/author.module';
+import { CategoryModule } from './category/category.module';
 
 @Module({
   imports: [
@@ -51,6 +54,9 @@ import { BannerModule } from './banner/banner.module';
     CustomerModule,
     ResourceModule,
     BannerModule,
+    LabelModule,
+    AuthorModule,
+    CategoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

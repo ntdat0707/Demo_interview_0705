@@ -5,10 +5,10 @@ export class ResourceAuthorEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('varchar')
+  @Column('uuid')
   resourceId: string;
 
-  @Column('varchar', { nullable: true })
+  @Column('uuid', { nullable: true })
   authorId: string;
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })

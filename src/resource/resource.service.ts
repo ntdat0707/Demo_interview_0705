@@ -24,8 +24,26 @@ export class ResourceService {
     @InjectRepository(ResourceLabelEntity)
     private ResourceLabelEntityRepository: Repository<ResourceLabelEntity>,
   ) {}
+  async uploadImage(image: any) {
+    this.logger.debug('upload image');
+    if (!image) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'IMAGE_REQUIRED',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    return {
+      data: {
+        picture: image.filename,
+      },
+    };
+  }
+
   async createResource(createResource: CreateResourceInput) {
-    this.logger.debug(`Running api createManyProduct at ${new Date()}`);
+    this.logger.debug('Create resource');
     const existPost = await this.resourceRepository
       .createQueryBuilder('resource')
       .where(`title::text like :title`, { title: `%"${createResource.title}"%` })
@@ -73,24 +91,30 @@ export class ResourceService {
         }
         await transactionalEntityManager.save<ResourceLabelEntity[]>(resourceLabelList);
       }
-      // if()
+      // create imageAttach file
+      if ((createResource.attachImages && createResource.attachImages.length > 0) || createResource.avatar) {
+        if (createResource.attachImages && createResource.attachImages.length > 0) {
+          const resourceImageList = [];
+          for (const item of createResource.attachImages) {
+            const resourceImage = new ResourceImageEntity();
+            resourceImage.picture = item;
+            resourceImage.resourceId = newResource.id;
+            resourceImageList.push(resourceImage);
+          }
+          await transactionalEntityManager.save<ResourceImageEntity[]>(resourceImageList);
+        }
+        if (createResource.avatar) {
+          const resourceImage = new ResourceImageEntity();
+          resourceImage.picture = createResource.avatar;
+          resourceImage.resourceId = newResource.id;
+          resourceImage.alt = createResource.alt ? createResource.alt : '';
+          resourceImage.isAvatar = true;
+          await transactionalEntityManager.save<ResourceImageEntity>(resourceImage);
+        }
+      }
     });
   }
-
-  async uploadImage(image: any) {
-    if (!image) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'IMAGE_REQUIRED',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    return {
-      data: {
-        picture: image.filename,
-      },
-    };
-  }
+  // async getAllResource(page:number = 1, limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE)) {
+  //   const resourcesQuery = this.resourceRepository.createQueryBuilder('resource').innerJoinAndMapOne('resource.author',)
+  // }
 }

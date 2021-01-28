@@ -1,21 +1,24 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
-@Entity('resource_image')
-export class ResourceImageEntity {
+@Entity('author')
+export class AuthorEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('text', { nullable: true })
-  picture: string;
+  @Column('varchar')
+  email: string;
+
+  @Column('varchar')
+  fullName: string;
+
+  @Column('varchar')
+  phone: string;
+
+  @Column('int2', { nullable: true })
+  gender: number;
 
   @Column('varchar', { nullable: true })
-  alt: string;
-
-  @Column('uuid')
-  resourceId: string;
-
-  @Column('boolean', { default: false })
-  isAvatar: boolean;
+  avatar: string;
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
   createdAt: Date;
@@ -27,7 +30,10 @@ export class ResourceImageEntity {
   deletedAt: Date;
 
   setAttributes(object: any) {
-    if (object.resourceId !== undefined) this.resourceId = object.resourceId;
-    if (object.alt || object.alt === null) this.alt = object.alt;
+    this.email = object.email;
+    this.fullName = object.fullName;
+    this.phone = object.phone;
+    this.gender = object.gender;
+    this.avatar = object.avatar;
   }
 }

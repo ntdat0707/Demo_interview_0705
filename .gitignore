@@ -1,22 +1,6 @@
 # compiled output
 /dist
 /node_modules
-/uploads/products
-/uploads/categories
-/uploads/brands
-/uploads/producers
-/uploads/suppliers
-/uploads/countries
-/uploads/suppliers
-/uploads/ranks
-/uploads/spiritTypes
-/uploads/regions
-/uploads/grapes
-/uploads/wineClassifications
-/uploads/users
-/uploads/descriptions
-/uploads/categoryPosts
-/uploads/posts
 
 /uploads
 /upload.zip

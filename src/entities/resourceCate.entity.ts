@@ -5,10 +5,10 @@ export class ResourceCateEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('varchar')
+  @Column('uuid')
   resourceId: string;
 
-  @Column('varchar', { nullable: true })
+  @Column('uuid', { nullable: true })
   categoryId: string;
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })

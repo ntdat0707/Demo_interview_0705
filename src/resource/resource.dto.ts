@@ -1,10 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class ResourcePicture {
+export class ResourcePictureInput {
   @ApiProperty({ type: 'string', format: 'binary' })
-  readonly resourcePicture: string;
+  readonly image: string;
 }
-
 export class CreateResourceInput {
   @ApiProperty({ required: true })
   readonly title: string;
@@ -13,7 +12,7 @@ export class CreateResourceInput {
   readonly status: string;
 
   @ApiProperty({ type: Boolean, required: false })
-  readonly isPublish: number;
+  readonly isPublish: boolean;
 
   @ApiProperty({ type: Date, required: false })
   readonly publishDate: string;
@@ -22,7 +21,7 @@ export class CreateResourceInput {
   readonly description?: string;
 
   @ApiProperty({ type: Boolean, required: false })
-  readonly isEditSEO: string;
+  readonly isEditSEO: boolean;
 
   @ApiProperty({ required: false })
   readonly titleSEO: string;
@@ -30,7 +29,7 @@ export class CreateResourceInput {
   @ApiProperty({ nullable: true })
   readonly descriptionSEO: boolean;
 
-  @ApiProperty({ type: 'text', required: false })
+  @ApiProperty({ required: false })
   readonly link: string;
 
   @ApiProperty({ type: [String], required: false })
@@ -43,5 +42,58 @@ export class CreateResourceInput {
   readonly labelIds?: string[];
 
   @ApiProperty({ required: false })
-  readonly alt: string;
+  readonly alt?: string;
+
+  @ApiProperty({ required: false })
+  readonly avatar?: string;
+
+  @ApiProperty({ type: [String], required: false })
+  readonly attachImages?: string[];
+}
+
+export class UpdateResourceInput {
+  @ApiProperty({ required: false })
+  readonly title: string;
+
+  @ApiProperty({ enum: ['publish', 'unpublish'] })
+  readonly status: string;
+
+  @ApiProperty({ type: Boolean, required: false })
+  readonly isPublish: boolean;
+
+  @ApiProperty({ type: Date, required: false })
+  readonly publishDate: string;
+
+  @ApiProperty({ required: false })
+  readonly description?: string;
+
+  @ApiProperty({ type: Boolean, required: false })
+  readonly isEditSEO: boolean;
+
+  @ApiProperty({ required: false })
+  readonly titleSEO: string;
+
+  @ApiProperty({ nullable: true })
+  readonly descriptionSEO: boolean;
+
+  @ApiProperty({ required: false })
+  readonly link: string;
+
+  @ApiProperty({ type: [String], required: false })
+  readonly categoryIds?: string[];
+
+  @ApiProperty({ required: false })
+  readonly authorId: string;
+
+  @ApiProperty({ type: [String], required: false })
+  readonly labelIds?: string[];
+
+  @ApiProperty({ required: false })
+  readonly alt?: string;
+
+  @ApiProperty({ required: false })
+  readonly avatar?: string;
+
+  @ApiProperty({ type: [String], required: false })
+  readonly attachImages?: string[];
 }

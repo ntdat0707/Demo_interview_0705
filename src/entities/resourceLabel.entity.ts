@@ -5,10 +5,10 @@ export class ResourceLabelEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('varchar')
+  @Column('uuid', { nullable: false })
   resourceId: string;
 
-  @Column('varchar', { nullable: true })
+  @Column('uuid', { nullable: true })
   labelId: string;
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
