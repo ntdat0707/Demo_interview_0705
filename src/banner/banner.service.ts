@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import { BannerEntity } from '../entities/banner.entity';
 import { BannerInput } from './banner.dto';
-import fs = require('fs');
 @Injectable()
 export class BannerService {
   private readonly logger = new Logger(BannerService.name);
@@ -12,13 +11,28 @@ export class BannerService {
     private connection: Connection,
   ) {}
 
-  async createBanner(imageBanner: any, bannerInput: BannerInput) {
+  async uploadImage(image: any) {
+    this.logger.debug('upload image banner');
+    if (!image) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'IMAGE_REQUIRED',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    return {
+      data: {
+        picture: image.filename,
+      },
+    };
+  }
+
+  async createBanner(bannerInput: BannerInput) {
     this.logger.debug('create banner');
     let banner = new BannerEntity();
     banner.setAttributes(bannerInput);
-    if (imageBanner) {
-      banner.image = imageBanner.filename;
-    }
     await this.connection.queryResultCache.clear();
     banner = await this.bannerRepository.save(banner);
     return {
@@ -26,7 +40,7 @@ export class BannerService {
     };
   }
 
-  async updateBanner(id: string, imageBanner: any, bannerInput: BannerInput) {
+  async updateBanner(id: string, bannerInput: BannerInput) {
     this.logger.debug('update banner');
     let banner = await this.bannerRepository.findOne({ where: { id: id } });
     if (!banner) {
@@ -38,19 +52,9 @@ export class BannerService {
         HttpStatus.NOT_FOUND,
       );
     }
-    let pathFile = '';
-    if (banner.image) {
-      pathFile = process.env.BANNER_IMAGE_PATH + '/' + banner.image;
-    }
     banner.setAttributes(bannerInput);
-    if (imageBanner) {
-      banner.image = imageBanner.filename;
-    }
     await this.connection.queryResultCache.clear();
     banner = await this.bannerRepository.save(banner);
-    if (pathFile !== '') {
-      fs.unlinkSync(pathFile);
-    }
     return {
       data: banner,
     };
@@ -88,5 +92,16 @@ export class BannerService {
     await this.connection.queryResultCache.clear();
     await this.bannerRepository.softDelete(banner);
     return {};
+  }
+
+  async getAllBanner() {
+    this.logger.debug('get all banner');
+    const banners = await this.bannerRepository
+      .createQueryBuilder('banner')
+      .orderBy('validTo', 'DESC')
+      .getMany();
+    return {
+      data: banners,
+    };
   }
 }

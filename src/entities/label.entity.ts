@@ -8,13 +8,13 @@ export class LabelEntity {
   @Column('varchar')
   name: string;
 
-  @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
   updatedAt: Date;
 
-  @DeleteDateColumn({ type: 'timestamptz', nullable: true, select: false })
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true, select: false })
   deletedAt: Date;
 
   setAttributes(object: any) {

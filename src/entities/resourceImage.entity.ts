@@ -11,23 +11,23 @@ export class ResourceImageEntity {
   @Column('varchar', { nullable: true })
   alt: string;
 
-  @Column('uuid')
+  @Column('uuid', { name: 'resource_id' })
   resourceId: string;
 
-  @Column('boolean', { default: false })
+  @Column('boolean', { name: 'is_avatar', default: false })
   isAvatar: boolean;
 
-  @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
   updatedAt: Date;
 
-  @DeleteDateColumn({ type: 'timestamptz', nullable: true, select: false })
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true, select: false })
   deletedAt: Date;
 
   setAttributes(object: any) {
-    if (object.resourceId !== undefined) this.resourceId = object.resourceId;
-    if (object.alt || object.alt === null) this.alt = object.alt;
+    this.resourceId = object.resourceId;
+    this.alt = object.alt;
   }
 }

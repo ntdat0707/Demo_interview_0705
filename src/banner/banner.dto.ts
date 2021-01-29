@@ -10,11 +10,17 @@ export class BannerInput {
   @ApiProperty({ required: false })
   readonly textColor: string;
 
-  @ApiProperty({ type: 'string', format: 'binary', required: false })
+  @ApiProperty({ required: false })
   readonly image: string;
 
   @ApiProperty({ required: false })
   readonly imageAlt: string;
+
+  @ApiProperty({ required: false })
+  readonly imageForResponsive: string;
+
+  @ApiProperty({ required: false })
+  readonly imageAltForResponsive: string;
 
   @ApiProperty({ required: false })
   readonly link: string;
@@ -30,4 +36,9 @@ export class BannerInput {
 
   @ApiProperty({ type: Date, required: false })
   readonly validTo: Date;
+}
+
+export class ImageBannerInput {
+  @ApiProperty({ type: 'string', format: 'binary', required: false })
+  readonly image: string;
 }
