@@ -12,9 +12,16 @@ export class AuthorService {
     private authorRepository: Repository<AuthorEntity>,
   ) {}
 
-  async createAuthor(input: AuthorInput) {
+  async createAuthor(authorInput: AuthorInput) {
     this.logger.debug('create author');
     //check author
-    // let newAuthor = new AuthorEntity();
+    const newAuthor = new AuthorEntity();
+    newAuthor.setAttributes(authorInput);
+    await this.authorRepository.save(newAuthor);
+    return {
+      data: {
+        label: newAuthor,
+      },
+    };
   }
 }

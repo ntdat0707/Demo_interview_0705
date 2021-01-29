@@ -1,6 +1,9 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
+import { AuthorEntity } from '../entities/author.entity';
+import { CategoryEntity } from '../entities/category.entity';
+import { LabelEntity } from '../entities/label.entity';
 import { ResourceEntity } from '../entities/resource.entity';
 import { ResourceAuthorEntity } from '../entities/resourceAuthor.entity';
 import { ResourceCateEntity } from '../entities/resourceCate.entity';
@@ -24,6 +27,7 @@ export class ResourceService {
     @InjectRepository(ResourceLabelEntity)
     private ResourceLabelEntityRepository: Repository<ResourceLabelEntity>,
   ) {}
+
   async uploadImage(image: any) {
     this.logger.debug('upload image');
     if (!image) {
@@ -114,7 +118,73 @@ export class ResourceService {
       }
     });
   }
-  // async getAllResource(page:number = 1, limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE)) {
-  //   const resourcesQuery = this.resourceRepository.createQueryBuilder('resource').innerJoinAndMapOne('resource.author',)
-  // }
+
+  async getAllResource() {
+    const resources = await this.resourceRepository
+      .createQueryBuilder('resource')
+      .leftJoinAndMapMany(
+        'resource.images',
+        ResourceImageEntity,
+        'resource_image',
+        '"resource_image"."resourceId"="resource".id',
+      )
+      .leftJoinAndMapMany(
+        'resource.authors',
+        ResourceAuthorEntity,
+        'resource_author',
+        '"resource_author"."resourceId"="resource".id',
+      )
+      .leftJoinAndMapMany('authors', AuthorEntity, 'author', '"author".id="resource_author"."authorId"')
+      .leftJoinAndMapMany(
+        'resource.labels',
+        ResourceLabelEntity,
+        'resource_label',
+        '"resource_label"."resourceId"="resource".id',
+      )
+      .leftJoinAndMapMany('labels', LabelEntity, 'label', '"label".id = "resource_label"."labelId"')
+      .leftJoinAndMapMany(
+        'resource.categories',
+        ResourceCateEntity,
+        'resource_category',
+        '"resource_category"."resourceId"="resource".id',
+      )
+      .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."categoryId"')
+      .getMany();
+    return { data: resources };
+  }
+
+  async getResource(resourceId: any) {
+    const resource = await this.resourceRepository
+      .createQueryBuilder('resource')
+      .where('"resource".id=:resourceId', { resourceId })
+      .leftJoinAndMapMany(
+        'resource.images',
+        ResourceImageEntity,
+        'resource_image',
+        '"resource_image"."resourceId"="resource".id',
+      )
+      .leftJoinAndMapMany(
+        'resource.authors',
+        ResourceAuthorEntity,
+        'resource_author',
+        '"resource_author"."resourceId"="resource".id',
+      )
+      .leftJoinAndMapMany('authors', AuthorEntity, 'author', '"author".id="resource_author"."authorId"')
+      .leftJoinAndMapMany(
+        'resource.labels',
+        ResourceLabelEntity,
+        'resource_label',
+        '"resource_label"."resourceId"="resource".id',
+      )
+      .leftJoinAndMapMany('labels', LabelEntity, 'label', '"label".id = "resource_label"."labelId"')
+      .leftJoinAndMapMany(
+        'resource.categories',
+        ResourceCateEntity,
+        'resource_category',
+        '"resource_category"."resourceId"="resource".id',
+      )
+      .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."categoryId"')
+      .getOne();
+    return { data: resource };
+  }
 }

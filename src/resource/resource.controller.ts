@@ -1,8 +1,9 @@
-import { Body, Controller, Post, UploadedFile, UseFilters, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UploadedFile, UseFilters, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { CreateResourcePipe } from '../lib/validatePipe/resource/createResourcePipe.class';
+import { CheckUUID } from '../lib/validatePipe/uuidPipe.class';
 import { CreateResourceInput, ResourcePictureInput } from './resource.dto';
 import { ResourceService } from './resource.service';
 
@@ -25,7 +26,7 @@ export class ResourceController {
     return await this.resourceService.uploadImage(image);
   }
 
-  @Post('/create-resource')
+  @Post('/resource')
   @ApiBody({
     type: CreateResourceInput,
   })
@@ -34,5 +35,15 @@ export class ResourceController {
   // @Roles([CREATE_BLOG, UPDATE_BLOG])
   async createResource(@Body(new CreateResourcePipe()) resourceInput: CreateResourceInput) {
     return await this.resourceService.createResource(resourceInput);
+  }
+
+  @Get('/all-resources')
+  async getAllResources() {
+    return await this.resourceService.getAllResource();
+  }
+
+  @Get('/resource/:id')
+  async getResource(@Param('id', new CheckUUID()) id: string) {
+    return await this.resourceService.getResource(id);
   }
 }
