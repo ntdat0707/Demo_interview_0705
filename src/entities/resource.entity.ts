@@ -12,45 +12,45 @@ export class ResourceEntity {
   @Column('varchar', { default: EResourceStatus.UNPUBLISH })
   status: string;
 
-  @Column('boolean', { default: false })
+  @Column('boolean', { name: 'is_publish', default: false })
   isPublish: boolean;
 
-  @Column('timestamptz', { nullable: true })
+  @Column('timestamptz', { name: 'publish_date', nullable: true })
   publishDate: Date;
 
   @Column('varchar', { nullable: true })
   description: string;
 
-  @Column('boolean', { default: false })
+  @Column('boolean', { name: 'is_edit_seo', default: false })
   isEditSEO: boolean;
 
-  @Column('varchar', { nullable: true })
+  @Column('varchar', { name: 'title_seo', nullable: true })
   titleSEO: string;
 
-  @Column('varchar', { nullable: true })
+  @Column('varchar', { name: 'description_seo', nullable: true })
   descriptionSEO: string;
 
   @Column('text', { nullable: true })
   link: string;
 
-  @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
   updatedAt: Date;
 
-  @DeleteDateColumn({ type: 'timestamptz', nullable: true, select: false })
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true, select: false })
   deletedAt: Date;
 
   setAttributes(object: any) {
-    if (object.title) this.title = object.title;
-    if (object.status !== undefined) this.status = object.status;
-    if (object.isPublish === true || object.isPublish === false) this.isPublish = object.isPublish;
-    if (object.publishDate || object.publishDate === null) this.publishDate = object.publishDate;
-    if (object.description || object.description === null) this.description = object.description;
-    if (object.isEditSEO === true || object.isEditSEO === false) this.isEditSEO = object.isEditSEO;
-    if (object.titleSEO || object.titleSEO === null) this.titleSEO = object.titleSEO;
-    if (object.descriptionSEO || object.descriptionSEO === null) this.descriptionSEO = object.descriptionSEO;
-    if (object.link || object.link === null) this.link = object.link;
+    this.title = object.title;
+    this.status = object.status;
+    this.isPublish = object.isPublish;
+    this.publishDate = object.publishDate;
+    this.description = object.description;
+    this.isEditSEO = object.isEditSEO;
+    this.titleSEO = object.titleSEO;
+    this.descriptionSEO = object.descriptionSEO;
+    this.link = object.link;
   }
 }

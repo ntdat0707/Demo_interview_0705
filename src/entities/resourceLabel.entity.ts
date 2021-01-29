@@ -5,18 +5,18 @@ export class ResourceLabelEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('uuid', { nullable: false })
+  @Column('uuid', { name: 'resource_id', nullable: false })
   resourceId: string;
 
-  @Column('uuid', { nullable: true })
+  @Column('uuid', { name: 'label_id', nullable: true })
   labelId: string;
 
-  @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
   updatedAt: Date;
 
-  @DeleteDateColumn({ type: 'timestamptz', nullable: true, select: false })
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true, select: false })
   deletedAt: Date;
 }
