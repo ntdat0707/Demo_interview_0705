@@ -14,8 +14,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { CreateBannerPipe } from '../lib/validatePipe/banner/createBannerPipe.class';
+import { UpdateIndexBannerPipe } from '../lib/validatePipe/banner/updateIndexBannerPipe.class';
 import { CheckUUID } from '../lib/validatePipe/uuidPipe.class';
-import { BannerInput, ImageBannerInput } from './banner.dto';
+import { BannerIndexInput, BannerInput, ImageBannerInput } from './banner.dto';
 import { BannerService } from './banner.service';
 
 @Controller('banner')
@@ -24,6 +25,10 @@ import { BannerService } from './banner.service';
 export class BannerController {
   constructor(private bannerService: BannerService) {}
 
+  @Get('/get-all-banner')
+  async getAllBanner() {
+    return await this.bannerService.getAllBanner();
+  }
   @Post('/upload-image-resource')
   @UseInterceptors(FileInterceptor('image'))
   @ApiConsumes('multipart/form-data')
@@ -35,14 +40,12 @@ export class BannerController {
   }
 
   @Post('/create-banner')
-  @ApiConsumes('multipart/form-data')
   @ApiBody({ type: BannerInput })
   async createBanner(@Body(new CreateBannerPipe()) createBannerInput: BannerInput) {
     return await this.bannerService.createBanner(createBannerInput);
   }
 
   @Put('/update-banner/:id')
-  @ApiConsumes('multipart/form-data')
   @ApiBody({ type: BannerInput })
   async updateBanner(
     @Param('id', new CheckUUID()) id: string,
@@ -59,5 +62,11 @@ export class BannerController {
   @Delete('/delete-banner/:id')
   async deleteBanner(@Param('id', new CheckUUID()) id: string) {
     return await this.bannerService.deleteBanner(id);
+  }
+
+  @Put('/update-index-banner')
+  @ApiBody({ type: [BannerIndexInput] })
+  async updateIndexBanner(@Body(new UpdateIndexBannerPipe()) bannerIndexInput: [BannerIndexInput]) {
+    return await this.bannerService.updateIndexBanner(bannerIndexInput);
   }
 }

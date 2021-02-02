@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Connection, Repository } from 'typeorm';
+import { Connection, getManager, LessThan, Repository } from 'typeorm';
 import { BannerEntity } from '../entities/banner.entity';
-import { BannerInput } from './banner.dto';
+import { BannerIndexInput, BannerInput } from './banner.dto';
 @Injectable()
 export class BannerService {
   private readonly logger = new Logger(BannerService.name);
@@ -98,10 +98,25 @@ export class BannerService {
     this.logger.debug('get all banner');
     const banners = await this.bannerRepository
       .createQueryBuilder('banner')
-      .orderBy('validTo', 'DESC')
+      .orderBy('banner_valid_to', 'DESC')
       .getMany();
     return {
       data: banners,
     };
+  }
+
+  async updateIndexBanner(listBanner: [BannerIndexInput]) {
+    this.logger.debug('update index banner');
+    const banners = await this.bannerRepository.find({ where: { index: LessThan(0) } });
+    await getManager().transaction(async transactionalEntityManager => {
+      await this.connection.queryResultCache.clear();
+      for (const banner of banners) {
+        await transactionalEntityManager.update(BannerEntity, { id: banner.id }, { index: 0 });
+      }
+      for (const input of listBanner) {
+        await transactionalEntityManager.update(BannerEntity, { id: input.id }, { index: input.index });
+      }
+    });
+    return {};
   }
 }

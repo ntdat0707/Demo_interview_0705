@@ -9,6 +9,9 @@ export class BannerEntity {
   @Column('varchar')
   title: string;
 
+  @Column({ default: 0, nullable: true })
+  index: number;
+
   @Column('varchar', { nullable: true })
   description: string;
 

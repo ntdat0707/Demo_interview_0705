@@ -42,3 +42,11 @@ export class ImageBannerInput {
   @ApiProperty({ type: 'string', format: 'binary', required: false })
   readonly image: string;
 }
+
+export class BannerIndexInput {
+  @ApiProperty({ required: true })
+  readonly id: string;
+
+  @ApiProperty({ required: true })
+  readonly index: number;
+}
