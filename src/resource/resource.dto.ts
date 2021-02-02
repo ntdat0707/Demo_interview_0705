@@ -48,7 +48,7 @@ export class CreateResourceInput {
   readonly avatar?: string;
 
   @ApiProperty({ type: [String], required: false })
-  readonly attachImages?: string[];
+  readonly pictures?: string[];
 }
 
 export class UpdateResourceInput {
@@ -95,5 +95,5 @@ export class UpdateResourceInput {
   readonly avatar?: string;
 
   @ApiProperty({ type: [String], required: false })
-  readonly attachImages?: string[];
+  readonly pictures?: string[];
 }

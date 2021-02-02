@@ -1,3 +1,4 @@
+import { LabelEntity } from './../entities/label.entity';
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -11,6 +12,8 @@ import { ResourceAuthorEntity } from '../entities/resourceAuthor.entity';
 import { ResourceCateEntity } from '../entities/resourceCate.entity';
 import { ResourceImageEntity } from '../entities/resourceImage.entity';
 import { ResourceLabelEntity } from '../entities/resourceLabel.entity';
+import { CategoryEntity } from '../entities/category.entity';
+import { AuthorEntity } from '../entities/author.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -19,6 +22,9 @@ import { ResourceLabelEntity } from '../entities/resourceLabel.entity';
       ResourceCateEntity,
       ResourceImageEntity,
       ResourceLabelEntity,
+      CategoryEntity,
+      LabelEntity,
+      AuthorEntity,
     ]),
     MulterModule.registerAsync({
       useFactory: () => ({

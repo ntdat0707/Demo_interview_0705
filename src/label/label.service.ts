@@ -15,7 +15,6 @@ export class LabelService {
   async createLabel(labelInput: LabelInput) {
     this.logger.debug('Create label');
     const newLabel = new LabelEntity();
-
     newLabel.setAttributes(labelInput);
     await this.labelRepository.save(newLabel);
     return {
