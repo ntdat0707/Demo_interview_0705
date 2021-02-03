@@ -9,10 +9,12 @@ import {
   UseInterceptors,
   Put,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
+import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
 import { CreateResourcePipe } from '../lib/validatePipe/resource/createResourcePipe.class';
 import { UpdateResourcePipe } from '../lib/validatePipe/resource/updateResourcePipe.class';
 import { CheckUUID } from '../lib/validatePipe/uuidPipe.class';
@@ -50,8 +52,13 @@ export class ResourceController {
   }
 
   @Get('/all-resources')
-  async getAllResources() {
-    return await this.resourceService.getAllResource();
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  async getAllResources(
+    @Query('page', new CheckUnSignIntPipe()) page: number,
+    @Query('limit', new CheckUnSignIntPipe()) limit: number,
+  ) {
+    return await this.resourceService.getAllResource(page, limit);
   }
 
   @Get('/resource/:id')
