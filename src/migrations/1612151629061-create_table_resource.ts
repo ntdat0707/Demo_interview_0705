@@ -31,29 +31,9 @@ export class CreateTableResource1612151629061 implements MigrationInterface {
     await queryRunner.query(
       `CREATE TABLE "role" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "deletedAt" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_b36bcfe02fc8de3c57a8b2391c2" PRIMARY KEY ("id"))`,
     );
-    await queryRunner.query(`COMMENT ON COLUMN "banner"."created_at" IS NULL`);
-    await queryRunner.query(`COMMENT ON COLUMN "banner"."updated_at" IS NULL`);
-    await queryRunner.query(`COMMENT ON COLUMN "customer"."createdAt" IS NULL`);
-    await queryRunner.query(`COMMENT ON COLUMN "customer"."updatedAt" IS NULL`);
-    await queryRunner.query(`COMMENT ON COLUMN "employee"."createdAt" IS NULL`);
-    await queryRunner.query(`COMMENT ON COLUMN "employee"."updatedAt" IS NULL`);
-    await queryRunner.query(`COMMENT ON COLUMN "permission"."createdAt" IS NULL`);
-    await queryRunner.query(`COMMENT ON COLUMN "permission"."updatedAt" IS NULL`);
-    await queryRunner.query(`COMMENT ON COLUMN "permission_role"."createdAt" IS NULL`);
-    await queryRunner.query(`COMMENT ON COLUMN "permission_role"."updatedAt" IS NULL`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`COMMENT ON COLUMN "permission_role"."updatedAt" IS NULL`);
-    await queryRunner.query(`COMMENT ON COLUMN "permission_role"."createdAt" IS NULL`);
-    await queryRunner.query(`COMMENT ON COLUMN "permission"."updatedAt" IS NULL`);
-    await queryRunner.query(`COMMENT ON COLUMN "permission"."createdAt" IS NULL`);
-    await queryRunner.query(`COMMENT ON COLUMN "employee"."updatedAt" IS NULL`);
-    await queryRunner.query(`COMMENT ON COLUMN "employee"."createdAt" IS NULL`);
-    await queryRunner.query(`COMMENT ON COLUMN "customer"."updatedAt" IS NULL`);
-    await queryRunner.query(`COMMENT ON COLUMN "customer"."createdAt" IS NULL`);
-    await queryRunner.query(`COMMENT ON COLUMN "banner"."updated_at" IS NULL`);
-    await queryRunner.query(`COMMENT ON COLUMN "banner"."created_at" IS NULL`);
     await queryRunner.query(`DROP TABLE "role"`);
     await queryRunner.query(`DROP TABLE "resource_label"`);
     await queryRunner.query(`DROP TABLE "resource_image"`);

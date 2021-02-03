@@ -94,14 +94,22 @@ export class BannerService {
     return {};
   }
 
-  async getAllBanner() {
+  async getAllBanner(page = 1, limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10)) {
     this.logger.debug('get all banner');
-    const banners = await this.bannerRepository
+    const queryExc = this.bannerRepository
       .createQueryBuilder('banner')
       .orderBy('banner_valid_to', 'DESC')
-      .getMany();
+      .limit(limit)
+      .offset((page - 1) * limit);
+    const countResult = await queryExc.cache(`banners_count_page${page}_limit${limit}`).getCount();
+    const result = await queryExc.cache(`banners__page${page}_limit${limit}`).getMany();
+    const pages = Math.ceil(Number(countResult) / limit);
     return {
-      data: banners,
+      page: Number(page),
+      totalPages: pages,
+      limit: Number(limit),
+      totalRecords: countResult,
+      data: result,
     };
   }
 

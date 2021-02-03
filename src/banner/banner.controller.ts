@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UploadedFile,
   UseFilters,
   UseInterceptors,
@@ -15,6 +16,7 @@ import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { CreateBannerPipe } from '../lib/validatePipe/banner/createBannerPipe.class';
 import { UpdateIndexBannerPipe } from '../lib/validatePipe/banner/updateIndexBannerPipe.class';
+import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
 import { CheckUUID } from '../lib/validatePipe/uuidPipe.class';
 import { BannerIndexInput, BannerInput, ImageBannerInput } from './banner.dto';
 import { BannerService } from './banner.service';
@@ -26,8 +28,11 @@ export class BannerController {
   constructor(private bannerService: BannerService) {}
 
   @Get('/get-all-banner')
-  async getAllBanner() {
-    return await this.bannerService.getAllBanner();
+  async getAllBanner(
+    @Query('page', new CheckUnSignIntPipe()) page: number,
+    @Query('limit', new CheckUnSignIntPipe()) limit: number,
+  ) {
+    return await this.bannerService.getAllBanner(page, limit);
   }
   @Post('/upload-image-resource')
   @UseInterceptors(FileInterceptor('image'))

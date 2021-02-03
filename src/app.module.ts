@@ -13,6 +13,7 @@ import { BannerModule } from './banner/banner.module';
 import { LabelModule } from './label/label.module';
 import { AuthorModule } from './author/author.module';
 import { CategoryModule } from './category/category.module';
+import { VideoModule } from './video/video.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { CategoryModule } from './category/category.module';
     LabelModule,
     AuthorModule,
     CategoryModule,
+    VideoModule,
   ],
   controllers: [AppController],
   providers: [AppService],

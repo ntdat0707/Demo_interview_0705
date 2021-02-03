@@ -7,4 +7,9 @@ enum EResourceStatus {
   UNPUBLISH = 'unpublish',
 }
 
-export { EBannerStatus, EResourceStatus };
+enum EFlagUploadVideo {
+  HOMEPAGE = 'homepage',
+  RESOURCE = 'resource',
+}
+
+export { EBannerStatus, EResourceStatus, EFlagUploadVideo };
