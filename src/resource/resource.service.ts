@@ -441,4 +441,38 @@ export class ResourceService {
       .getOne();
     return { data: resourceUpdated };
   }
+
+  async deleteResource(resourceId: string) {
+    this.logger.debug('Delete resource');
+    const resource: any = await this.resourceRepository.findOne({ where: { id: resourceId } });
+    if (!resource) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: 'RESOURCE_NOT_FOUND',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    const resourceAuthor: any = await this.resourceAuthorRepository.findOne({ where: { resourceId: resourceId } });
+    const resourceCateList: any = await this.resourceCateRepository.find({ where: { resourceId: resourceId } });
+    const resourceLabel: any = await this.resourceLabelEntityRepository.find({ where: { resourceId: resourceId } });
+    const resourceImages: any = await this.resourceImageRepository.find({ where: { resourceId: resourceId } });
+    await this.connection.queryResultCache.clear();
+    await getManager().transaction(async transactionalEntityManager => {
+      await transactionalEntityManager.softDelete(ResourceEntity, resource);
+      if (resourceAuthor) {
+        await transactionalEntityManager.softRemove(ResourceAuthorEntity, resourceAuthor);
+      }
+      if (resourceCateList.length > 0) {
+        await transactionalEntityManager.softRemove(ResourceCateEntity, resourceCateList);
+      }
+      if (resourceLabel.length > 0) {
+        await transactionalEntityManager.softRemove(ResourceLabelEntity, resourceLabel);
+      }
+      if (resourceImages.length > 0) {
+        await transactionalEntityManager.softRemove(ResourceImageEntity, resourceImages);
+      }
+    });
+  }
 }
