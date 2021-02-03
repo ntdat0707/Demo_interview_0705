@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Param, Post, UploadedFile, UseFilters, UseInterceptors, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  UploadedFile,
+  UseFilters,
+  UseInterceptors,
+  Put,
+  Delete,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
@@ -54,5 +65,10 @@ export class ResourceController {
     @Body(new UpdateResourcePipe()) resourceUpdate: UpdateResourceInput,
   ) {
     return await this.resourceService.updateResource(id, resourceUpdate);
+  }
+
+  @Delete('/resource/:id')
+  async deleteResource(@Param('id', new CheckUUID()) id: string) {
+    return await this.resourceService.deleteResource(id);
   }
 }
