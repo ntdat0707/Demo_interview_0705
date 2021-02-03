@@ -10,7 +10,7 @@ import { AuthorService } from './author.service';
 @UseFilters(new HttpExceptionFilter())
 export class AuthorController {
   constructor(private authorService: AuthorService) {}
-  @Post('/create-author')
+  @Post('/author')
   @ApiBody({
     type: AuthorInput,
   })
