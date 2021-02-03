@@ -165,9 +165,10 @@ export class ResourceService {
     return { data: { resource: newResource } };
   }
 
-  async getAllResource() {
-    const resources = await this.resourceRepository
-      .createQueryBuilder('resource')
+  async getAllResource(page = 1, limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10)) {
+    const resourceQuery = this.resourceRepository.createQueryBuilder('resource');
+    const resourceCount = await resourceQuery.cache(`resources_count_page${page}_limit${limit}`).getCount();
+    const resources = await resourceQuery
       .leftJoinAndMapMany(
         'resource.images',
         ResourceImageEntity,
@@ -195,8 +196,20 @@ export class ResourceService {
         '"resource_category"."resource_id"="resource".id',
       )
       .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."category_id"')
+      .where('resource."deleted_at" is null')
+      .limit(limit)
+      .offset((page - 1) * limit)
+      .orderBy('resource."created_at"', 'DESC')
+      .cache(`resources_page${page}_limit${limit}`)
       .getMany();
-    return { data: resources };
+    const pages = Math.ceil(Number(resourceCount) / limit);
+    return {
+      page: Number(page),
+      totalPages: pages,
+      limit: Number(limit),
+      totalRecords: resourceCount,
+      data: resources,
+    };
   }
 
   async getResource(resourceId: any) {
