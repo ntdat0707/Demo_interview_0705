@@ -24,19 +24,10 @@ export class InitDatabase1611917326253 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP TABLE "role"`);
-    await queryRunner.query(`DROP TABLE "resource_label"`);
-    await queryRunner.query(`DROP TABLE "resource_image"`);
-    await queryRunner.query(`DROP TABLE "resource_category"`);
-    await queryRunner.query(`DROP TABLE "resource_author"`);
-    await queryRunner.query(`DROP TABLE "resource"`);
     await queryRunner.query(`DROP TABLE "permission_role"`);
     await queryRunner.query(`DROP TABLE "permission"`);
-    await queryRunner.query(`DROP TABLE "label"`);
     await queryRunner.query(`DROP TABLE "employee"`);
     await queryRunner.query(`DROP TABLE "customer"`);
-    await queryRunner.query(`DROP TABLE "category"`);
     await queryRunner.query(`DROP TABLE "banner"`);
-    await queryRunner.query(`DROP TABLE "author"`);
   }
 }

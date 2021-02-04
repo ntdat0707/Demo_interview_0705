@@ -1,11 +1,12 @@
 import { CreateCareerPipe } from './../lib/validatePipe/career/createCareerPipe.class';
-import { Body, Controller, Delete, Get, Param, Post, Put, UseFilters } from '@nestjs/common';
-import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseFilters } from '@nestjs/common';
+import { ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { CheckUUID } from '../lib/validatePipe/uuidPipe.class';
 import { CareerService } from './career.service';
 import { CreateCareerInput, UpdateCareerInput } from './career.dto';
 import { UpdateCareerPipe } from '../lib/validatePipe/career/updateCareerPipe.class';
+import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
 
 @Controller('career')
 @ApiTags('Career')
@@ -14,12 +15,17 @@ export class CareerController {
   constructor(private careerService: CareerService) {}
 
   @Get('/all')
-  async getAllBanner() {
-    return await this.careerService.getAllCareer();
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  async getAllCareer(
+    @Query('page', new CheckUnSignIntPipe()) page: number,
+    @Query('limit', new CheckUnSignIntPipe()) limit: number,
+  ) {
+    return await this.careerService.getAllCareer(page, limit);
   }
 
   @Get('/:id')
-  async getBanner(@Param('id', new CheckUUID()) id: string) {
+  async getCareer(@Param('id', new CheckUUID()) id: string) {
     return await this.careerService.getCareer(id);
   }
 
