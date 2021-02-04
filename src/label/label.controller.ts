@@ -9,7 +9,7 @@ import { LabelService } from './label.service';
 @UseFilters(new HttpExceptionFilter())
 export class LabelController {
   constructor(private labelService: LabelService) {}
-  @Post('/label')
+  @Post()
   @ApiBody({
     type: LabelInput,
   })

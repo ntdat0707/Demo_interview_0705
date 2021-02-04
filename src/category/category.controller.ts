@@ -10,7 +10,7 @@ import { CategoryService } from './category.service';
 @UseFilters(new HttpExceptionFilter())
 export class CategoryController {
   constructor(private categoryService: CategoryService) {}
-  @Post('/category')
+  @Post()
   @ApiBody({
     type: CategoryInput,
   })

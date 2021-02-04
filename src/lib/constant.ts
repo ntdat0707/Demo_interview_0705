@@ -6,6 +6,12 @@ enum EResourceStatus {
   PUBLISH = 'publish',
   UNPUBLISH = 'unpublish',
 }
+
+enum EFlagUploadVideo {
+  HOMEPAGE = 'homepage',
+  RESOURCE = 'resource',
+}
+
 enum EEducationLevelStatus {
   ANY_LEVEL = 'any_level',
   HIGH_SCHOOL_OR_EQUIVALENT = 'high_school_or_equivalent',
@@ -19,4 +25,4 @@ enum ECareerStatus {
   ACTIVE = 'active',
   CLOSED = 'closed',
 }
-export { EBannerStatus, EResourceStatus, EEducationLevelStatus, ECareerStatus };
+export { EBannerStatus, EResourceStatus, EEducationLevelStatus, ECareerStatus, EFlagUploadVideo };

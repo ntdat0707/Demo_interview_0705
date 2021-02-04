@@ -14,7 +14,7 @@ import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
 export class CareerController {
   constructor(private careerService: CareerService) {}
 
-  @Get('/all')
+  @Get()
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   async getAllCareer(
