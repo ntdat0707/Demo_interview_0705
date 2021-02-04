@@ -11,7 +11,7 @@ export class VideoService {
   private readonly logger = new Logger(VideoService.name);
   constructor(
     @InjectRepository(VideoEntity) private videoRepository: Repository<VideoEntity>,
-    private connecttion: Connection,
+    private connection: Connection,
   ) {}
 
   async uploadVideo(video: any, uploadVideoInput: UploadVideoInput) {
@@ -48,7 +48,7 @@ export class VideoService {
     if (video) {
       newVideo.video = video.filename;
     }
-    await this.connecttion.queryResultCache.clear();
+    await this.connection.queryResultCache.clear();
     newVideo = await this.videoRepository.save(newVideo);
     return {
       data: newVideo,
@@ -144,7 +144,7 @@ export class VideoService {
     if (video) {
       checkVideo.video = video.filename;
     }
-    await this.connecttion.queryResultCache.clear();
+    await this.connection.queryResultCache.clear();
     await this.videoRepository.save(checkVideo);
     if (pathFile !== '') {
       fs.unlinkSync(pathFile);
@@ -164,7 +164,7 @@ export class VideoService {
         HttpStatus.NOT_FOUND,
       );
     }
-    await this.connecttion.queryResultCache.clear();
+    await this.connection.queryResultCache.clear();
     await this.videoRepository.softDelete(checkVideo);
     return {};
   }

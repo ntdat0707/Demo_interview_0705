@@ -64,6 +64,6 @@ export class VideoController {
 
   @Delete('/:id')
   async deleteVideo(@Param('id', new CheckUUID()) id: string) {
-    return await this.deleteVideo(id);
+    return await this.videoService.deleteVideo(id);
   }
 }

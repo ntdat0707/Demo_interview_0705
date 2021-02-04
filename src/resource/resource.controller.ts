@@ -40,7 +40,7 @@ export class ResourceController {
     return await this.resourceService.uploadImage(image);
   }
 
-  @Post('/resource')
+  @Post()
   @ApiBody({
     type: CreateResourceInput,
   })
@@ -51,7 +51,7 @@ export class ResourceController {
     return await this.resourceService.createResource(resourceInput);
   }
 
-  @Get('/all-resources')
+  @Get()
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   async getAllResources(
@@ -61,12 +61,12 @@ export class ResourceController {
     return await this.resourceService.getAllResource(page, limit);
   }
 
-  @Get('/resource/:id')
+  @Get('/:id')
   async getResource(@Param('id', new CheckUUID()) id: string) {
     return await this.resourceService.getResource(id);
   }
 
-  @Put('/resource/:id')
+  @Put('/:id')
   async updateResource(
     @Param('id', new CheckUUID()) id: string,
     @Body(new UpdateResourcePipe()) resourceUpdate: UpdateResourceInput,
@@ -74,7 +74,7 @@ export class ResourceController {
     return await this.resourceService.updateResource(id, resourceUpdate);
   }
 
-  @Delete('/resource/:id')
+  @Delete('/:id')
   async deleteResource(@Param('id', new CheckUUID()) id: string) {
     return await this.resourceService.deleteResource(id);
   }
