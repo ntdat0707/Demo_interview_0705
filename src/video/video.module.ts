@@ -25,8 +25,8 @@ import { VideoService } from './video.service';
           },
         }),
         limits: {
-          fileSize: parseInt(process.env.MAX_SIZE_PER_FILE_UPLOAD, 10),
-          files: parseInt(process.env.MAX_NUMBER_FILE_UPLOAD, 10),
+          fileSize: parseInt(process.env.MAX_SIZE_PER_VIDEO_UPLOAD, 10),
+          files: parseInt(process.env.MAX_SIZE_PER_VIDEO_UPLOAD_BLOG, 10),
         },
       }),
     }),
