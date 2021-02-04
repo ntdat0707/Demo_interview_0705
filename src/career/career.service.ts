@@ -1,7 +1,8 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Connection, Repository } from 'typeorm';
+import { Brackets, Connection, Repository } from 'typeorm';
 import { CareerEntity } from '../entities/career.entity';
+import { convertTv } from '../lib/utils';
 import { CreateCareerInput, UpdateCareerInput } from './career.dto';
 
 @Injectable()
@@ -23,23 +24,48 @@ export class CareerService {
     };
   }
 
-  async getAllCareer(page = 1, limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10)) {
+  async getAllCareer(
+    page = 1,
+    limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
+    searchValue: string[],
+  ) {
     this.logger.debug('get-all-career');
-    const careerQuery = this.careerRepository.createQueryBuilder('career');
-    const careerCount = await careerQuery.cache(`career_count_page${page}_limit${limit}`).getCount();
-    const careers = await careerQuery
+    let cacheKey = 'filter_career';
+    const careerQuery = this.careerRepository
+      .createQueryBuilder('career')
       .where('career."deleted_at" is null')
       .limit(limit)
       .offset((page - 1) * limit)
-      .orderBy('created_at', 'DESC')
-      .cache(`career_page${page}_limit${limit}`)
-      .getMany();
-    const pages = Math.ceil(Number(careerCount) / limit);
+      .orderBy('created_at', 'DESC');
+    const countQuery: any = this.careerRepository.createQueryBuilder('career').where('career."deleted_at" is null');
+    const newSearchValue = [];
+    let searchValueJoin = '';
+    if (searchValue?.length > 0) {
+      for (let value of searchValue) {
+        value = value.replace(/  +/g, '');
+        if (value) {
+          newSearchValue.push(convertTv(value.trim()));
+        }
+      }
+      searchValueJoin = `%${newSearchValue.join(' ')}%`;
+      cacheKey += `searchValue${searchValueJoin}`;
+      const bracket = new Brackets(qb => {
+        qb.orWhere(`LOWER(convertTVkdau("career"."status")) like '${searchValueJoin}'`);
+        qb.orWhere(`LOWER(convertTVkdau("career"."country")) like '${searchValueJoin}'`);
+      });
+      careerQuery.andWhere(bracket);
+      countQuery.andWhere(bracket);
+    }
+    let count: any = 0;
+    count = await countQuery.cache(`${cacheKey}_count_page${page}_limit${limit}`).getCount();
+
+    const careers = await careerQuery.cache(`${cacheKey}_page${page}_limit${limit}`).getMany();
+    const pages = Math.ceil(Number(count) / limit);
     return {
       page: Number(page),
       totalPages: pages,
       limit: Number(limit),
-      totalRecords: careerCount,
+      totalRecords: count,
       data: careers,
     };
   }
