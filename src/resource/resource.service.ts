@@ -165,9 +165,10 @@ export class ResourceService {
     return { data: { resource: newResource } };
   }
 
-  async getAllResource() {
-    const resources = await this.resourceRepository
-      .createQueryBuilder('resource')
+  async getAllResource(page = 1, limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10)) {
+    const resourceQuery = this.resourceRepository.createQueryBuilder('resource');
+    const resourceCount = await resourceQuery.cache(`resources_count_page${page}_limit${limit}`).getCount();
+    const resources = await resourceQuery
       .leftJoinAndMapMany(
         'resource.images',
         ResourceImageEntity,
@@ -195,8 +196,20 @@ export class ResourceService {
         '"resource_category"."resource_id"="resource".id',
       )
       .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."category_id"')
+      .where('resource."deleted_at" is null')
+      .limit(limit)
+      .offset((page - 1) * limit)
+      .orderBy('resource."created_at"', 'DESC')
+      .cache(`resources_page${page}_limit${limit}`)
       .getMany();
-    return { data: resources };
+    const pages = Math.ceil(Number(resourceCount) / limit);
+    return {
+      page: Number(page),
+      totalPages: pages,
+      limit: Number(limit),
+      totalRecords: resourceCount,
+      data: resources,
+    };
   }
 
   async getResource(resourceId: any) {
@@ -427,5 +440,39 @@ export class ResourceService {
       .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."category_id"')
       .getOne();
     return { data: resourceUpdated };
+  }
+
+  async deleteResource(resourceId: string) {
+    this.logger.debug('Delete resource');
+    const resource: any = await this.resourceRepository.findOne({ where: { id: resourceId } });
+    if (!resource) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: 'RESOURCE_NOT_FOUND',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    const resourceAuthor: any = await this.resourceAuthorRepository.findOne({ where: { resourceId: resourceId } });
+    const resourceCateList: any = await this.resourceCateRepository.find({ where: { resourceId: resourceId } });
+    const resourceLabel: any = await this.resourceLabelEntityRepository.find({ where: { resourceId: resourceId } });
+    const resourceImages: any = await this.resourceImageRepository.find({ where: { resourceId: resourceId } });
+    await this.connection.queryResultCache.clear();
+    await getManager().transaction(async transactionalEntityManager => {
+      await transactionalEntityManager.softDelete(ResourceEntity, resource);
+      if (resourceAuthor) {
+        await transactionalEntityManager.softRemove(ResourceAuthorEntity, resourceAuthor);
+      }
+      if (resourceCateList.length > 0) {
+        await transactionalEntityManager.softRemove(ResourceCateEntity, resourceCateList);
+      }
+      if (resourceLabel.length > 0) {
+        await transactionalEntityManager.softRemove(ResourceLabelEntity, resourceLabel);
+      }
+      if (resourceImages.length > 0) {
+        await transactionalEntityManager.softRemove(ResourceImageEntity, resourceImages);
+      }
+    });
   }
 }
