@@ -15,6 +15,7 @@ import { AuthorModule } from './author/author.module';
 import { CategoryModule } from './category/category.module';
 import { VideoModule } from './video/video.module';
 import { CareerModule } from './career/career.module';
+import { AgentModule } from './agent/agent.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { CareerModule } from './career/career.module';
     CategoryModule,
     VideoModule,
     CareerModule,
+    AgentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
