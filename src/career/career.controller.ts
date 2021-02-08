@@ -7,6 +7,7 @@ import { CareerService } from './career.service';
 import { CreateCareerInput, UpdateCareerInput } from './career.dto';
 import { UpdateCareerPipe } from '../lib/validatePipe/career/updateCareerPipe.class';
 import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
+import { ConvertArray } from '../lib/validatePipe/convertArrayPipe.class';
 
 @Controller('career')
 @ApiTags('Career')
@@ -18,16 +19,16 @@ export class CareerController {
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'status', required: false })
-  @ApiQuery({ name: 'country', required: false })
-  @ApiQuery({ name: 'searchValue', required: false, type: String, isArray: true })
+  @ApiQuery({ name: 'countries', type: String, isArray: true, required: false })
+  @ApiQuery({ name: 'searchValue', required: false })
   async getAllCareer(
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
     @Query('status') status: string,
-    @Query('country') country: string,
+    @Query('countries', new ConvertArray()) countries: string[],
     @Query('searchValue') searchValue: string,
   ) {
-    return await this.careerService.getAllCareer(page, limit, searchValue, status, country);
+    return await this.careerService.getAllCareer(page, limit, searchValue, status, countries);
   }
 
   @Get('/:id')

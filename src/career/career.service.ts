@@ -28,11 +28,12 @@ export class CareerService {
     page = 1,
     limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
     searchValue: string,
-    status?: string,
-    country?: string,
+    status: string,
+    countries?: string[],
   ) {
     this.logger.debug('get-all-career');
     let cacheKey = 'filter_career';
+    await this.connection.queryResultCache.clear();
     const careerQuery = this.careerRepository
       .createQueryBuilder('career')
       // .where('career."deleted_at" is null')
@@ -41,18 +42,24 @@ export class CareerService {
       .orderBy('created_at', 'DESC');
     const countQuery: any = this.careerRepository.createQueryBuilder('career');
 
-    if (country) {
-      country = country.replace(/  +/g, '');
-      const convert = convertTv(country.trim());
-      const searchCountry = `%${convert}%`;
+    if (countries?.length > 0) {
+      const newSearchCountry = [];
+      for (let value of countries) {
+        value = value.replace(/  +/g, '');
+        if (value) {
+          newSearchCountry.push(convertTv(value.trim()));
+        }
+      }
+      cacheKey += `searchValue${newSearchCountry}`;
       const bracket = new Brackets(qb => {
-        qb.andWhere(`LOWER(convertTVkdau("career"."country")) like '${searchCountry}'`);
+        qb.andWhere(`LOWER(convertTVkdau("career"."country")) In (:...countries)`, { countries: newSearchCountry });
       });
       careerQuery.andWhere(bracket);
       countQuery.andWhere(bracket);
     }
 
     if (status) {
+      cacheKey += `searchValue${status}`;
       const bracket = new Brackets(qb => {
         qb.andWhere(`"career"."status" = '${status}'`);
       });
@@ -70,7 +77,7 @@ export class CareerService {
       careerQuery.andWhere(bracket);
       countQuery.andWhere(bracket);
     }
-    await this.connection.queryResultCache.clear();
+
     let count: any = 0;
     count = await countQuery.cache(`${cacheKey}_count_page${page}_limit${limit}`).getCount();
 
