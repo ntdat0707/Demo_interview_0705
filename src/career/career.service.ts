@@ -27,35 +27,50 @@ export class CareerService {
   async getAllCareer(
     page = 1,
     limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
-    searchValue: string[],
+    searchValue: string,
+    status?: string,
+    country?: string,
   ) {
     this.logger.debug('get-all-career');
     let cacheKey = 'filter_career';
     const careerQuery = this.careerRepository
       .createQueryBuilder('career')
-      .where('career."deleted_at" is null')
+      // .where('career."deleted_at" is null')
       .limit(limit)
       .offset((page - 1) * limit)
       .orderBy('created_at', 'DESC');
-    const countQuery: any = this.careerRepository.createQueryBuilder('career').where('career."deleted_at" is null');
-    const newSearchValue = [];
-    let searchValueJoin = '';
-    if (searchValue?.length > 0) {
-      for (let value of searchValue) {
-        value = value.replace(/  +/g, '');
-        if (value) {
-          newSearchValue.push(convertTv(value.trim()));
-        }
-      }
-      searchValueJoin = `%${newSearchValue.join(' ')}%`;
-      cacheKey += `searchValue${searchValueJoin}`;
+    const countQuery: any = this.careerRepository.createQueryBuilder('career');
+
+    if (country) {
+      country = country.replace(/  +/g, '');
+      const convert = convertTv(country.trim());
+      const searchCountry = `%${convert}%`;
       const bracket = new Brackets(qb => {
-        qb.orWhere(`LOWER(convertTVkdau("career"."status")) like '${searchValueJoin}'`);
-        qb.orWhere(`LOWER(convertTVkdau("career"."country")) like '${searchValueJoin}'`);
+        qb.andWhere(`LOWER(convertTVkdau("career"."country")) like '${searchCountry}'`);
       });
       careerQuery.andWhere(bracket);
       countQuery.andWhere(bracket);
     }
+
+    if (status) {
+      const bracket = new Brackets(qb => {
+        qb.andWhere(`"career"."status" = '${status}'`);
+      });
+      careerQuery.andWhere(bracket);
+      countQuery.andWhere(bracket);
+    }
+    if (searchValue) {
+      searchValue = searchValue.replace(/  +/g, '');
+      const titleConvert = convertTv(searchValue.trim());
+      const searchTitle = `%${titleConvert}%`;
+      cacheKey += `searchValue${searchTitle}`;
+      const bracket = new Brackets(qb => {
+        qb.andWhere(`LOWER(convertTVkdau("career"."title")) like '${searchTitle}'`);
+      });
+      careerQuery.andWhere(bracket);
+      countQuery.andWhere(bracket);
+    }
+    await this.connection.queryResultCache.clear();
     let count: any = 0;
     count = await countQuery.cache(`${cacheKey}_count_page${page}_limit${limit}`).getCount();
 

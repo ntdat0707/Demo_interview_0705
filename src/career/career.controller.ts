@@ -1,4 +1,3 @@
-import { ConvertArray } from './../lib/validatePipe/convertArrayPipe.class';
 import { CreateCareerPipe } from './../lib/validatePipe/career/createCareerPipe.class';
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseFilters } from '@nestjs/common';
 import { ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
@@ -18,13 +17,17 @@ export class CareerController {
   @Get()
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'status', required: false })
+  @ApiQuery({ name: 'country', required: false })
   @ApiQuery({ name: 'searchValue', required: false, type: String, isArray: true })
   async getAllCareer(
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
-    @Query('searchValue', new ConvertArray()) searchValue: string[],
+    @Query('status') status: string,
+    @Query('country') country: string,
+    @Query('searchValue') searchValue: string,
   ) {
-    return await this.careerService.getAllCareer(page, limit, searchValue);
+    return await this.careerService.getAllCareer(page, limit, searchValue, status, country);
   }
 
   @Get('/:id')
