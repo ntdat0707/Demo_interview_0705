@@ -10,7 +10,7 @@ export class AgentEntity {
   code: string;
 
   @Column('varchar', { name: 'company_phone' })
-  phone: string;
+  companyPhone: string;
 
   @Column('varchar', { name: 'company_name' })
   companyName: string;
@@ -18,8 +18,8 @@ export class AgentEntity {
   @Column('varchar', { nullable: true })
   website: string;
 
-  @Column('varchar', { nullable: true })
-  emailCompany: string;
+  @Column('varchar', { name: 'company_email', nullable: true })
+  companyEmail: string;
 
   @Column('varchar')
   country: string;
@@ -58,11 +58,10 @@ export class AgentEntity {
   deletedAt: Date;
 
   setAttributes(object: any) {
-    this.code = object.code;
-    this.phone = object.phone;
+    this.companyPhone = object.companyPhone;
     this.companyName = object.companyName;
     this.website = object.website;
-    this.emailCompany = object.emailCompany;
+    this.companyEmail = object.companyEmail;
     this.country = object.country;
     this.city = object.city;
     this.street = object.street;
