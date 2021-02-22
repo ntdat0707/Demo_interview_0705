@@ -8,6 +8,7 @@ import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
 import { ConvertArray } from '../lib/validatePipe/convertArrayPipe.class';
 import { AgentInput } from './agent.dto';
 import { AgentService } from './agent.service';
+import { CheckStatusFilterPipe } from '../lib/validatePipe/agent/statusFilterPipe.class';
 
 @Controller('agent')
 @ApiTags('Agent')
@@ -23,7 +24,7 @@ export class AgentController {
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
     @Query('searchValue') searchValue: string,
-    @Query('status', new ConvertArray()) status: string[],
+    @Query('status', new ConvertArray(), new CheckStatusFilterPipe()) status: string[],
     @Query('country', new ConvertArray()) country: string[],
   ) {
     return await this.agentService.getAllAgent(page, limit, searchValue, status, country);
