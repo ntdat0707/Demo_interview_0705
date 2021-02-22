@@ -27,35 +27,57 @@ export class CareerService {
   async getAllCareer(
     page = 1,
     limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
-    searchValue: string[],
+    searchValue: string,
+    status: string,
+    countries?: string[],
   ) {
     this.logger.debug('get-all-career');
     let cacheKey = 'filter_career';
+    await this.connection.queryResultCache.clear();
     const careerQuery = this.careerRepository
       .createQueryBuilder('career')
-      .where('career."deleted_at" is null')
+      // .where('career."deleted_at" is null')
       .limit(limit)
       .offset((page - 1) * limit)
       .orderBy('created_at', 'DESC');
-    const countQuery: any = this.careerRepository.createQueryBuilder('career').where('career."deleted_at" is null');
-    const newSearchValue = [];
-    let searchValueJoin = '';
-    if (searchValue?.length > 0) {
-      for (let value of searchValue) {
+    const countQuery: any = this.careerRepository.createQueryBuilder('career');
+
+    if (countries?.length > 0) {
+      const newSearchCountry = [];
+      for (let value of countries) {
         value = value.replace(/  +/g, '');
         if (value) {
-          newSearchValue.push(convertTv(value.trim()));
+          newSearchCountry.push(convertTv(value.trim()));
         }
       }
-      searchValueJoin = `%${newSearchValue.join(' ')}%`;
-      cacheKey += `searchValue${searchValueJoin}`;
+      cacheKey += `searchValue${newSearchCountry}`;
       const bracket = new Brackets(qb => {
-        qb.orWhere(`LOWER(convertTVkdau("career"."status")) like '${searchValueJoin}'`);
-        qb.orWhere(`LOWER(convertTVkdau("career"."country")) like '${searchValueJoin}'`);
+        qb.andWhere(`LOWER(convertTVkdau("career"."country")) In (:...countries)`, { countries: newSearchCountry });
       });
       careerQuery.andWhere(bracket);
       countQuery.andWhere(bracket);
     }
+
+    if (status) {
+      cacheKey += `searchValue${status}`;
+      const bracket = new Brackets(qb => {
+        qb.andWhere(`"career"."status" = '${status}'`);
+      });
+      careerQuery.andWhere(bracket);
+      countQuery.andWhere(bracket);
+    }
+    if (searchValue) {
+      searchValue = searchValue.replace(/  +/g, '');
+      const titleConvert = convertTv(searchValue.trim());
+      const searchTitle = `%${titleConvert}%`;
+      cacheKey += `searchValue${searchTitle}`;
+      const bracket = new Brackets(qb => {
+        qb.andWhere(`LOWER(convertTVkdau("career"."title")) like '${searchTitle}'`);
+      });
+      careerQuery.andWhere(bracket);
+      countQuery.andWhere(bracket);
+    }
+
     let count: any = 0;
     count = await countQuery.cache(`${cacheKey}_count_page${page}_limit${limit}`).getCount();
 
