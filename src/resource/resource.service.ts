@@ -168,7 +168,7 @@ export class ResourceService {
   async getAllResource(page = 1, limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10)) {
     const resourceQuery = this.resourceRepository.createQueryBuilder('resource');
     const resourceCount = await resourceQuery.cache(`resources_count_page${page}_limit${limit}`).getCount();
-    const resources = await resourceQuery
+    const resources: any = await resourceQuery
       .leftJoinAndMapMany(
         'resource.images',
         ResourceImageEntity,
@@ -202,6 +202,21 @@ export class ResourceService {
       .orderBy('resource."created_at"', 'DESC')
       .cache(`resources_page${page}_limit${limit}`)
       .getMany();
+
+    for (let k = 0; k < resources.length; k++) {
+      const images = [];
+      let avatar = {};
+      for (let i = 0; i < resources[k].images.length; i++) {
+        if (resources[k].images[i].isAvatar === true) {
+          avatar = resources[k].images[i];
+        } else {
+          images.push(resources[k].images[i]);
+        }
+      }
+      resources[k].images = images;
+      resources[k].avatar = avatar;
+    }
+
     const pages = Math.ceil(Number(resourceCount) / limit);
     return {
       page: Number(page),
@@ -213,7 +228,7 @@ export class ResourceService {
   }
 
   async getResource(resourceId: any) {
-    const resource = await this.resourceRepository
+    const resource: any = await this.resourceRepository
       .createQueryBuilder('resource')
       .where('"resource".id=:resourceId', { resourceId })
       .leftJoinAndMapMany(
@@ -244,6 +259,17 @@ export class ResourceService {
       )
       .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."category_id"')
       .getOne();
+    const images = [];
+    let avatar = {};
+    for (let i = 0; i < resource.images.length; i++) {
+      if (resource.images[i].isAvatar === true) {
+        avatar = resource.images[i];
+      } else {
+        images.push(resource.images[i]);
+      }
+    }
+    resource.images = images;
+    resource.avatar = avatar;
     return { data: resource };
   }
 
@@ -390,6 +416,11 @@ export class ResourceService {
           resourcePictures.push(resourcePictureData);
         }
         await transactionalEntityManager.save<ResourceImageEntity[]>(resourcePictures);
+      } else {
+        const deleteImages = await this.resourceImageRepository.find({
+          where: { resourceId: resourceId, isAvatar: false },
+        });
+        if (deleteImages) await transactionalEntityManager.softRemove<ResourceImageEntity>(deleteImages);
       }
       if (resourceUpdate.avatar) {
         const resourcePictureData = new ResourceImageEntity();
