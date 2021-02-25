@@ -2,6 +2,7 @@ import { ArgumentMetadata, HttpException, HttpStatus, Injectable, PipeTransform 
 import moment = require('moment');
 import { CreateResourceInput } from '../../../resource/resource.dto';
 import { EResourceStatus } from '../../constant';
+import { checkUUID } from '../../pipeUtils/uuidValidate';
 
 @Injectable()
 export class UpdateResourcePipe implements PipeTransform<any> {
@@ -35,6 +36,43 @@ export class UpdateResourcePipe implements PipeTransform<any> {
         },
         HttpStatus.BAD_REQUEST,
       );
+    }
+    if (value.categoryIds) {
+      for (const item of value.categoryIds) {
+        if (!checkUUID(item)) {
+          throw new HttpException(
+            {
+              statusCode: HttpStatus.BAD_REQUEST,
+              message: 'CATEGORY_UUID_INVALID',
+            },
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+      }
+    }
+    if (value.authorId) {
+      if (!checkUUID(value.authorId)) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.BAD_REQUEST,
+            message: 'AUTHOR_UUID_INVALID',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+    if (value.labelIds) {
+      for (const item of value.labelIds) {
+        if (!checkUUID(item)) {
+          throw new HttpException(
+            {
+              statusCode: HttpStatus.BAD_REQUEST,
+              message: 'LABEL_UUID_INVALID',
+            },
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+      }
     }
     return value;
   }

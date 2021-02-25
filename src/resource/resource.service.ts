@@ -127,7 +127,7 @@ export class ResourceService {
             throw new HttpException(
               {
                 statusCode: HttpStatus.NOT_FOUND,
-                message: `CATEGORY_${item}_NOT_FOUND`,
+                message: `LABEL_${item}_NOT_FOUND`,
               },
               HttpStatus.NOT_FOUND,
             );
