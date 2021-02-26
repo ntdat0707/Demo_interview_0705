@@ -60,16 +60,16 @@ export class AgentEntity {
   setAttributes(object: any) {
     this.companyPhone = object.companyPhone;
     this.companyName = object.companyName;
-    this.website = object.website;
-    this.companyEmail = object.companyEmail;
+    this.website = object.website ? object.website : null;
+    this.companyEmail = object.companyEmail ? object.companyEmail : null;
     this.country = object.country;
     this.city = object.city;
     this.street = object.street;
     this.contactName = object.contactName;
     this.contactEmail = object.contactEmail;
     this.contactPhone = object.contactPhone;
-    this.jobTitle = object.jobTitle;
-    this.description = object.description;
+    this.jobTitle = object.jobTitle ? object.jobTitle : null;
+    this.description = object.description ? object.description : null;
     this.status = object.status;
   }
 }

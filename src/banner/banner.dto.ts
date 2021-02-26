@@ -31,10 +31,10 @@ export class BannerInput {
   @ApiProperty({ required: false })
   readonly status: string;
 
-  @ApiProperty({ type: Date, required: false })
+  @ApiProperty({ type: Date, format: 'date', required: false })
   readonly validFrom: Date;
 
-  @ApiProperty({ type: Date, required: false })
+  @ApiProperty({ type: Date, format: 'date', required: false })
   readonly validTo: Date;
 }
 

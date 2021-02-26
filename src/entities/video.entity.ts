@@ -34,9 +34,9 @@ export class VideoEntity {
 
   setAttributes(object: any) {
     this.title = object.title;
-    this.description = object.description;
-    this.video = object.video;
-    this.linkVideo = object.linkVideo;
+    this.description = object.description ? object.description : null;
+    this.video = object.video ? object.video : null;
+    this.linkVideo = object.linkVideo ? object.linkVideo : null;
     this.status = object.status;
   }
 }

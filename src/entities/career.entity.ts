@@ -59,18 +59,18 @@ export class CareerEntity {
 
   setAttributes(object: any) {
     this.title = object.title;
-    this.vancancies = object.vancancies;
+    this.vancancies = object.vancancies ? object.vancancies : 0;
     this.country = object.country;
     this.city = object.city;
-    this.educationLevel = object.educationLevel;
-    this.maxSalary = object.maxSalary;
-    this.minSalary = object.minSalary;
+    this.educationLevel = object.educationLevel ? object.educationLevel : EEducationLevelStatus.NONE;
+    this.maxSalary = object.maxSalary ? object.maxSalary : 0;
+    this.minSalary = object.minSalary ? object.minSalary : 0;
     this.currency = object.currency;
-    this.isEditSalary = object.isEditSalary;
+    this.isEditSalary = object.isEditSalary ? object.isEditSalary : false;
     this.jobDescription = object.jobDescription;
-    this.requirementsBenefits = object.requirementsBenefits;
-    this.contactInformation = object.contactInformation;
+    this.requirementsBenefits = object.requirementsBenefits ? object.requirementsBenefits : null;
+    this.contactInformation = object.contactInformation ? object.contactInformation : null;
     this.status = object.status;
-    this.closingDate = object.closingDate;
+    this.closingDate = object.closingDate ? object.closingDate : null;
   }
 }
