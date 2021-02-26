@@ -10,6 +10,7 @@ import { ResourceAuthorEntity } from '../entities/resourceAuthor.entity';
 import { ResourceCateEntity } from '../entities/resourceCate.entity';
 import { ResourceImageEntity } from '../entities/resourceImage.entity';
 import { ResourceLabelEntity } from '../entities/resourceLabel.entity';
+import { mapDataResource } from '../lib/mapData/resource';
 
 import { CreateResourceInput, UpdateResourceInput } from './resource.dto';
 @Injectable()
@@ -60,7 +61,7 @@ export class ResourceService {
     this.logger.debug('Create resource');
     const existPost = await this.resourceRepository
       .createQueryBuilder('resource')
-      .where(`title::text like :title`, { title: `%"${createResource.title}"%` })
+      .where(`title ilike :title`, { title: `%"${createResource.title}"%` })
       .getOne();
     if (existPost) {
       throw new HttpException(
@@ -203,27 +204,13 @@ export class ResourceService {
       .cache(`resources_page${page}_limit${limit}`)
       .getMany();
 
-    for (let k = 0; k < resources.length; k++) {
-      const images = [];
-      let avatar = {};
-      for (let i = 0; i < resources[k].images.length; i++) {
-        if (resources[k].images[i].isAvatar === true) {
-          avatar = resources[k].images[i];
-        } else {
-          images.push(resources[k].images[i]);
-        }
-      }
-      resources[k].images = images;
-      resources[k].avatar = avatar;
-    }
-
     const pages = Math.ceil(Number(resourceCount) / limit);
     return {
       page: Number(page),
       totalPages: pages,
       limit: Number(limit),
       totalRecords: resourceCount,
-      data: resources,
+      data: mapDataResource(resources, true),
     };
   }
 
@@ -235,42 +222,31 @@ export class ResourceService {
         'resource.images',
         ResourceImageEntity,
         'resource_image',
-        '"resource_image"."resource_id"="resource".id',
+        '"resource_image"."resource_id"="resource".id and resource_image.deleted_at is null',
       )
       .leftJoinAndMapOne(
         'resource.authors',
         ResourceAuthorEntity,
         'resource_author',
-        '"resource_author"."resource_id"="resource".id',
+        '"resource_author"."resource_id"="resource".id and resource_author.deleted_at is null',
       )
-      .leftJoinAndMapOne('authors', AuthorEntity, 'author', '"author".id="resource_author"."author_id"')
+      .leftJoinAndMapOne('authors', AuthorEntity, 'author', '"author".id="resource_author"."author_id" ')
       .leftJoinAndMapMany(
         'resource.labels',
         ResourceLabelEntity,
         'resource_label',
-        '"resource_label"."resource_id"="resource".id',
+        '"resource_label"."resource_id"="resource".id and resource_label.deleted_at is null',
       )
       .leftJoinAndMapMany('labels', LabelEntity, 'label', '"label".id = "resource_label"."label_id"')
       .leftJoinAndMapMany(
         'resource.categories',
         ResourceCateEntity,
         'resource_category',
-        '"resource_category"."resource_id"="resource".id',
+        '"resource_category"."resource_id"="resource".id and resource_category.deleted_at is null',
       )
       .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."category_id"')
       .getOne();
-    const images = [];
-    let avatar = {};
-    for (let i = 0; i < resource.images.length; i++) {
-      if (resource.images[i].isAvatar === true) {
-        avatar = resource.images[i];
-      } else {
-        images.push(resource.images[i]);
-      }
-    }
-    resource.images = images;
-    resource.avatar = avatar;
-    return { data: resource };
+    return { data: mapDataResource(resource, false) };
   }
 
   async updateResource(resourceId: string, resourceUpdate: UpdateResourceInput) {
@@ -293,6 +269,7 @@ export class ResourceService {
 
       //update Author
       this.logger.debug('Update resource author');
+
       if (!resourceUpdate.authorId) {
         const resourceAuthor = await this.resourceAuthorRepository.findOne({ where: { resourceId: resourceId } });
         await transactionalEntityManager.softRemove<ResourceAuthorEntity>(resourceAuthor);
@@ -322,6 +299,7 @@ export class ResourceService {
           await transactionalEntityManager.save<ResourceAuthorEntity>(resourceAuthorData);
         }
       }
+
       //update label
       this.logger.debug('Update resource labels');
       const resourceLabels = await this.resourceLabelEntityRepository.find({ where: { resourceId: resourceId } });
@@ -363,6 +341,7 @@ export class ResourceService {
           await transactionalEntityManager.save<ResourceLabelEntity[]>(resourceLabelList);
         }
       }
+
       //update category
       this.logger.debug('Update resource categories');
       const resourceCates = await this.resourceCateRepository.find({ where: { resourceId: resourceId } });
@@ -404,11 +383,12 @@ export class ResourceService {
           await transactionalEntityManager.save<ResourceCateEntity[]>(resourceCateList);
         }
       }
-      // update picture
+      // update images
       this.logger.debug('Update resource images');
-      if (resourceUpdate.pictures && resourceUpdate.pictures.length > 0) {
+
+      if (resourceUpdate.images && resourceUpdate.images.length > 0) {
         const resourcePictures = [];
-        for (const picture of resourceUpdate.pictures) {
+        for (const picture of resourceUpdate.images) {
           const resourcePictureData = new ResourceImageEntity();
           resourcePictureData.picture = picture;
           resourcePictureData.resourceId = resourceId;
@@ -416,7 +396,7 @@ export class ResourceService {
           resourcePictures.push(resourcePictureData);
         }
         await transactionalEntityManager.save<ResourceImageEntity[]>(resourcePictures);
-      } else {
+      } else if (!resourceUpdate.images) {
         const deleteImages = await this.resourceImageRepository.find({
           where: { resourceId: resourceId, isAvatar: false },
         });
@@ -470,7 +450,7 @@ export class ResourceService {
       )
       .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."category_id"')
       .getOne();
-    return { data: resourceUpdated };
+    return { data: mapDataResource(resourceUpdated, false) };
   }
 
   async deleteResource(resourceId: string) {

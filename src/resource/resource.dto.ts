@@ -95,5 +95,5 @@ export class UpdateResourceInput {
   readonly avatar?: string;
 
   @ApiProperty({ type: [String], required: false })
-  readonly pictures?: string[];
+  readonly images?: string[];
 }
