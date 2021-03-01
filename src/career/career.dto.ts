@@ -87,7 +87,7 @@ export class UpdateCareerInput {
   @ApiProperty({ required: false })
   readonly isEditSalary: boolean;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: true })
   readonly jobDescription: string;
 
   @ApiProperty({ required: false })

@@ -2,40 +2,40 @@ import { ApiProperty } from '@nestjs/swagger';
 import { EBannerStatus } from '../lib/constant';
 
 export class AgentInput {
-  @ApiProperty()
+  @ApiProperty({ required: true })
   readonly companyPhone: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: true })
   readonly companyName: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   readonly website: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   readonly companyEmail: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: true })
   readonly country: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: true })
   readonly city: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: true })
   readonly street: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: true })
   readonly contactName: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: true })
   readonly contactEmail: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: true })
   readonly contactPhone: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   readonly jobTitle: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   readonly description: string;
 
   @ApiProperty({
