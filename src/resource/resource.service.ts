@@ -52,7 +52,7 @@ export class ResourceService {
     }
     return {
       data: {
-        picture: image.filename,
+        image: image.filename,
       },
     };
   }
@@ -142,20 +142,20 @@ export class ResourceService {
       }
       // create imageAttach file
       this.logger.debug('Create resource Images');
-      if ((createResource.pictures && createResource.pictures.length > 0) || createResource.avatar) {
-        if (createResource.pictures && createResource.pictures.length > 0) {
+      if ((createResource.images && createResource.images.length > 0) || createResource.avatar) {
+        if (createResource.images && createResource.images.length > 0) {
           const resourceImageList = [];
-          for (const item of createResource.pictures) {
-            const resourceImage = new ResourceImageEntity();
-            resourceImage.picture = item;
+          for (const item of createResource.images) {
+            const resourceImage: any = new ResourceImageEntity();
+            resourceImage.image = item.image;
             resourceImage.resourceId = newResource.id;
             resourceImageList.push(resourceImage);
           }
           await transactionalEntityManager.save<ResourceImageEntity[]>(resourceImageList);
         }
         if (createResource.avatar) {
-          const resourceImage = new ResourceImageEntity();
-          resourceImage.picture = createResource.avatar;
+          const resourceImage: any = new ResourceImageEntity();
+          resourceImage.image = createResource.avatar.image;
           resourceImage.resourceId = newResource.id;
           resourceImage.alt = createResource.alt ? createResource.alt : '';
           resourceImage.isAvatar = true;
@@ -225,7 +225,7 @@ export class ResourceService {
         '"resource_image"."resource_id"="resource".id and resource_image.deleted_at is null',
       )
       .leftJoinAndMapOne(
-        'resource.authors',
+        'resource.author',
         ResourceAuthorEntity,
         'resource_author',
         '"resource_author"."resource_id"="resource".id and resource_author.deleted_at is null',
@@ -387,15 +387,36 @@ export class ResourceService {
       this.logger.debug('Update resource images');
 
       if (resourceUpdate.images && resourceUpdate.images.length > 0) {
-        const resourcePictures = [];
-        for (const picture of resourceUpdate.images) {
-          const resourcePictureData = new ResourceImageEntity();
-          resourcePictureData.picture = picture;
-          resourcePictureData.resourceId = resourceId;
-          resourcePictureData.isAvatar = false;
-          resourcePictures.push(resourcePictureData);
+        const newPictures = [];
+        const updatePictures = [];
+        for (const image of resourceUpdate.images) {
+          if (!image.id) {
+            const resourcePictureData: any = new ResourceImageEntity();
+            resourcePictureData.image = image.image;
+            resourcePictureData.resourceId = resourceId;
+            resourcePictureData.isAvatar = false;
+            newPictures.push(resourcePictureData);
+          } else {
+            updatePictures.push(image.id);
+          }
         }
-        await transactionalEntityManager.save<ResourceImageEntity[]>(resourcePictures);
+        const deleteImages = await this.resourceImageRepository.find({
+          where: { resourceId: resourceId, isAvatar: false },
+        });
+        if (deleteImages.length > 0 && updatePictures.length > 0) {
+          const currImages = deleteImages.map((item: any) => item.id);
+          const diff = _.difference(currImages, updatePictures);
+          if (diff.length > 0) {
+            for (let i = 0; i < diff.length; i++) {
+              const index = deleteImages.findIndex((item: any) => item.id === diff[i]);
+              if (index > -1) {
+                deleteImages.splice(index, 1);
+              }
+            }
+            await transactionalEntityManager.softRemove<ResourceImageEntity>(deleteImages);
+          }
+        }
+        await transactionalEntityManager.save<ResourceImageEntity[]>(newPictures);
       } else if (!resourceUpdate.images) {
         const deleteImages = await this.resourceImageRepository.find({
           where: { resourceId: resourceId, isAvatar: false },
@@ -403,8 +424,8 @@ export class ResourceService {
         if (deleteImages) await transactionalEntityManager.softRemove<ResourceImageEntity>(deleteImages);
       }
       if (resourceUpdate.avatar) {
-        const resourcePictureData = new ResourceImageEntity();
-        resourcePictureData.picture = resourceUpdate.avatar;
+        const resourcePictureData: any = new ResourceImageEntity();
+        resourcePictureData.image = resourceUpdate.avatar.image;
         resourcePictureData.resourceId = resourceId;
         resourcePictureData.isAvatar = true;
         const deleteAvatar = await this.resourceImageRepository.find({

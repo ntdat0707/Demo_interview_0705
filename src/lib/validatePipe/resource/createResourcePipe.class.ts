@@ -61,6 +61,7 @@ export class CreateResourcePipe implements PipeTransform<any> {
         );
       }
     }
+
     if (value.labelIds) {
       for (const item of value.labelIds) {
         if (!checkUUID(item)) {
@@ -74,6 +75,7 @@ export class CreateResourcePipe implements PipeTransform<any> {
         }
       }
     }
+
     return value;
   }
 }
