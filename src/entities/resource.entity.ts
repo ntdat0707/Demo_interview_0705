@@ -45,12 +45,12 @@ export class ResourceEntity {
   setAttributes(object: any) {
     this.title = object.title;
     this.status = object.status;
-    this.isPublish = object.isPublish;
-    this.publishDate = object.publishDate;
-    this.description = object.description;
-    this.isEditSEO = object.isEditSEO;
-    this.titleSEO = object.titleSEO;
-    this.descriptionSEO = object.descriptionSEO;
-    this.link = object.link;
+    this.isPublish = object.isPublish ? object.isPublish : false;
+    this.publishDate = object.publishDate ? object.publishDate : null;
+    this.description = object.description ? object.description : null;
+    this.isEditSEO = object.isEditSEO ? object.isEditSE : false;
+    this.titleSEO = object.titleSEO ? object.titleSEO : null;
+    this.descriptionSEO = object.descriptionSEO ? object.descriptionSEO : null;
+    this.link = object.link ? object.link : null;
   }
 }

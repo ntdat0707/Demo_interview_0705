@@ -1,7 +1,7 @@
 import { ArgumentMetadata, HttpException, HttpStatus, Injectable, PipeTransform } from '@nestjs/common';
-import moment = require('moment');
 import { CreateCareerInput } from '../../../career/career.dto';
 import { ECareerStatus, EEducationLevelStatus } from '../../constant';
+import { checkDate } from '../../pipeUtils/dateValidate';
 
 @Injectable()
 export class UpdateCareerPipe implements PipeTransform<any> {
@@ -96,7 +96,7 @@ export class UpdateCareerPipe implements PipeTransform<any> {
         );
       }
     }
-    if (value.closingDate && !moment(value.closingDate, 'YYYY-MM-DD', true).isValid()) {
+    if (value.closingDate && !checkDate(value.closingDate)) {
       throw new HttpException(
         {
           statusCode: HttpStatus.BAD_REQUEST,

@@ -26,8 +26,8 @@ export class CreateResourceInput {
   @ApiProperty({ required: false })
   readonly titleSEO: string;
 
-  @ApiProperty({ nullable: true })
-  readonly descriptionSEO: boolean;
+  @ApiProperty({ required: false })
+  readonly descriptionSEO: string;
 
   @ApiProperty({ required: false })
   readonly link: string;

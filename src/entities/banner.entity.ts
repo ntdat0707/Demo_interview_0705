@@ -56,14 +56,16 @@ export class BannerEntity {
 
   setAttributes(object: any) {
     this.title = object.title;
-    this.description = object.description;
-    this.textColor = object.textColor;
-    this.image = object.image;
-    this.imageAlt = object.imageAlt;
-    this.link = object.link;
-    this.position = object.position;
+    this.description = object.description ? object.description : null;
+    this.textColor = object.textColor ? object.textColor : null;
+    this.image = object.image ? object.image : null;
+    this.imageAlt = object.imageAlt ? object.imageAlt : null;
+    this.imageForResponsive = object.imageForResponsive ? object.imageForResponsive : null;
+    this.imageAltForResponsive = object.imageAltForResponsive ? object.imageAltForResponsive : null;
+    this.link = object.link ? object.link : null;
+    this.position = object.position ? object.position : null;
     this.status = object.status;
-    this.validFrom = object.validFrom;
-    this.validTo = object.validTo;
+    this.validFrom = object.validFrom ? object.validFrom : null;
+    this.validTo = object.validTo ? object.validTo : null;
   }
 }

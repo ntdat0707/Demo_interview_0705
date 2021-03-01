@@ -1,7 +1,7 @@
 import { ArgumentMetadata, HttpException, HttpStatus, Injectable, PipeTransform } from '@nestjs/common';
-import moment = require('moment');
 import { CreateResourceInput } from '../../../resource/resource.dto';
 import { EResourceStatus } from '../../constant';
+import { checkDateTime } from '../../pipeUtils/dateValidate';
 import { checkUUID } from '../../pipeUtils/uuidValidate';
 
 @Injectable()
@@ -28,7 +28,7 @@ export class UpdateResourcePipe implements PipeTransform<any> {
         );
       }
     }
-    if (value.publishDate && !moment(value.publishDate).isValid()) {
+    if (value.publishDate && !checkDateTime(value.publishDate)) {
       throw new HttpException(
         {
           statusCode: HttpStatus.BAD_REQUEST,
