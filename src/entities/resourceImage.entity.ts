@@ -6,7 +6,7 @@ export class ResourceImageEntity {
   id: string;
 
   @Column('text', { nullable: true })
-  picture: string;
+  image: string;
 
   @Column('varchar', { nullable: true })
   alt: string;

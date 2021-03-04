@@ -28,7 +28,7 @@ import { VideoService } from './video.service';
 export class VideoController {
   constructor(private videoService: VideoService) {}
 
-  @Get('/all-video')
+  @Get('')
   async getAllVideo(
     @Query('flag', new CheckFlagPipe()) flag: string,
     @Query('page', new CheckUnSignIntPipe()) page: number,

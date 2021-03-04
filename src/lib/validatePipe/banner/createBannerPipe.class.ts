@@ -1,5 +1,4 @@
 import { ArgumentMetadata, HttpException, HttpStatus, Injectable, PipeTransform } from '@nestjs/common';
-import moment = require('moment');
 import { BannerInput } from '../../../banner/banner.dto';
 import { EBannerStatus } from '../../constant';
 import { checkDate } from '../../pipeUtils/dateValidate';
@@ -16,7 +15,15 @@ export class CreateBannerPipe implements PipeTransform<any> {
         HttpStatus.BAD_REQUEST,
       );
     }
-    if (value.status) {
+    if (!value.status) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'STATUS_REQUIRED',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    } else {
       const status: any = value.status;
       if (!Object.values(EBannerStatus).includes(status)) {
         throw new HttpException(
@@ -28,7 +35,7 @@ export class CreateBannerPipe implements PipeTransform<any> {
         );
       }
     }
-    if (value.validFrom && !moment(value.validFrom, 'YYYY-MM-DD', true).isValid()) {
+    if (value.validFrom && !checkDate(value.validFrom)) {
       throw new HttpException(
         {
           statusCode: HttpStatus.BAD_REQUEST,

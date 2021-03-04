@@ -25,20 +25,20 @@ export class CreateAgentPipe implements PipeTransform<any> {
         HttpStatus.BAD_REQUEST,
       );
     }
-    if (value.companyEmail && !checkEmail(value.companyEmail)) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'COMPANY_EMAIL_INVALID',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
     if (!checkPhoneNumber(value.companyPhone)) {
       throw new HttpException(
         {
           statusCode: HttpStatus.BAD_REQUEST,
           message: 'COMPANY_PHONE_INVALID',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    if (value.companyEmail && !checkEmail(value.companyEmail)) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'COMPANY_EMAIL_INVALID',
         },
         HttpStatus.BAD_REQUEST,
       );

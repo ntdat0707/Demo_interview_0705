@@ -16,7 +16,7 @@ import { CheckStatusFilterPipe } from '../lib/validatePipe/agent/statusFilterPip
 export class AgentController {
   constructor(private agentService: AgentService) {}
 
-  @Get('/get-all-agent')
+  @Get('')
   @ApiQuery({ name: 'searchValue', required: false, type: String })
   @ApiQuery({ name: 'status', required: false, type: String, isArray: true })
   @ApiQuery({ name: 'country', required: false, type: String, isArray: true })
@@ -49,7 +49,7 @@ export class AgentController {
     return await this.agentService.deleteAgent(id);
   }
 
-  @Post('/create')
+  @Post('')
   @ApiBody({ type: AgentInput })
   async createAgent(@Body(new CreateAgentPipe()) createAgentInput: AgentInput) {
     return await this.agentService.createAgent(createAgentInput);

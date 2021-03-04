@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { EResourceStatus } from '../lib/constant';
 
 export class UploadVideoInput {
   @ApiProperty({ required: true })
@@ -33,6 +34,6 @@ export class UpdateVideoInput {
   @ApiProperty({ required: false })
   readonly linkVideo: string;
 
-  @ApiProperty({ required: true })
+  @ApiProperty({ required: true, enum: Object.values(EResourceStatus) })
   readonly status: string;
 }

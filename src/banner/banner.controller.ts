@@ -27,13 +27,19 @@ import { BannerService } from './banner.service';
 export class BannerController {
   constructor(private bannerService: BannerService) {}
 
-  @Get('/get-all-banner')
+  @Get('')
   async getAllBanner(
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
   ) {
     return await this.bannerService.getAllBanner(page, limit);
   }
+
+  @Get('/:id')
+  async getBanner(@Param('id', new CheckUUID()) id: string) {
+    return await this.bannerService.getBanner(id);
+  }
+
   @Post('/upload-image-resource')
   @UseInterceptors(FileInterceptor('image'))
   @ApiConsumes('multipart/form-data')
@@ -44,13 +50,13 @@ export class BannerController {
     return await this.bannerService.uploadImage(image);
   }
 
-  @Post('/create-banner')
+  @Post('')
   @ApiBody({ type: BannerInput })
   async createBanner(@Body(new CreateBannerPipe()) createBannerInput: BannerInput) {
     return await this.bannerService.createBanner(createBannerInput);
   }
 
-  @Put('/update-banner/:id')
+  @Put('/:id')
   @ApiBody({ type: BannerInput })
   async updateBanner(
     @Param('id', new CheckUUID()) id: string,
@@ -59,12 +65,7 @@ export class BannerController {
     return await this.bannerService.updateBanner(id, updateBannerInput);
   }
 
-  @Get('/get-banner/:id')
-  async getBanner(@Param('id', new CheckUUID()) id: string) {
-    return await this.bannerService.getBanner(id);
-  }
-
-  @Delete('/delete-banner/:id')
+  @Delete('/:id')
   async deleteBanner(@Param('id', new CheckUUID()) id: string) {
     return await this.bannerService.deleteBanner(id);
   }

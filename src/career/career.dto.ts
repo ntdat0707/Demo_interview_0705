@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { EEducationLevelStatus } from '../lib/constant';
 
 export class CreateCareerInput {
   @ApiProperty({ required: true })
@@ -14,15 +15,7 @@ export class CreateCareerInput {
   readonly city: string;
 
   @ApiProperty({
-    enum: [
-      'any_level',
-      'high_school_or_equivalent',
-      'associate_degree',
-      'bachelor_degree',
-      'master_degree',
-      'doctorate_degree',
-      'none',
-    ],
+    enum: Object.values(EEducationLevelStatus),
     required: false,
   })
   readonly educationLevel: string;
@@ -94,7 +87,7 @@ export class UpdateCareerInput {
   @ApiProperty({ required: false })
   readonly isEditSalary: boolean;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: true })
   readonly jobDescription: string;
 
   @ApiProperty({ required: false })

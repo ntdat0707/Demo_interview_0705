@@ -44,7 +44,7 @@ import { AgentModule } from './agent/agent.module';
       },
       cache: {
         type: 'redis',
-        duration: 30000, // 30 seconds
+        duration: 3000, // 30 seconds
         options: {
           host: process.env.REDIS_HOST || 'localhost',
           port: process.env.REDIS_PORT || '6381',
