@@ -21,8 +21,8 @@ import { CheckUUID } from '../lib/validatePipe/uuidPipe.class';
 import { CreateResourceInput, ResourcePictureInput, UpdateResourceInput } from './resource.dto';
 import { ResourceService } from './resource.service';
 
-@Controller('resource')
-@ApiTags('Resource')
+@Controller('blog')
+@ApiTags('Blog')
 @UseFilters(new HttpExceptionFilter())
 export class ResourceController {
   constructor(private resourceService: ResourceService) {}
