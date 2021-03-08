@@ -16,6 +16,10 @@ import { CategoryModule } from './category/category.module';
 import { VideoModule } from './video/video.module';
 import { CareerModule } from './career/career.module';
 import { AgentModule } from './agent/agent.module';
+import { LanguageService } from './language/language.service';
+import { LanguageController } from './language/language.controller';
+import { LanguageModule } from './language/language.module';
+import { FocusedModule } from './focused/focused.module';
 
 @Module({
   imports: [
@@ -63,9 +67,11 @@ import { AgentModule } from './agent/agent.module';
     VideoModule,
     CareerModule,
     AgentModule,
+    LanguageModule,
+    FocusedModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, LanguageController],
+  providers: [AppService, LanguageService],
 })
 export class AppModule {
   constructor(@Inject(CACHE_MANAGER) cacheManager: any) {
