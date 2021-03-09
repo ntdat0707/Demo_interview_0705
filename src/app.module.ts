@@ -16,6 +16,9 @@ import { CategoryModule } from './category/category.module';
 import { VideoModule } from './video/video.module';
 import { CareerModule } from './career/career.module';
 import { AgentModule } from './agent/agent.module';
+import { NetworkModule } from './network/network.module';
+import { LanguageModule } from './language/language.module';
+import { FocusedModule } from './focused/focused.module';
 
 @Module({
   imports: [
@@ -63,6 +66,9 @@ import { AgentModule } from './agent/agent.module';
     VideoModule,
     CareerModule,
     AgentModule,
+    NetworkModule,
+    LanguageModule,
+    FocusedModule,
   ],
   controllers: [AppController],
   providers: [AppService],
