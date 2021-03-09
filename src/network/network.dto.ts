@@ -5,7 +5,7 @@ export class CountryInput {
   readonly name: string;
 
   @ApiProperty({ type: 'string', format: 'binary', required: false })
-  readonly icon: string;
+  readonly image: string;
 }
 
 export class BranchInput {
@@ -16,7 +16,7 @@ export class BranchInput {
   readonly province: string;
 
   @ApiProperty({ required: true })
-  readonly adress: string;
+  readonly address: string;
 
   @ApiProperty({ required: true })
   readonly contact: string;

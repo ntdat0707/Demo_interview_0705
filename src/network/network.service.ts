@@ -137,12 +137,68 @@ export class NetworkService {
     return {};
   }
 
-  // async getAllBranch(
-  //   page = 1,
-  //   limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
-  //   searchValue: string,
-  // ) {
-  //   this.logger.debug('get all branch');
-  //   const queryExc = this.branchRepository.createQueryBuilder('branch');
-  // }
+  async getAllBranch(
+    page = 1,
+    limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
+    // searchValue: string,
+  ) {
+    this.logger.debug('get all branch');
+    const queryExc = this.branchRepository
+      .createQueryBuilder('branch')
+      .orderBy('created_at')
+      .where('')
+      .limit(limit)
+      .offset((page - 1) * limit);
+    // if (searchValue) {
+    //   searchValue = convertTv(searchValue.replace(/  +/g, '').trim());
+    //   queryExc.andWhere(`lower(name) like :value`, {
+    //     value: `%${searchValue}%`,
+    //   });
+    // }
+    this.connection.queryResultCache.clear();
+    const countResult = await queryExc.cache(`branchs_count_page${page}_limit${limit}`).getCount();
+    const result = await queryExc.cache(`branchs__page${page}_limit${limit}`).getMany();
+    const pages = Math.ceil(Number(countResult) / limit);
+    return {
+      page: Number(page),
+      totalPages: pages,
+      limit: Number(limit),
+      totalRecords: countResult,
+      data: result,
+    };
+  }
+
+  async getBranch(id: string) {
+    this.logger.debug('get branch');
+    const branch = await this.branchRepository.findOne({ where: { id: id } });
+    if (!branch) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: 'BRANCH_NOT_FOUND',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    return {
+      data: branch,
+    };
+  }
+
+  async deleteBranch(id: string) {
+    this.logger.debug('delete branch');
+    const branch = await this.branchRepository.findOne({ where: { id: id } });
+    if (!branch) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: 'BRANCH_NOT_FOUND',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    await this.connection.queryResultCache.clear();
+    await this.branchRepository.softDelete(branch);
+    return {};
+  }
 }
