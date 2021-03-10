@@ -22,8 +22,17 @@ enum EEducationLevelStatus {
   DOCTORATE_DEGREE = 'doctorate_degree',
   NONE = 'none',
 }
+
 enum ECareerStatus {
   ACTIVE = 'active',
   CLOSED = 'closed',
 }
-export { EBannerStatus, EResourceStatus, EEducationLevelStatus, ECareerStatus, EFlagUploadVideo };
+
+enum EDocmentFlag {
+  ABOUT_US = 'about_us',
+  RESOURCE = 'resource',
+  IMPORT = 'import',
+  EXPORT = 'export',
+}
+
+export { EBannerStatus, EResourceStatus, EEducationLevelStatus, ECareerStatus, EFlagUploadVideo, EDocmentFlag };
