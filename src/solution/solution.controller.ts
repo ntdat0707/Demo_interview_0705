@@ -1,10 +1,11 @@
 import { SolutionService } from './solution.service';
-import { Body, Controller, Post, UploadedFile, UseFilters, UseInterceptors } from '@nestjs/common';
-import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Post, Query, UploadedFile, UseFilters, UseInterceptors } from '@nestjs/common';
+import { ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateSolutionInput, SolutionPictureInput } from './solution.dto';
 import { CreateSolutionPipe } from '../lib/validatePipe/solution/createSolutionPipe.class';
+import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
 
 @Controller('solution')
 @ApiTags('Solution')
@@ -32,7 +33,20 @@ export class SolutionController {
   // @ApiBearerAuth()
   // @UseGuards(JwtAuthGuard, RolesGuard)
   // @Roles([CREATE_BLOG, UPDATE_BLOG])
-  async createSolution(@Body(new CreateSolutionPipe()) solutionInput: CreateSolutionInput[]) {
+  async createSolution(@Body(new CreateSolutionPipe()) solutionInput: [CreateSolutionInput]) {
     return await this.solutionService.createSolution(solutionInput);
+  }
+
+  @Get()
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  // @ApiBearerAuth()
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles([CREATE_BLOG, UPDATE_BLOG])
+  async getAllSolution(
+    @Query('page', new CheckUnSignIntPipe()) page: number,
+    @Query('limit', new CheckUnSignIntPipe()) limit: number,
+  ) {
+    return await this.solutionService.getAllSolution(page, limit);
   }
 }

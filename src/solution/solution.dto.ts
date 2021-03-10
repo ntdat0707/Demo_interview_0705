@@ -6,9 +6,6 @@ export class SolutionPictureInput {
 }
 class SolutionImage {
   @ApiProperty({ required: true })
-  readonly id: string;
-
-  @ApiProperty({ required: true })
   readonly image: string;
 }
 

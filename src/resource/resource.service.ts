@@ -51,9 +51,7 @@ export class ResourceService {
       );
     }
     return {
-      data: {
-        image: image.filename,
-      },
+      data: image.filename,
     };
   }
 
@@ -163,7 +161,7 @@ export class ResourceService {
         }
       }
     });
-    return { data: { resource: newResource } };
+    return { data: newResource };
   }
 
   async getAllResource(page = 1, limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10)) {

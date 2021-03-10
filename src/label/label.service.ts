@@ -18,9 +18,7 @@ export class LabelService {
     newLabel.setAttributes(labelInput);
     await this.labelRepository.save(newLabel);
     return {
-      data: {
-        label: newLabel,
-      },
+      data: newLabel,
     };
   }
 }

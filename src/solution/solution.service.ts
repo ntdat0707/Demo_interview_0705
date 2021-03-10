@@ -36,9 +36,10 @@ export class SolutionService {
     };
   }
 
-  async createSolution(createSolutionList: CreateSolutionInput[]) {
-    this.logger.debug('Create resource');
-    const dataList = [];
+  async createSolution(createSolutionList: [CreateSolutionInput]) {
+    this.logger.debug('Create solution');
+    const solutions = [];
+    //Need check max and different solution when create
     for (const item of createSolutionList) {
       const existPost = await this.solutionRepository
         .createQueryBuilder('solution')
@@ -78,10 +79,10 @@ export class SolutionService {
           solutionImage.isBanner = true;
           await transactionalEntityManager.save<SolutionImageEntity>(solutionImage);
         }
-        dataList.push(newSolution);
+        solutions.push(newSolution);
       });
     }
-    return { data: { solution: dataList } };
+    return { data: solutions };
   }
 
   async getAllSolution(page = 1, limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10)) {

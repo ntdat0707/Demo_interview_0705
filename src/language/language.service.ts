@@ -17,9 +17,7 @@ export class LanguageService {
     language.setAttributes(languageInput);
     await this.languageRepository.save(language);
     return {
-      data: {
-        language: language,
-      },
+      data: language,
     };
   }
 
@@ -28,9 +26,7 @@ export class LanguageService {
     //check author
     const languages = await this.languageRepository.find();
     return {
-      data: {
-        languages: languages,
-      },
+      data: languages,
     };
   }
 
@@ -38,9 +34,7 @@ export class LanguageService {
     this.logger.debug('get language');
     const language = await this.languageRepository.find({ id: id });
     return {
-      data: {
-        language: language,
-      },
+      data: language,
     };
   }
 }

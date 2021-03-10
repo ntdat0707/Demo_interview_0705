@@ -17,9 +17,7 @@ export class CategoryService {
     newCategory.setAttributes(categoryInput);
     await this.categoryRepository.save(newCategory);
     return {
-      data: {
-        label: newCategory,
-      },
+      data: newCategory,
     };
   }
 }

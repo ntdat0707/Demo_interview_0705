@@ -13,5 +13,15 @@ export class CreateLanguagePipe implements PipeTransform<any> {
         HttpStatus.BAD_REQUEST,
       );
     }
+    if (!value.code) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'CODE_REQUIRED',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    return value;
   }
 }

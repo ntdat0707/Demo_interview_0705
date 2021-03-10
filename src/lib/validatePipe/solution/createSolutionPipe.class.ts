@@ -5,7 +5,7 @@ import { checkDateTime } from '../../pipeUtils/dateValidate';
 
 @Injectable()
 export class CreateSolutionPipe implements PipeTransform<any> {
-  transform(value: CreateSolutionInput[], metadata: ArgumentMetadata) {
+  transform(value: [CreateSolutionInput], metadata: ArgumentMetadata) {
     for (const item of value) {
       if (!item.title) {
         throw new HttpException(
@@ -46,7 +46,7 @@ export class CreateSolutionPipe implements PipeTransform<any> {
           HttpStatus.BAD_REQUEST,
         );
       }
-      return item;
     }
+    return value;
   }
 }

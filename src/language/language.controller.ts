@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseFilters } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseFilters } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { CreateLanguagePipe } from '../lib/validatePipe/language/createLanguagePipe.class';
@@ -10,6 +10,7 @@ import { LanguageService } from './language.service';
 @UseFilters(new HttpExceptionFilter())
 export class LanguageController {
   constructor(private languageService: LanguageService) {}
+
   @Post()
   @ApiBody({
     type: LanguageInput,
@@ -17,7 +18,12 @@ export class LanguageController {
   // @ApiBearerAuth()
   // @UseGuards(JwtAuthGuard, RolesGuard)
   // @Roles([CREATE_BLOG, UPDATE_BLOG])
-  async uploadImageBlog(@Body(new CreateLanguagePipe()) languageInput: LanguageInput) {
+  async createLanguage(@Body(new CreateLanguagePipe()) languageInput: LanguageInput) {
     return await this.languageService.createLanguage(languageInput);
+  }
+
+  @Get()
+  async getAllLanguage() {
+    return await this.languageService.getAllLanguage();
   }
 }
