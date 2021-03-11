@@ -15,6 +15,7 @@ export class DocumentService {
 
   async uploadDocument(file: any, documentInput: DocumentInput) {
     this.logger.debug('upload document');
+    this.logger.debug('check commit');
     const fileName: string = file.filename;
     const name = fileName.substring(0, fileName.lastIndexOf('_'));
     let newDocument = new DocumentEntity();
