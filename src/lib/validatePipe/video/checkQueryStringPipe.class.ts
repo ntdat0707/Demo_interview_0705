@@ -1,19 +1,10 @@
 import { ArgumentMetadata, HttpException, HttpStatus, Injectable, PipeTransform } from '@nestjs/common';
-import { EFlagUploadVideo } from '../../constant';
+import { EDocmentFlag } from '../../constant';
 
 @Injectable()
 export class CheckFlagPipe implements PipeTransform<any> {
   transform(value: any, metadata: ArgumentMetadata) {
-    if (!value) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'FLAG_REQUIRED',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    if (!Object.values(EFlagUploadVideo).includes(value)) {
+    if (!Object.values(EDocmentFlag).includes(value)) {
       throw new HttpException(
         {
           statusCode: HttpStatus.BAD_REQUEST,
