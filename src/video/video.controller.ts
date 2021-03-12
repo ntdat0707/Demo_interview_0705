@@ -12,8 +12,9 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
+import { EFlagUploadVideo } from '../lib/constant';
 import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
 import { CheckUUID } from '../lib/validatePipe/uuidPipe.class';
 import { CheckFlagPipe } from '../lib/validatePipe/video/checkQueryStringPipe.class';
@@ -29,6 +30,7 @@ export class VideoController {
   constructor(private videoService: VideoService) {}
 
   @Get('')
+  @ApiQuery({ name: 'flag', type: String, required: true, enum: Object.values(EFlagUploadVideo) })
   async getAllVideo(
     @Query('flag', new CheckFlagPipe()) flag: string,
     @Query('page', new CheckUnSignIntPipe()) page: number,
