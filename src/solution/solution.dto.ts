@@ -4,11 +4,6 @@ export class SolutionPictureInput {
   @ApiProperty({ type: 'string', format: 'binary' })
   readonly image: string;
 }
-class SolutionImage {
-  @ApiProperty({ required: true })
-  readonly image: string;
-}
-
 class AttachImage {
   @ApiProperty({ required: true })
   readonly image: string;
@@ -34,13 +29,16 @@ export class CreateSolutionInput {
   readonly description?: string;
 
   @ApiProperty({ required: false })
-  readonly bannerImage?: SolutionImage;
+  readonly bannerImage?: string;
 
   @ApiProperty({ type: [AttachImage], required: false })
   readonly images?: AttachImage[];
 }
 
 export class UpdateSolutionInput {
+  @ApiProperty({ required: true })
+  readonly id: string;
+
   @ApiProperty({ required: true })
   readonly languageId: string;
 
@@ -60,7 +58,7 @@ export class UpdateSolutionInput {
   readonly description?: string;
 
   @ApiProperty({ required: false })
-  readonly bannerImage?: SolutionImage;
+  readonly bannerImage?: string;
 
   @ApiProperty({ type: [AttachImage], required: false })
   readonly images?: AttachImage[];
