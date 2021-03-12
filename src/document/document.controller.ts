@@ -14,10 +14,11 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
+import { EDocmentFlag } from '../lib/constant';
+import { CheckFlagPipe } from '../lib/validatePipe/document/checkFlagPipe.class';
 import { DocumentPipe } from '../lib/validatePipe/document/documentPipe.class';
 import { DocumentStatusPipe } from '../lib/validatePipe/document/documentSatusPipe.class';
 import { CheckUUID } from '../lib/validatePipe/uuidPipe.class';
-import { CheckFlagPipe } from '../lib/validatePipe/video/checkQueryStringPipe.class';
 import { DocumentInput, DocumentUpdateStatus } from './document.dto';
 import { DocumentService } from './document.service';
 
@@ -28,7 +29,7 @@ export class DocumentController {
   constructor(private documentService: DocumentService) {}
 
   @Get('')
-  @ApiQuery({ name: 'flag', required: true, type: String })
+  @ApiQuery({ name: 'flag', required: true, type: String, enum: Object.values(EDocmentFlag) })
   async getAllDocument(@Query('flag', new CheckFlagPipe()) flag: string) {
     return await this.documentService.getAllDocument(flag);
   }
@@ -46,7 +47,7 @@ export class DocumentController {
     return await this.documentService.uploadDocument(file, documentInput);
   }
 
-  @Put('/id')
+  @Put('/:id')
   @ApiBody({ type: DocumentUpdateStatus })
   async updateDocumentStatus(
     @Param('id', new CheckUUID()) id: string,

@@ -24,15 +24,6 @@ export class DocumentPipe implements PipeTransform<any> {
         );
       }
     }
-    // if (!value.file) {
-    //   throw new HttpException(
-    //     {
-    //       statusCode: HttpStatus.BAD_REQUEST,
-    //       message: 'FILE_REQUIRED',
-    //     },
-    //     HttpStatus.BAD_REQUEST,
-    //   );
-    // }
     if (!value.flag) {
       throw new HttpException(
         {

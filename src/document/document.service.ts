@@ -4,6 +4,7 @@ import { Connection, getManager, Repository } from 'typeorm';
 import { DocumentEntity } from '../entities/document.entity';
 import { EDocmentFlag } from '../lib/constant';
 import { DocumentInput, DocumentUpdateStatus } from './document.dto';
+import fs = require('fs');
 
 @Injectable()
 export class DocumentService {
@@ -18,6 +19,7 @@ export class DocumentService {
     const fileName: string = file.filename;
     const lastName = fileName.split('.');
     const name = fileName.substring(0, fileName.lastIndexOf('_')) + '.' + lastName[lastName.length - 1];
+    let pathFile = '';
 
     let newDocument = new DocumentEntity();
     await this.connection.queryResultCache.clear();
@@ -32,13 +34,8 @@ export class DocumentService {
           where: { name: name, flag: documentInput.flag },
         });
         if (existDocument) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.CONFLICT,
-              message: 'DOCUMENT_NAME_EXIST',
-            },
-            HttpStatus.CONFLICT,
-          );
+          pathFile = process.env.UPLOAD_DOCUMENT_PATH + '/' + existDocument.file;
+          await this.documentRepository.delete(existDocument);
         }
       }
       newDocument.setAttributes(documentInput);
@@ -47,12 +44,16 @@ export class DocumentService {
       await this.connection.queryResultCache.clear();
       newDocument = await transactionalEntityManager.save<DocumentEntity>(newDocument);
     });
+    if (pathFile !== '') {
+      fs.unlinkSync(pathFile);
+    }
     return {
       data: newDocument,
     };
   }
 
   async getAllDocument(flag: string) {
+    this.logger.debug('get all document');
     const documents = await this.documentRepository
       .createQueryBuilder('document')
       .orderBy('created_at', 'DESC')
@@ -64,6 +65,7 @@ export class DocumentService {
   }
 
   async updateStatusDocument(id: string, documentUpdate: DocumentUpdateStatus) {
+    this.logger.debug('update status document');
     let document = await this.documentRepository.findOne({ where: { id: id } });
     if (!document) {
       throw new HttpException(
@@ -83,6 +85,7 @@ export class DocumentService {
   }
 
   async deleteDocument(id: string) {
+    this.logger.debug('delete document');
     const document = await this.documentRepository.findOne({ where: { id: id } });
     if (!document) {
       throw new HttpException(
@@ -99,6 +102,7 @@ export class DocumentService {
   }
 
   async getDocument(id: string) {
+    this.logger.debug('get document');
     const document = await this.documentRepository.findOne({ where: { id: id } });
     if (!document) {
       throw new HttpException(
@@ -109,5 +113,8 @@ export class DocumentService {
         HttpStatus.NOT_FOUND,
       );
     }
+    return {
+      data: document,
+    };
   }
 }
