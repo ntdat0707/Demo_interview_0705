@@ -12,6 +12,9 @@ export class FocusedEntity {
   @Column('varchar')
   title: string;
 
+  @Column('varchar')
+  code: string;
+
   @Column({ name: 'feature_image', type: 'text', nullable: true })
   featureImage: string;
 
@@ -39,6 +42,7 @@ export class FocusedEntity {
   setAttributes(object: any) {
     this.languageId = object.languageId;
     this.title = object.title;
+    this.code = object.code;
     this.featureImage = object.featureImage ? object.featureImage : null;
     this.status = object.status;
     this.isPublish = object.isPublish ? object.isPublish : false;

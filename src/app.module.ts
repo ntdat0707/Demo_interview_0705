@@ -20,6 +20,7 @@ import { NetworkModule } from './network/network.module';
 import { LanguageModule } from './language/language.module';
 import { FocusedModule } from './focused/focused.module';
 import { DocumentModule } from './document/document.module';
+import { FocusedMarketModule } from './focused-market/focused-market.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { DocumentModule } from './document/document.module';
     LanguageModule,
     FocusedModule,
     DocumentModule,
+    FocusedMarketModule,
   ],
   controllers: [AppController],
   providers: [AppService],

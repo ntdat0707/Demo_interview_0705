@@ -8,6 +8,9 @@ export class LanguageEntity {
   @Column('varchar')
   name: string;
 
+  @Column('varchar')
+  code: string;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
   createdAt: Date;
 
@@ -19,5 +22,6 @@ export class LanguageEntity {
 
   setAttributes(object: any) {
     this.name = object.name;
+    this.code = object.code;
   }
 }
