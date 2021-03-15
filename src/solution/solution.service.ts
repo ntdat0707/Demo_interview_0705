@@ -80,6 +80,7 @@ export class SolutionService {
             HttpStatus.CONFLICT,
           );
         }
+
         const newSolution = new SolutionEntity();
         newSolution.setAttributes(item);
         await this.connection.queryResultCache.clear();
@@ -153,8 +154,9 @@ export class SolutionService {
         '"solution_image"."solution_id"="solution".id',
       )
       .where('solution."deleted_at" is null')
+      .andWhere(`solution."code" = '${code}'`)
       .andWhere('"solution_image"."is_banner" is false')
-      .groupBy('solution."code"')
+      .groupBy('solution."code","solution_image"."id",solution."id"')
       .orderBy('solution."created_at"', 'DESC')
       .getMany();
     return { data: solutions };
@@ -178,6 +180,9 @@ export class SolutionService {
             );
           }
           currSolutions[index].setAttributes(item);
+          //check duplicate
+
+          //images update
           if (item.images && item.images.length > 0) {
             const currImages = await this.solutionImageRepository.find({ where: { solutionId: item.id } });
             await transactionalEntityManager.update<SolutionImageEntity[]>(

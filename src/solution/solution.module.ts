@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { diskStorage } from 'multer';
 import { basename, extname, resolve } from 'path';
 import shortid = require('shortid');
+import { LanguageEntity } from '../entities/language.entity';
 import { SolutionEntity } from '../entities/solution.entity';
 import { SolutionImageEntity } from '../entities/solutionImage.entity';
 import { SolutionController } from './solution.controller';
@@ -11,7 +12,7 @@ import { SolutionService } from './solution.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([SolutionEntity, SolutionImageEntity]),
+    TypeOrmModule.forFeature([SolutionEntity, SolutionImageEntity, LanguageEntity]),
     MulterModule.registerAsync({
       useFactory: () => ({
         storage: diskStorage({

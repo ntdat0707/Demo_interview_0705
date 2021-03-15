@@ -14,3 +14,24 @@ export async function countSolution(solutionRepository: Repository<SolutionEntit
     return data;
   }
 }
+
+// export async function isSolutionAvailable(data: [UpdateSolutionInput], languageRepository: Repository<LanguageEntity>) {
+//   let checkLanguages: any = data.map((item: any) => {
+//     item.languageId;
+//   });
+
+//   let totalLanguage = { languageVN: 0, languageEN: 0, languageCN: 0 };
+//   for (let item of checkLanguages) {
+//     let language = await languageRepository.findOne({ where: { id: item } });
+//     if (language.code === 'VN') {
+//       totalLanguage.languageVN++;
+//     }
+//     if (language.code === 'EN') {
+//       totalLanguage.languageEN++;
+//     }
+//     if (language.code === 'CN') {
+//       totalLanguage.languageCN++;
+//     }
+//   }
+//   return totalLanguage;
+// }
