@@ -51,9 +51,7 @@ export class ResourceService {
       );
     }
     return {
-      data: {
-        image: image.filename,
-      },
+      data: image.filename,
     };
   }
 
@@ -155,7 +153,7 @@ export class ResourceService {
         }
         if (createResource.avatar) {
           const resourceImage: any = new ResourceImageEntity();
-          resourceImage.image = createResource.avatar.image;
+          resourceImage.image = createResource.avatar;
           resourceImage.resourceId = newResource.id;
           resourceImage.alt = createResource.alt ? createResource.alt : '';
           resourceImage.isAvatar = true;
@@ -163,7 +161,7 @@ export class ResourceService {
         }
       }
     });
-    return { data: { resource: newResource } };
+    return { data: newResource };
   }
 
   async getAllResource(page = 1, limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10)) {
@@ -269,7 +267,7 @@ export class ResourceService {
 
       //update Author
       this.logger.debug('Update resource author');
-
+      await this.connection.queryResultCache.clear();
       if (!resourceUpdate.authorId) {
         const resourceAuthor = await this.resourceAuthorRepository.findOne({ where: { resourceId: resourceId } });
         await transactionalEntityManager.softRemove<ResourceAuthorEntity>(resourceAuthor);
@@ -390,32 +388,23 @@ export class ResourceService {
         const newPictures = [];
         const updatePictures = [];
         for (const image of resourceUpdate.images) {
-          if (!image.id) {
+          if (!image) {
             const resourcePictureData: any = new ResourceImageEntity();
             resourcePictureData.image = image.image;
             resourcePictureData.resourceId = resourceId;
             resourcePictureData.isAvatar = false;
             newPictures.push(resourcePictureData);
           } else {
-            updatePictures.push(image.id);
+            updatePictures.push(image);
           }
         }
         const deleteImages = await this.resourceImageRepository.find({
           where: { resourceId: resourceId, isAvatar: false },
         });
         if (deleteImages.length > 0 && updatePictures.length > 0) {
-          const currImages = deleteImages.map((item: any) => item.id);
-          const diff = _.difference(currImages, updatePictures);
-          if (diff.length > 0) {
-            for (let i = 0; i < diff.length; i++) {
-              const index = deleteImages.findIndex((item: any) => item.id === diff[i]);
-              if (index > -1) {
-                deleteImages.splice(index, 1);
-              }
-            }
-            await transactionalEntityManager.softRemove<ResourceImageEntity>(deleteImages);
-          }
+          await transactionalEntityManager.softRemove<ResourceImageEntity>(deleteImages);
         }
+
         await transactionalEntityManager.save<ResourceImageEntity[]>(newPictures);
       } else if (!resourceUpdate.images) {
         const deleteImages = await this.resourceImageRepository.find({
@@ -425,7 +414,7 @@ export class ResourceService {
       }
       if (resourceUpdate.avatar) {
         const resourcePictureData: any = new ResourceImageEntity();
-        resourcePictureData.image = resourceUpdate.avatar.image;
+        resourcePictureData.image = resourceUpdate.avatar;
         resourcePictureData.resourceId = resourceId;
         resourcePictureData.isAvatar = true;
         const deleteAvatar = await this.resourceImageRepository.find({

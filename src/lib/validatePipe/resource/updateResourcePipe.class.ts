@@ -74,19 +74,6 @@ export class UpdateResourcePipe implements PipeTransform<any> {
         }
       }
     }
-    if (value.images) {
-      for (const item of value.images) {
-        if (item.id && !checkUUID(item.id)) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'IMAGE_UUID_INVALID',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-      }
-    }
     return value;
   }
 }
