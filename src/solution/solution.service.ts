@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, getManager, Repository } from 'typeorm';
 import { CreateSolutionInput, UpdateSolutionInput } from './solution.dto';
 import { SolutionImageEntity } from '../entities/solutionImage.entity';
-import { countSolution } from '../lib/subFunction/solution';
+import { countSolution, isSolutionAvailable } from '../lib/subFunction/solution';
 import { LanguageEntity } from '../entities/language.entity';
 
 @Injectable()
@@ -166,6 +166,17 @@ export class SolutionService {
     this.logger.debug('update solution');
     await this.connection.queryResultCache.clear();
     const currSolutions = await this.solutionRepository.find({ where: { code: code } });
+    //check duplicate
+    const checkDupLanguageInput = await isSolutionAvailable(data, this.languageRepository);
+    if (checkDupLanguageInput === true) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.CONFLICT,
+          message: 'SOLUTION_LANGUAGE_DUPLICATE',
+        },
+        HttpStatus.CONFLICT,
+      );
+    }
     await getManager().transaction(async transactionalEntityManager => {
       for (const item of data) {
         if (item.id) {
@@ -180,7 +191,6 @@ export class SolutionService {
             );
           }
           currSolutions[index].setAttributes(item);
-          //check duplicate
 
           //images update
           if (item.images && item.images.length > 0) {

@@ -1,5 +1,8 @@
+import _ = require('lodash');
 import { Repository } from 'typeorm';
+import { LanguageEntity } from '../../../entities/language.entity';
 import { SolutionEntity } from '../../../entities/solution.entity';
+import { UpdateSolutionInput } from '../../../solution/solution.dto';
 
 export async function countSolution(solutionRepository: Repository<SolutionEntity>, languageId: string) {
   const [solutions, total] = await solutionRepository.findAndCount({ where: { languageId: languageId } });
@@ -15,23 +18,21 @@ export async function countSolution(solutionRepository: Repository<SolutionEntit
   }
 }
 
-// export async function isSolutionAvailable(data: [UpdateSolutionInput], languageRepository: Repository<LanguageEntity>) {
-//   let checkLanguages: any = data.map((item: any) => {
-//     item.languageId;
-//   });
+export async function isSolutionAvailable(data: [UpdateSolutionInput], languageRepository: Repository<LanguageEntity>) {
+  const solutions = [];
+  let checkDuplicates = false;
 
-//   let totalLanguage = { languageVN: 0, languageEN: 0, languageCN: 0 };
-//   for (let item of checkLanguages) {
-//     let language = await languageRepository.findOne({ where: { id: item } });
-//     if (language.code === 'VN') {
-//       totalLanguage.languageVN++;
-//     }
-//     if (language.code === 'EN') {
-//       totalLanguage.languageEN++;
-//     }
-//     if (language.code === 'CN') {
-//       totalLanguage.languageCN++;
-//     }
-//   }
-//   return totalLanguage;
-// }
+  for (const item of data) {
+    solutions.push(item.languageId);
+  }
+  if (hasDuplicates(solutions)) {
+    checkDuplicates = true;
+  } else {
+    checkDuplicates = false;
+  }
+  return checkDuplicates;
+}
+
+function hasDuplicates(arr: any) {
+  return _.uniq(arr).length !== arr.length;
+}

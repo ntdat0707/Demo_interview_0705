@@ -1,6 +1,18 @@
 import { UpdateSolutionPipe } from './../lib/validatePipe/solution/updateSolutionPipe.class';
 import { SolutionService } from './solution.service';
-import { Body, Controller, Get, Post, Put, Query, UploadedFile, UseFilters, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UploadedFile,
+  UseFilters,
+  UseInterceptors,
+} from '@nestjs/common';
 import { ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -48,18 +60,19 @@ export class SolutionController {
     return await this.solutionService.getAllSolutionByCode(code);
   }
 
-  @Put()
-  @ApiQuery({
-    name: 'code',
-    required: true,
-  })
+  @Put('/:code')
   @ApiBody({
     type: [UpdateSolutionInput],
   })
-  async updateResource(
-    @Query('code') code: string,
+  async updateSolution(
+    @Param('code') code: string,
     @Body(new UpdateSolutionPipe()) solutionInput: [UpdateSolutionInput],
   ) {
     return await this.solutionService.updateSolution(code, solutionInput);
+  }
+
+  @Delete('/:code')
+  async deleteSolution(@Param('code') code: string) {
+    return await this.solutionService.deleteSolution(code);
   }
 }
