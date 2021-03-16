@@ -8,14 +8,8 @@ export class FocusedImageEntity {
   @Column('text', { nullable: true })
   image: string;
 
-  @Column('varchar', { nullable: true })
-  alt: string;
-
   @Column('uuid', { name: 'focused_id' })
   focusedId: string;
-
-  @Column('boolean', { name: 'is_avatar', default: false })
-  isAvatar: boolean;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
   createdAt: Date;
@@ -25,9 +19,4 @@ export class FocusedImageEntity {
 
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true, select: false })
   deletedAt: Date;
-
-  setAttributes(object: any) {
-    this.focusedId = object.focusedId;
-    this.alt = object.alt;
-  }
 }
