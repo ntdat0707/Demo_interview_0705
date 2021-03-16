@@ -65,12 +65,7 @@ export class SolutionService {
     for (const item of createSolutionList) {
       const currItems: any = await countSolution(this.solutionRepository, item.languageId);
       if (currItems.isValid === true) {
-        // const existPost = await this.solutionRepository
-        //   .createQueryBuilder('solution')
-        //   .where(`title ilike :title`, { title: `%"${item.title}"%` })
-        //   .getOne();
         const index: any = currItems.solutions.findIndex((solution: any) => solution.title === item.title);
-
         if (index > -1) {
           throw new HttpException(
             {
@@ -114,11 +109,10 @@ export class SolutionService {
     return { data: solutions };
   }
 
-  async getAllSolution(page = 1, limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10)) {
+  async getAllSolution(languageId: string, code?: string) {
     this.logger.debug('Get all solution');
     const solutionQuery = this.solutionRepository.createQueryBuilder('solution');
-    const solutionCount = await solutionQuery.cache(`solution_count_page${page}_limit${limit}`).getCount();
-    const solutions: any = await solutionQuery
+    const query: any = solutionQuery
       .leftJoinAndMapMany(
         'solution.images',
         SolutionImageEntity,
@@ -126,40 +120,16 @@ export class SolutionService {
         '"solution_image"."solution_id"="solution".id',
       )
       .where('solution."deleted_at" is null')
+      .andWhere(`solution."language_id"='${languageId}'`)
       .andWhere('"solution_image"."is_banner" is false')
-      .limit(limit)
-      .offset((page - 1) * limit)
-      .orderBy('solution."created_at"', 'DESC')
-      .cache(`solutions_page${page}_limit${limit}`)
-      .getMany();
-
-    const pages = Math.ceil(Number(solutionCount) / limit);
+      .orderBy('solution."created_at"', 'DESC');
+    if (code) {
+      query.andWhere(`solution."code" = '${code}'`);
+    }
+    const solutions = await query.getMany();
     return {
-      page: Number(page),
-      totalPages: pages,
-      limit: Number(limit),
-      totalRecords: solutionCount,
       data: solutions,
     };
-  }
-
-  async getAllSolutionByCode(code: string) {
-    this.logger.debug('Get  solutions by code');
-    const solutionQuery = this.solutionRepository.createQueryBuilder('solution');
-    const solutions: any = await solutionQuery
-      .leftJoinAndMapMany(
-        'solution.images',
-        SolutionImageEntity,
-        'solution_image',
-        '"solution_image"."solution_id"="solution".id',
-      )
-      .where('solution."deleted_at" is null')
-      .andWhere(`solution."code" = '${code}'`)
-      .andWhere('"solution_image"."is_banner" is false')
-      .groupBy('solution."code","solution_image"."id",solution."id"')
-      .orderBy('solution."created_at"', 'DESC')
-      .getMany();
-    return { data: solutions };
   }
 
   async updateSolution(code: string, data: [UpdateSolutionInput]) {
