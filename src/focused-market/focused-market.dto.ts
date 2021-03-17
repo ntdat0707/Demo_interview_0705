@@ -12,6 +12,9 @@ class AttachImage {
 
 export class FocusedMarketInput {
   @ApiProperty({ required: true })
+  readonly id: string;
+
+  @ApiProperty({ required: true })
   readonly languageId: string;
 
   @ApiProperty({ required: true })

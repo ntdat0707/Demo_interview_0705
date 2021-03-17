@@ -1,4 +1,16 @@
-import { Body, Controller, Get, Param, Post, Query, UploadedFile, UseFilters, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UploadedFile,
+  UseFilters,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
@@ -36,12 +48,26 @@ export class FocusedMarketController {
     @Param('code') code: string,
     @Query('languageId', new CheckLanguagePipe()) languageId: string,
   ) {
-    return await this.focusedMarketService.getFocusedMarket(code);
+    return await this.focusedMarketService.getFocusedMarket(code, languageId);
   }
 
   @Post('')
   @ApiBody({ type: [FocusedMarketInput] })
   async createFocusedMarket(@Body(new FocusedMarketPipe()) focusedMarketInput: [FocusedMarketInput]) {
     return await this.focusedMarketService.createFocusedMarket(focusedMarketInput);
+  }
+
+  @Put('/:code')
+  @ApiBody({ type: [FocusedMarketInput] })
+  async updateFocusedMarket(
+    @Param('code') code: string,
+    @Body(new FocusedMarketPipe()) focusedMarketInput: [FocusedMarketInput],
+  ) {
+    return await this.focusedMarketService.updateFocusedMarket(code, focusedMarketInput);
+  }
+
+  @Delete('/:code')
+  async DeleteFocusedMarket(@Param('code') code: string) {
+    return await this.focusedMarketService.deleteFocusedMarket(code);
   }
 }

@@ -7,6 +7,17 @@ import { checkUUID } from '../../pipeUtils/uuidValidate';
 export class FocusedMarketPipe implements PipeTransform<any> {
   transform(value: [FocusedMarketInput], metadata: ArgumentMetadata) {
     for (const item of value) {
+      if (item.id) {
+        if (!checkUUID(item.id)) {
+          throw new HttpException(
+            {
+              statusCode: HttpStatus.BAD_REQUEST,
+              message: 'ID_INVALID',
+            },
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+      }
       if (!item.languageId) {
         throw new HttpException(
           {
