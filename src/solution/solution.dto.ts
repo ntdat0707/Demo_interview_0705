@@ -32,7 +32,7 @@ export class CreateSolutionInput {
   readonly bannerImage?: string;
 
   @ApiProperty({ type: [AttachImage], required: false })
-  readonly images?: AttachImage[];
+  readonly images: AttachImage[];
 }
 
 export class UpdateSolutionInput {
@@ -61,5 +61,5 @@ export class UpdateSolutionInput {
   readonly bannerImage?: string;
 
   @ApiProperty({ type: [AttachImage], required: false })
-  readonly images?: AttachImage[];
+  readonly images: AttachImage[];
 }

@@ -6,7 +6,7 @@ export class SolutionImageEntity {
   id: string;
 
   @Column('text', { nullable: true })
-  image: string;
+  image?: string;
 
   @Column({ name: 'solution_id', type: 'uuid' })
   solutionId: string;
