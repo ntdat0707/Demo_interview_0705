@@ -147,7 +147,7 @@ export class FocusedMarketService {
         'focused_market.images',
         FocusedImageEntity,
         'focused_market_image',
-        'focused_market_image."focused_id" = focused_market."id"',
+        'focused_market_image."focused_id" = focused_market."id" and focused_market_image."deleted_at" is null',
       );
     if (languageId) {
       queryExc.andWhere(`language_id = :languageId`, { languageId: `${languageId}` });
@@ -217,6 +217,7 @@ export class FocusedMarketService {
         HttpStatus.BAD_REQUEST,
       );
     }
+
     await this.connection.queryResultCache.clear();
     await getManager().transaction(async transactionalEntityManager => {
       for (const focusedMarket of focusedMarketList) {
@@ -236,7 +237,6 @@ export class FocusedMarketService {
           const focusedImages = await this.focusedMarketImageRepository.find({
             where: { focusedId: focusedMarket.id },
           });
-          // console.log('before:::: ', focusedImages);
           if (focusedMarket.images && focusedMarket.images.length > 0) {
             const oldFocusedMarketImage: string[] = focusedImages.map((item: any) => {
               return item.image;
@@ -255,19 +255,19 @@ export class FocusedMarketService {
               });
               await transactionalEntityManager.save<FocusedImageEntity>(listFocusedMarketImage);
             }
-            const deleteFocusedMarketImage = _.difference(oldFocusedMarketImage, newFocusedMarketImage);
+            const deleteFocusedMarketImage: any = _.difference(oldFocusedMarketImage, newFocusedMarketImage);
             if (deleteFocusedMarketImage.length > 0) {
-              deleteFocusedMarketImage.map(async (item: any) => {
-                const indexImage = focusedImages.findIndex((x: any) => x.image === item.image);
-                await transactionalEntityManager.softDelete<FocusedImageEntity>(
-                  FocusedImageEntity,
-                  focusedImages[indexImage],
-                );
-              });
+              for (const item of deleteFocusedMarketImage) {
+                const indexImage = focusedImages.findIndex((x: any) => x.image === item);
+                if (indexImage !== -1) {
+                  await transactionalEntityManager.softDelete<FocusedImageEntity[]>(
+                    FocusedImageEntity,
+                    focusedImages[indexImage],
+                  );
+                }
+              }
             }
           } else {
-            // console.log('case else');
-            // console.log(focusedImages);
             if (focusedImages.length > 0) {
               await transactionalEntityManager.softDelete<FocusedImageEntity[]>(FocusedImageEntity, focusedImages);
             }
