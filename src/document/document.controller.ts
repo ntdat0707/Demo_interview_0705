@@ -15,6 +15,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { EDocmentFlag } from '../lib/constant';
+import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
 import { CheckFlagPipe } from '../lib/validatePipe/document/checkFlagPipe.class';
 import { DocumentPipe } from '../lib/validatePipe/document/documentPipe.class';
 import { DocumentStatusPipe } from '../lib/validatePipe/document/documentSatusPipe.class';
@@ -30,8 +31,12 @@ export class DocumentController {
 
   @Get('')
   @ApiQuery({ name: 'flag', required: true, type: String, enum: Object.values(EDocmentFlag) })
-  async getAllDocument(@Query('flag', new CheckFlagPipe()) flag: string) {
-    return await this.documentService.getAllDocument(flag);
+  async getAllDocument(
+    @Query('flag', new CheckFlagPipe()) flag: string,
+    @Query('page', new CheckUnSignIntPipe()) page: number,
+    @Query('limit', new CheckUnSignIntPipe()) limit: number,
+  ) {
+    return await this.documentService.getAllDocument(flag, page, limit);
   }
 
   @Get('/:id')
