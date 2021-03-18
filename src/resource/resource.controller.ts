@@ -17,7 +17,6 @@ import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
 import { CreateResourcePipe } from '../lib/validatePipe/resource/createResourcePipe.class';
 import { UpdateResourcePipe } from '../lib/validatePipe/resource/updateResourcePipe.class';
-import { CheckUUID } from '../lib/validatePipe/uuidPipe.class';
 import { CreateResourceInput, ResourcePictureInput, UpdateResourceInput } from './resource.dto';
 import { ResourceService } from './resource.service';
 
@@ -42,12 +41,12 @@ export class ResourceController {
 
   @Post()
   @ApiBody({
-    type: CreateResourceInput,
+    type: [CreateResourceInput],
   })
   // @ApiBearerAuth()
   // @UseGuards(JwtAuthGuard, RolesGuard)
   // @Roles([CREATE_BLOG, UPDATE_BLOG])
-  async createResource(@Body(new CreateResourcePipe()) resourceInput: CreateResourceInput) {
+  async createResource(@Body(new CreateResourcePipe()) resourceInput: [CreateResourceInput]) {
     return await this.resourceService.createResource(resourceInput);
   }
 
@@ -61,21 +60,24 @@ export class ResourceController {
     return await this.resourceService.getAllResource(page, limit);
   }
 
-  @Get('/:id')
-  async getResource(@Param('id', new CheckUUID()) id: string) {
-    return await this.resourceService.getResource(id);
+  @Get('/:code')
+  async getResource(@Param('code') code: string) {
+    return await this.resourceService.getResource(code);
   }
 
-  @Put('/:id')
+  @Put('/:code')
+  @ApiBody({
+    type: [UpdateResourceInput],
+  })
   async updateResource(
-    @Param('id', new CheckUUID()) id: string,
-    @Body(new UpdateResourcePipe()) resourceUpdate: UpdateResourceInput,
+    @Param('code') code: string,
+    @Body(new UpdateResourcePipe()) resourceUpdate: [UpdateResourceInput],
   ) {
-    return await this.resourceService.updateResource(id, resourceUpdate);
+    return await this.resourceService.updateResource(code, resourceUpdate);
   }
 
-  @Delete('/:id')
-  async deleteResource(@Param('id', new CheckUUID()) id: string) {
-    return await this.resourceService.deleteResource(id);
+  @Delete('/:code')
+  async deleteResource(@Param('code') code: string) {
+    return await this.resourceService.deleteResource(code);
   }
 }
