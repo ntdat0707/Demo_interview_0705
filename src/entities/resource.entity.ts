@@ -33,6 +33,12 @@ export class ResourceEntity {
   @Column('text', { nullable: true })
   link: string;
 
+  @Column('varchar', { name: 'language_id', nullable: false })
+  languageId: string;
+
+  @Column('varchar', { nullable: true })
+  code: string;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
   createdAt: Date;
 
@@ -48,9 +54,10 @@ export class ResourceEntity {
     this.isPublish = object.isPublish ? object.isPublish : false;
     this.publishDate = object.publishDate ? object.publishDate : null;
     this.description = object.description ? object.description : null;
-    this.isEditSEO = object.isEditSEO ? object.isEditSE : false;
+    this.isEditSEO = object.isEditSEO ? object.isEditSEO : false;
     this.titleSEO = object.titleSEO ? object.titleSEO : null;
     this.descriptionSEO = object.descriptionSEO ? object.descriptionSEO : null;
     this.link = object.link ? object.link : null;
+    this.languageId = object.languageId;
   }
 }

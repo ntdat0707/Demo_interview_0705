@@ -5,12 +5,14 @@ import { Connection, getManager, In, Repository } from 'typeorm';
 import { AuthorEntity } from '../entities/author.entity';
 import { CategoryEntity } from '../entities/category.entity';
 import { LabelEntity } from '../entities/label.entity';
+import { LanguageEntity } from '../entities/language.entity';
 import { ResourceEntity } from '../entities/resource.entity';
 import { ResourceAuthorEntity } from '../entities/resourceAuthor.entity';
 import { ResourceCateEntity } from '../entities/resourceCate.entity';
 import { ResourceImageEntity } from '../entities/resourceImage.entity';
 import { ResourceLabelEntity } from '../entities/resourceLabel.entity';
 import { mapDataResource } from '../lib/mapData/resource';
+import { checkConditionInputCreate, checkConditionInputUpdate } from '../lib/validatePipe/resource/checkCondition';
 
 import { CreateResourceInput, UpdateResourceInput } from './resource.dto';
 @Injectable()
@@ -35,7 +37,8 @@ export class ResourceService {
     private authorRepository: Repository<AuthorEntity>,
     @InjectRepository(LabelEntity)
     private labelRepository: Repository<LabelEntity>,
-
+    @InjectRepository(LanguageEntity)
+    private languageRepository: Repository<LanguageEntity>,
     private connection: Connection,
   ) {}
 
@@ -55,113 +58,110 @@ export class ResourceService {
     };
   }
 
-  async createResource(createResource: CreateResourceInput) {
+  async createResource(createResources: [CreateResourceInput]) {
     this.logger.debug('Create resource');
-    const existPost = await this.resourceRepository
-      .createQueryBuilder('resource')
-      .where(`title ilike :title`, { title: `%"${createResource.title}"%` })
-      .getOne();
-    if (existPost) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.CONFLICT,
-          message: 'POST_ALREADY_EXIST',
-        },
-        HttpStatus.CONFLICT,
-      );
-    }
-    let newResource = new ResourceEntity();
-    newResource.setAttributes(createResource);
-    await this.connection.queryResultCache.clear();
-    await getManager().transaction(async transactionalEntityManager => {
-      newResource = await transactionalEntityManager.save<ResourceEntity>(newResource);
-      this.logger.debug('Create resource categories');
-      if (createResource.categoryIds && createResource.categoryIds.length > 0) {
-        const resourceCateList = [];
-        for (const item of createResource.categoryIds) {
-          //check category
-          const category = await this.cateRepository.findOne({ where: { id: item } });
-          if (!category) {
+    await checkConditionInputCreate(this.resourceRepository, createResources, this.languageRepository);
+    const newResources = [];
+    const code = Math.random()
+      .toString(36)
+      .substring(2, 8)
+      .toUpperCase();
+    for (const createResource of createResources) {
+      let newResource = new ResourceEntity();
+      newResource.setAttributes(createResource);
+      await this.connection.queryResultCache.clear();
+      await getManager().transaction(async transactionalEntityManager => {
+        newResource.code = code;
+        newResource = await transactionalEntityManager.save<ResourceEntity>(newResource);
+        this.logger.debug('Create resource categories');
+        if (createResource.categoryIds && createResource.categoryIds.length > 0) {
+          const resourceCateList = [];
+          for (const item of createResource.categoryIds) {
+            //check category
+            const category = await this.cateRepository.findOne({ where: { id: item } });
+            if (!category) {
+              throw new HttpException(
+                {
+                  statusCode: HttpStatus.NOT_FOUND,
+                  message: `CATEGORY_${item}_NOT_FOUND`,
+                },
+                HttpStatus.NOT_FOUND,
+              );
+            }
+            const resourceCate = new ResourceCateEntity();
+            resourceCate.resourceId = newResource.id;
+            resourceCate.categoryId = item;
+            resourceCateList.push(resourceCate);
+          }
+          await transactionalEntityManager.save<ResourceCateEntity[]>(resourceCateList);
+        }
+        this.logger.debug('Create resource author');
+        if (createResource.authorId) {
+          //check author
+          const author = await this.authorRepository.findOne({ where: { id: createResource.authorId } });
+          if (!author) {
             throw new HttpException(
               {
                 statusCode: HttpStatus.NOT_FOUND,
-                message: `CATEGORY_${item}_NOT_FOUND`,
+                message: `AUTHOR_${createResource.authorId}_NOT_FOUND`,
               },
               HttpStatus.NOT_FOUND,
             );
           }
-          const resourceCate = new ResourceCateEntity();
-          resourceCate.resourceId = newResource.id;
-          resourceCate.categoryId = item;
-          resourceCateList.push(resourceCate);
+          const resourceAuthor = new ResourceAuthorEntity();
+          resourceAuthor.resourceId = newResource.id;
+          resourceAuthor.authorId = createResource.authorId;
+          await this.connection.queryResultCache.clear();
+          await transactionalEntityManager.save<ResourceAuthorEntity>(resourceAuthor);
         }
-        await transactionalEntityManager.save<ResourceCateEntity[]>(resourceCateList);
-      }
-      this.logger.debug('Create resource author');
-      if (createResource.authorId) {
-        //check author
-        const author = await this.authorRepository.findOne({ where: { id: createResource.authorId } });
-        if (!author) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.NOT_FOUND,
-              message: `AUTHOR_${createResource.authorId}_NOT_FOUND`,
-            },
-            HttpStatus.NOT_FOUND,
-          );
-        }
-        const resourceAuthor = new ResourceAuthorEntity();
-        resourceAuthor.resourceId = newResource.id;
-        resourceAuthor.authorId = createResource.authorId;
-        await this.connection.queryResultCache.clear();
-        await transactionalEntityManager.save<ResourceAuthorEntity>(resourceAuthor);
-      }
-      this.logger.debug('Create resource labels');
-      if (createResource.labelIds && createResource.labelIds.length > 0) {
-        //check label
-        const resourceLabelList = [];
-        for (const item of createResource.labelIds) {
-          const label = await this.labelRepository.findOne({ where: { id: item } });
-          if (!label) {
-            throw new HttpException(
-              {
-                statusCode: HttpStatus.NOT_FOUND,
-                message: `LABEL_${item}_NOT_FOUND`,
-              },
-              HttpStatus.NOT_FOUND,
-            );
+        this.logger.debug('Create resource labels');
+        if (createResource.labelIds && createResource.labelIds.length > 0) {
+          //check label
+          const resourceLabelList = [];
+          for (const item of createResource.labelIds) {
+            const label = await this.labelRepository.findOne({ where: { id: item } });
+            if (!label) {
+              throw new HttpException(
+                {
+                  statusCode: HttpStatus.NOT_FOUND,
+                  message: `LABEL_${item}_NOT_FOUND`,
+                },
+                HttpStatus.NOT_FOUND,
+              );
+            }
+            const resourceLabel = new ResourceLabelEntity();
+            resourceLabel.resourceId = newResource.id;
+            resourceLabel.labelId = item;
+            resourceLabelList.push(resourceLabel);
           }
-          const resourceLabel = new ResourceLabelEntity();
-          resourceLabel.resourceId = newResource.id;
-          resourceLabel.labelId = item;
-          resourceLabelList.push(resourceLabel);
+          await transactionalEntityManager.save<ResourceLabelEntity[]>(resourceLabelList);
         }
-        await transactionalEntityManager.save<ResourceLabelEntity[]>(resourceLabelList);
-      }
-      // create imageAttach file
-      this.logger.debug('Create resource Images');
-      if ((createResource.images && createResource.images.length > 0) || createResource.avatar) {
-        if (createResource.images && createResource.images.length > 0) {
-          const resourceImageList = [];
-          for (const item of createResource.images) {
+        // create imageAttach file
+        this.logger.debug('Create resource Images');
+        if ((createResource.images && createResource.images.length > 0) || createResource.avatar) {
+          if (createResource.images && createResource.images.length > 0) {
+            const resourceImageList = [];
+            for (const item of createResource.images) {
+              const resourceImage: any = new ResourceImageEntity();
+              resourceImage.image = item.image;
+              resourceImage.resourceId = newResource.id;
+              resourceImageList.push(resourceImage);
+            }
+            await transactionalEntityManager.save<ResourceImageEntity[]>(resourceImageList);
+          }
+          if (createResource.avatar) {
             const resourceImage: any = new ResourceImageEntity();
-            resourceImage.image = item.image;
+            resourceImage.image = createResource.avatar;
             resourceImage.resourceId = newResource.id;
-            resourceImageList.push(resourceImage);
+            resourceImage.alt = createResource.alt ? createResource.alt : '';
+            resourceImage.isAvatar = true;
+            await transactionalEntityManager.save<ResourceImageEntity>(resourceImage);
           }
-          await transactionalEntityManager.save<ResourceImageEntity[]>(resourceImageList);
         }
-        if (createResource.avatar) {
-          const resourceImage: any = new ResourceImageEntity();
-          resourceImage.image = createResource.avatar;
-          resourceImage.resourceId = newResource.id;
-          resourceImage.alt = createResource.alt ? createResource.alt : '';
-          resourceImage.isAvatar = true;
-          await transactionalEntityManager.save<ResourceImageEntity>(resourceImage);
-        }
-      }
-    });
-    return { data: newResource };
+        newResources.push(newResource);
+      });
+    }
+    return { data: newResources };
   }
 
   async getAllResource(page = 1, limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10)) {
@@ -212,10 +212,10 @@ export class ResourceService {
     };
   }
 
-  async getResource(resourceId: any) {
+  async getResource(code: any) {
     const resource: any = await this.resourceRepository
       .createQueryBuilder('resource')
-      .where('"resource".id=:resourceId', { resourceId })
+      .where('"resource".code=:code', { code })
       .leftJoinAndMapMany(
         'resource.images',
         ResourceImageEntity,
@@ -243,230 +243,304 @@ export class ResourceService {
         '"resource_category"."resource_id"="resource".id and resource_category.deleted_at is null',
       )
       .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."category_id"')
-      .getOne();
-    return { data: mapDataResource(resource, false) };
+      .getMany();
+    return { data: mapDataResource(resource, true) };
   }
 
-  async updateResource(resourceId: string, resourceUpdate: UpdateResourceInput) {
+  async updateResource(code: string, resourcesUpdate: [UpdateResourceInput]) {
     this.logger.debug('Update resource');
-    let resource: any = await this.resourceRepository.findOne({ where: { id: resourceId } });
-    if (!resource) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'RESOURCE_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
-      );
-    }
-    resource.setAttributes(resourceUpdate);
+    await checkConditionInputUpdate(this.resourceRepository, resourcesUpdate, this.languageRepository);
+    const currResources = await this.resourceRepository.find({ where: { code: code } });
     await this.connection.queryResultCache.clear();
     await getManager().transaction(async transactionalEntityManager => {
-      this.logger.debug('Update resource data');
-      resource = await transactionalEntityManager.save<ResourceEntity>(resource);
-
-      //update Author
-      this.logger.debug('Update resource author');
-      await this.connection.queryResultCache.clear();
-      if (!resourceUpdate.authorId) {
-        const resourceAuthor = await this.resourceAuthorRepository.findOne({ where: { resourceId: resourceId } });
-        await transactionalEntityManager.softRemove<ResourceAuthorEntity>(resourceAuthor);
-      } else {
-        const author = await this.authorRepository.findOne({ where: { id: resourceUpdate.authorId } });
-        if (!author) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.NOT_FOUND,
-              message: `AUTHOR_${resourceUpdate.authorId}_NOT_FOUND`,
-            },
-            HttpStatus.NOT_FOUND,
-          );
-        }
-        const resourceAuthor = await this.resourceAuthorRepository.findOne({ where: { resourceId: resourceId } });
-        if (resourceAuthor) {
-          resourceAuthor.authorId = resourceUpdate.authorId;
-          await transactionalEntityManager.update(
-            ResourceAuthorEntity,
-            { resourceId: resourceId },
-            { authorId: resourceUpdate.authorId },
-          );
-        } else {
-          const resourceAuthorData = new ResourceAuthorEntity();
-          resourceAuthorData.resourceId = resourceId;
-          resourceAuthorData.authorId = resourceUpdate.authorId;
-          await transactionalEntityManager.save<ResourceAuthorEntity>(resourceAuthorData);
-        }
-      }
-
-      //update label
-      this.logger.debug('Update resource labels');
-      const resourceLabels = await this.resourceLabelEntityRepository.find({ where: { resourceId: resourceId } });
-      if (!resourceLabels.length) {
-        const resourceLabelList = [];
-        for (const item of resource.labelIds) {
-          const resourceLabel = new ResourceLabelEntity();
-          resourceLabel.resourceId = resourceId;
-          resourceLabel.labelId = item;
-          resourceLabelList.push(resourceLabel);
-        }
-        await transactionalEntityManager.save<ResourceLabelEntity[]>(resourceLabelList);
-      } else {
-        const currResourceLabelIds = resourceLabels.map((item: any) => item.labelId);
-        const diff = _.difference(currResourceLabelIds, resourceUpdate.labelIds);
-        if (diff.length > 0) {
-          const deleteResources = await this.resourceLabelEntityRepository.find({ where: { labelId: In(diff) } });
-          await transactionalEntityManager.softRemove<ResourceLabelEntity[]>(deleteResources);
-        }
-        const add = _.difference(resourceUpdate.labelIds, currResourceLabelIds);
-        if (add.length > 0) {
-          const resourceLabelList = [];
-          for (const item of add) {
-            const label = await this.labelRepository.findOne({ where: { id: item } });
-            if (!label) {
-              throw new HttpException(
-                {
-                  statusCode: HttpStatus.NOT_FOUND,
-                  message: `LABEL_${item}_NOT_FOUND`,
-                },
-                HttpStatus.NOT_FOUND,
-              );
+      for (const resourceUpdate of resourcesUpdate) {
+        if (resourceUpdate.id) {
+          let currResource: any = new ResourceEntity();
+          for (let i = 0; i < currResources.length; i++) {
+            if (currResources[i].id === resourceUpdate.id) {
+              currResource = currResources[i];
             }
-            const resourceLabel = new ResourceLabelEntity();
-            resourceLabel.resourceId = resourceId;
-            resourceLabel.labelId = item;
-            resourceLabelList.push(resourceLabel);
           }
-          await transactionalEntityManager.save<ResourceLabelEntity[]>(resourceLabelList);
-        }
-      }
-
-      //update category
-      this.logger.debug('Update resource categories');
-      const resourceCates = await this.resourceCateRepository.find({ where: { resourceId: resourceId } });
-      if (!resourceCates.length) {
-        const resourceCateList = [];
-        for (const item of resource.categoryIds) {
-          const resourceLabel = new ResourceCateEntity();
-          resourceLabel.resourceId = resourceId;
-          resourceLabel.categoryId = item;
-          resourceCateList.push(resourceLabel);
-        }
-        await transactionalEntityManager.save<ResourceCateEntity[]>(resourceCateList);
-      } else {
-        const currResourceCateIds = resourceCates.map((item: any) => item.categoryId);
-        const diff = _.difference(currResourceCateIds, resourceUpdate.categoryIds);
-        if (diff.length > 0) {
-          const deleteCates = await this.resourceCateRepository.find({ where: { categoryId: In(diff) } });
-          await transactionalEntityManager.softRemove<ResourceCateEntity[]>(deleteCates);
-        }
-        const add = _.difference(resourceUpdate.categoryIds, currResourceCateIds);
-        if (add.length > 0) {
-          const resourceCateList = [];
-          for (const item of add) {
-            const category = await this.cateRepository.findOne({ where: { id: item } });
-            if (!category) {
-              throw new HttpException(
-                {
-                  statusCode: HttpStatus.NOT_FOUND,
-                  message: `CATEGORY_${item}_NOT_FOUND`,
-                },
-                HttpStatus.NOT_FOUND,
-              );
-            }
-            const resourceLabel = new ResourceCateEntity();
-            resourceLabel.resourceId = resourceId;
-            resourceLabel.categoryId = item;
-            resourceCateList.push(resourceLabel);
-          }
-          await transactionalEntityManager.save<ResourceCateEntity[]>(resourceCateList);
-        }
-      }
-      // update images
-      this.logger.debug('Update resource images');
-
-      if (resourceUpdate.images && resourceUpdate.images.length > 0) {
-        const newPictures = [];
-        const updatePictures = [];
-        for (const image of resourceUpdate.images) {
-          if (!image) {
-            const resourcePictureData: any = new ResourceImageEntity();
-            resourcePictureData.image = image.image;
-            resourcePictureData.resourceId = resourceId;
-            resourcePictureData.isAvatar = false;
-            newPictures.push(resourcePictureData);
+          this.logger.debug('Update resource data');
+          //update Author
+          this.logger.debug('Update resource author');
+          if (!resourceUpdate.authorId) {
+            const resourceAuthor = await this.resourceAuthorRepository.findOne({
+              where: { resourceId: currResource.id },
+            });
+            await transactionalEntityManager.softRemove<ResourceAuthorEntity>(resourceAuthor);
           } else {
-            updatePictures.push(image);
+            const author = await this.authorRepository.findOne({ where: { id: resourceUpdate.authorId } });
+            if (!author) {
+              throw new HttpException(
+                {
+                  statusCode: HttpStatus.NOT_FOUND,
+                  message: `AUTHOR_${resourceUpdate.authorId}_NOT_FOUND`,
+                },
+                HttpStatus.NOT_FOUND,
+              );
+            }
+            const resourceAuthor = await this.resourceAuthorRepository.findOne({
+              where: { resourceId: currResource.id },
+            });
+            if (resourceAuthor) {
+              resourceAuthor.authorId = resourceUpdate.authorId;
+              await transactionalEntityManager.update(
+                ResourceAuthorEntity,
+                { resourceId: currResource.id },
+                { authorId: resourceUpdate.authorId },
+              );
+            } else {
+              const resourceAuthorData = new ResourceAuthorEntity();
+              resourceAuthorData.resourceId = currResource.id;
+              resourceAuthorData.authorId = resourceUpdate.authorId;
+              await transactionalEntityManager.save<ResourceAuthorEntity>(resourceAuthorData);
+            }
           }
+          //update label
+          this.logger.debug('Update resource labels');
+          const resourceLabels = await this.resourceLabelEntityRepository.find({
+            where: { resourceId: resourceUpdate.id },
+          });
+          if (!resourceLabels.length) {
+            const resourceLabelList = [];
+            for (const item of resourceUpdate.labelIds) {
+              const resourceLabel = new ResourceLabelEntity();
+              resourceLabel.resourceId = resourceUpdate.id;
+              resourceLabel.labelId = item;
+              resourceLabelList.push(resourceLabel);
+            }
+            await transactionalEntityManager.save<ResourceLabelEntity[]>(resourceLabelList);
+          } else {
+            const currResourceLabelIds = resourceLabels.map((item: any) => item.labelId);
+            const diff = _.difference(currResourceLabelIds, resourceUpdate.labelIds);
+            if (diff.length > 0) {
+              const deleteResources = await this.resourceLabelEntityRepository.find({ where: { labelId: In(diff) } });
+              await transactionalEntityManager.softRemove<ResourceLabelEntity[]>(deleteResources);
+            }
+            const add = _.difference(resourceUpdate.labelIds, currResourceLabelIds);
+            if (add.length > 0) {
+              const resourceLabelList = [];
+              for (const item of add) {
+                const label = await this.labelRepository.findOne({ where: { id: item } });
+                if (!label) {
+                  throw new HttpException(
+                    {
+                      statusCode: HttpStatus.NOT_FOUND,
+                      message: `LABEL_${item}_NOT_FOUND`,
+                    },
+                    HttpStatus.NOT_FOUND,
+                  );
+                }
+                const resourceLabel = new ResourceLabelEntity();
+                resourceLabel.resourceId = resourceUpdate.id;
+                resourceLabel.labelId = item;
+                resourceLabelList.push(resourceLabel);
+              }
+              await transactionalEntityManager.save<ResourceLabelEntity[]>(resourceLabelList);
+            }
+            //update category
+            this.logger.debug('Update resource categories');
+            const resourceCates = await this.resourceCateRepository.find({ where: { resourceId: resourceUpdate.id } });
+            if (!resourceCates.length) {
+              const resourceCateList = [];
+              for (const item of resourceUpdate.categoryIds) {
+                const resourceLabel = new ResourceCateEntity();
+                resourceLabel.resourceId = resourceUpdate.id;
+                resourceLabel.categoryId = item;
+                resourceCateList.push(resourceLabel);
+              }
+              await transactionalEntityManager.save<ResourceCateEntity[]>(resourceCateList);
+            } else {
+              const currResourceCateIds = resourceCates.map((item: any) => item.categoryId);
+              const diffCate = _.difference(currResourceCateIds, resourceUpdate.categoryIds);
+              if (diffCate.length > 0) {
+                const deleteCates = await this.resourceCateRepository.find({ where: { categoryId: In(diffCate) } });
+                await transactionalEntityManager.softRemove<ResourceCateEntity[]>(deleteCates);
+              }
+              const addCate = _.difference(resourceUpdate.categoryIds, currResourceCateIds);
+              if (addCate.length > 0) {
+                const resourceCateList = [];
+                for (const item of addCate) {
+                  const category = await this.cateRepository.findOne({ where: { id: item } });
+                  if (!category) {
+                    throw new HttpException(
+                      {
+                        statusCode: HttpStatus.NOT_FOUND,
+                        message: `CATEGORY_${item}_NOT_FOUND`,
+                      },
+                      HttpStatus.NOT_FOUND,
+                    );
+                  }
+                  const resourceLabel = new ResourceCateEntity();
+                  resourceLabel.resourceId = resourceUpdate.id;
+                  resourceLabel.categoryId = item;
+                  resourceCateList.push(resourceLabel);
+                }
+                await transactionalEntityManager.save<ResourceCateEntity[]>(resourceCateList);
+              }
+            }
+            // update images
+            this.logger.debug('Update resource images');
+            if (resourceUpdate.images && resourceUpdate.images.length > 0) {
+              const oldImages: string[] = currResource.images.map((item: any) => {
+                return item.image;
+              });
+              const newImages: string[] = resourceUpdate.images.map((item: any) => {
+                return item.image;
+              });
+              const addImages = _.difference(newImages, oldImages);
+              if (addImages.length > 0) {
+                const listResourceImage = [];
+                addImages.map((item: any) => {
+                  const dataImage = new ResourceImageEntity();
+                  dataImage.resourceId = resourceUpdate.id;
+                  dataImage.image = item;
+                  listResourceImage.push(dataImage);
+                });
+                await transactionalEntityManager.save<ResourceImageEntity[]>(listResourceImage);
+              }
+              const deleteImages = _.difference(oldImages, newImages);
+              if (deleteImages.length > 0) {
+                for (const item of deleteImages) {
+                  const index = currResource.findIndex((x: any) => x.image === item);
+                  if (index > -1) {
+                    await transactionalEntityManager.softDelete<ResourceImageEntity>(
+                      ResourceImageEntity,
+                      deleteImages[index],
+                    );
+                  }
+                }
+              }
+            } else if (currResource.images.length > 0) {
+              await transactionalEntityManager.softDelete<ResourceImageEntity[]>(
+                ResourceImageEntity,
+                currResource.images,
+              );
+            }
+            if (resourceUpdate.avatar) {
+              const resourcePictureData: any = new ResourceImageEntity();
+              resourcePictureData.image = resourceUpdate.avatar;
+              resourcePictureData.resourceId = resourceUpdate.id;
+              resourcePictureData.isAvatar = true;
+              const deleteAvatar = await this.resourceImageRepository.find({
+                where: { resourceId: resourceUpdate.id, isAvatar: true },
+              });
+              await transactionalEntityManager.softRemove<ResourceImageEntity>(deleteAvatar);
+              await transactionalEntityManager.save<ResourceImageEntity>(resourcePictureData);
+            } else {
+              const deleteAvatar = await this.resourceImageRepository.find({
+                where: { resourceId: resourceUpdate.id, isAvatar: true },
+              });
+              if (deleteAvatar) await transactionalEntityManager.softRemove<ResourceImageEntity>(deleteAvatar);
+            }
+            this.logger.debug('Update resource have id');
+            currResource.setAttributes(resourceUpdate);
+            await transactionalEntityManager.update<ResourceEntity>(
+              ResourceEntity,
+              { id: resourceUpdate.id },
+              currResource,
+            );
+          }
+        } else {
+          // add new resource
+          const newResources = new ResourceEntity();
+          newResources.setAttributes(resourceUpdate);
+          if (resourceUpdate.categoryIds && resourceUpdate.categoryIds.length > 0) {
+            const resourceCateList = [];
+            for (const item of resourceUpdate.categoryIds) {
+              //check category
+              const category = await this.cateRepository.findOne({ where: { id: item } });
+              if (!category) {
+                throw new HttpException(
+                  {
+                    statusCode: HttpStatus.NOT_FOUND,
+                    message: `CATEGORY_${item}_NOT_FOUND`,
+                  },
+                  HttpStatus.NOT_FOUND,
+                );
+              }
+              const resourceCate = new ResourceCateEntity();
+              resourceCate.resourceId = resourceUpdate.id;
+              resourceCate.categoryId = item;
+              resourceCateList.push(resourceCate);
+            }
+            await transactionalEntityManager.save<ResourceCateEntity[]>(resourceCateList);
+          }
+          this.logger.debug('Create resource author');
+          if (resourceUpdate.authorId) {
+            //check author
+            const author = await this.authorRepository.findOne({ where: { id: resourceUpdate.authorId } });
+            if (!author) {
+              throw new HttpException(
+                {
+                  statusCode: HttpStatus.NOT_FOUND,
+                  message: `AUTHOR_${resourceUpdate.authorId}_NOT_FOUND`,
+                },
+                HttpStatus.NOT_FOUND,
+              );
+            }
+            const resourceAuthor = new ResourceAuthorEntity();
+            resourceAuthor.resourceId = resourceUpdate.id;
+            resourceAuthor.authorId = resourceUpdate.authorId;
+            await this.connection.queryResultCache.clear();
+            await transactionalEntityManager.save<ResourceAuthorEntity>(resourceAuthor);
+          }
+          this.logger.debug('Create resource labels');
+          if (resourceUpdate.labelIds && resourceUpdate.labelIds.length > 0) {
+            //check label
+            const resourceLabelList = [];
+            for (const item of resourceUpdate.labelIds) {
+              const label = await this.labelRepository.findOne({ where: { id: item } });
+              if (!label) {
+                throw new HttpException(
+                  {
+                    statusCode: HttpStatus.NOT_FOUND,
+                    message: `LABEL_${item}_NOT_FOUND`,
+                  },
+                  HttpStatus.NOT_FOUND,
+                );
+              }
+              const resourceLabel = new ResourceLabelEntity();
+              resourceLabel.resourceId = resourceUpdate.id;
+              resourceLabel.labelId = item;
+              resourceLabelList.push(resourceLabel);
+            }
+            await transactionalEntityManager.save<ResourceLabelEntity[]>(resourceLabelList);
+          }
+          // create imageAttach file
+          this.logger.debug('Create resource Images');
+          if ((resourceUpdate.images && resourceUpdate.images.length > 0) || resourceUpdate.avatar) {
+            if (resourceUpdate.images && resourceUpdate.images.length > 0) {
+              const resourceImageList = [];
+              for (const item of resourceUpdate.images) {
+                const resourceImage: any = new ResourceImageEntity();
+                resourceImage.image = item.image;
+                resourceImage.resourceId = resourceUpdate.id;
+                resourceImageList.push(resourceImage);
+              }
+              await transactionalEntityManager.save<ResourceImageEntity[]>(resourceImageList);
+            }
+            if (resourceUpdate.avatar) {
+              const resourceImage: any = new ResourceImageEntity();
+              resourceImage.image = resourceUpdate.avatar;
+              resourceImage.resourceId = resourceUpdate.id;
+              resourceImage.alt = resourceUpdate.alt ? resourceUpdate.alt : '';
+              resourceImage.isAvatar = true;
+              await transactionalEntityManager.save<ResourceImageEntity>(resourceImage);
+            }
+          }
+          await transactionalEntityManager.save<ResourceEntity>(newResources);
         }
-        const deleteImages = await this.resourceImageRepository.find({
-          where: { resourceId: resourceId, isAvatar: false },
-        });
-        if (deleteImages.length > 0 && updatePictures.length > 0) {
-          await transactionalEntityManager.softRemove<ResourceImageEntity>(deleteImages);
-        }
-
-        await transactionalEntityManager.save<ResourceImageEntity[]>(newPictures);
-      } else if (!resourceUpdate.images) {
-        const deleteImages = await this.resourceImageRepository.find({
-          where: { resourceId: resourceId, isAvatar: false },
-        });
-        if (deleteImages) await transactionalEntityManager.softRemove<ResourceImageEntity>(deleteImages);
-      }
-      if (resourceUpdate.avatar) {
-        const resourcePictureData: any = new ResourceImageEntity();
-        resourcePictureData.image = resourceUpdate.avatar;
-        resourcePictureData.resourceId = resourceId;
-        resourcePictureData.isAvatar = true;
-        const deleteAvatar = await this.resourceImageRepository.find({
-          where: { resourceId: resourceId, isAvatar: true },
-        });
-        await transactionalEntityManager.softRemove<ResourceImageEntity>(deleteAvatar);
-        await transactionalEntityManager.save<ResourceImageEntity>(resourcePictureData);
-      } else {
-        const deleteAvatar = await this.resourceImageRepository.find({
-          where: { resourceId: resourceId, isAvatar: true },
-        });
-        if (deleteAvatar) await transactionalEntityManager.softRemove<ResourceImageEntity>(deleteAvatar);
       }
     });
-    const resourceUpdated = await this.resourceRepository
-      .createQueryBuilder('resource')
-      .where('"resource".id=:resourceId', { resourceId })
-      .leftJoinAndMapMany(
-        'resource.images',
-        ResourceImageEntity,
-        'resource_image',
-        '"resource_image"."resource_id"="resource".id',
-      )
-      .leftJoinAndMapOne(
-        'resource.authors',
-        ResourceAuthorEntity,
-        'resource_author',
-        '"resource_author"."resource_id"="resource".id',
-      )
-      .leftJoinAndMapOne('authors', AuthorEntity, 'author', '"author".id="resource_author"."author_id"')
-      .leftJoinAndMapMany(
-        'resource.labels',
-        ResourceLabelEntity,
-        'resource_label',
-        '"resource_label"."resource_id"="resource".id',
-      )
-      .leftJoinAndMapMany('labels', LabelEntity, 'label', '"label".id = "resource_label"."label_id"')
-      .leftJoinAndMapMany(
-        'resource.categories',
-        ResourceCateEntity,
-        'resource_category',
-        '"resource_category"."resource_id"="resource".id',
-      )
-      .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."category_id"')
-      .getOne();
-    return { data: mapDataResource(resourceUpdated, false) };
+    return {};
   }
 
-  async deleteResource(resourceId: string) {
+  async deleteResource(code: string) {
     this.logger.debug('Delete resource');
-    const resource: any = await this.resourceRepository.findOne({ where: { id: resourceId } });
-    if (!resource) {
+    const resources: any = await this.resourceRepository.find({ where: { code: code } });
+    if (resources.length === 0) {
       throw new HttpException(
         {
           statusCode: HttpStatus.NOT_FOUND,
@@ -475,25 +549,27 @@ export class ResourceService {
         HttpStatus.NOT_FOUND,
       );
     }
-    const resourceAuthor: any = await this.resourceAuthorRepository.findOne({ where: { resourceId: resourceId } });
-    const resourceCateList: any = await this.resourceCateRepository.find({ where: { resourceId: resourceId } });
-    const resourceLabel: any = await this.resourceLabelEntityRepository.find({ where: { resourceId: resourceId } });
-    const resourceImages: any = await this.resourceImageRepository.find({ where: { resourceId: resourceId } });
-    await this.connection.queryResultCache.clear();
-    await getManager().transaction(async transactionalEntityManager => {
-      await transactionalEntityManager.softDelete(ResourceEntity, resource);
-      if (resourceAuthor) {
-        await transactionalEntityManager.softRemove(ResourceAuthorEntity, resourceAuthor);
-      }
-      if (resourceCateList.length > 0) {
-        await transactionalEntityManager.softRemove(ResourceCateEntity, resourceCateList);
-      }
-      if (resourceLabel.length > 0) {
-        await transactionalEntityManager.softRemove(ResourceLabelEntity, resourceLabel);
-      }
-      if (resourceImages.length > 0) {
-        await transactionalEntityManager.softRemove(ResourceImageEntity, resourceImages);
-      }
-    });
+    for (const resource of resources) {
+      const resourceAuthor: any = await this.resourceAuthorRepository.findOne({ where: { resourceId: resource.id } });
+      const resourceCateList: any = await this.resourceCateRepository.find({ where: { resourceId: resource.id } });
+      const resourceLabel: any = await this.resourceLabelEntityRepository.find({ where: { resourceId: resource.id } });
+      const resourceImages: any = await this.resourceImageRepository.find({ where: { resourceId: resource.id } });
+      await this.connection.queryResultCache.clear();
+      await getManager().transaction(async transactionalEntityManager => {
+        await transactionalEntityManager.softDelete(ResourceEntity, resource);
+        if (resourceAuthor) {
+          await transactionalEntityManager.softRemove(ResourceAuthorEntity, resourceAuthor);
+        }
+        if (resourceCateList.length > 0) {
+          await transactionalEntityManager.softRemove(ResourceCateEntity, resourceCateList);
+        }
+        if (resourceLabel.length > 0) {
+          await transactionalEntityManager.softRemove(ResourceLabelEntity, resourceLabel);
+        }
+        if (resourceImages.length > 0) {
+          await transactionalEntityManager.softRemove(ResourceImageEntity, resourceImages);
+        }
+      });
+    }
   }
 }
