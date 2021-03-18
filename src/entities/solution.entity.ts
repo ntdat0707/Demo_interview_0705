@@ -21,7 +21,7 @@ export class SolutionEntity {
   @Column('boolean', { name: 'is_publish', default: false })
   isPublish: boolean;
 
-  @Column('varchar', { name: 'code', default: false })
+  @Column('varchar', { name: 'code' })
   code: string;
 
   @Column('timestamptz', { name: 'publish_date', nullable: true })
