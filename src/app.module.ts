@@ -18,8 +18,9 @@ import { CareerModule } from './career/career.module';
 import { AgentModule } from './agent/agent.module';
 import { NetworkModule } from './network/network.module';
 import { LanguageModule } from './language/language.module';
-import { FocusedModule } from './focused/focused.module';
 import { DocumentModule } from './document/document.module';
+import { FocusedMarketModule } from './focused-market/focused-market.module';
+import { SolutionModule } from './solution/solution.module';
 
 @Module({
   imports: [
@@ -69,8 +70,9 @@ import { DocumentModule } from './document/document.module';
     AgentModule,
     NetworkModule,
     LanguageModule,
-    FocusedModule,
     DocumentModule,
+    FocusedMarketModule,
+    SolutionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

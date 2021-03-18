@@ -52,15 +52,23 @@ export class DocumentService {
     };
   }
 
-  async getAllDocument(flag: string) {
+  async getAllDocument(flag: string, page = 1, limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10)) {
     this.logger.debug('get all document');
-    const documents = await this.documentRepository
+    const queryExc = this.documentRepository
       .createQueryBuilder('document')
       .orderBy('created_at', 'DESC')
       .where(`flag =  :value`, { value: `${flag}` })
-      .getMany();
+      .limit(limit)
+      .offset((page - 1) * limit);
+    const countResult = await queryExc.cache(`documents_count_page${page}_limit${limit}`).getCount();
+    const result = await queryExc.cache(`documents__page${page}_limit${limit}`).getMany();
+    const pages = Math.ceil(Number(countResult) / limit);
     return {
-      data: documents,
+      page: Number(page),
+      totalPages: pages,
+      limit: Number(limit),
+      totalRecords: countResult,
+      data: result,
     };
   }
 

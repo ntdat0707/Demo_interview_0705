@@ -6,13 +6,13 @@ export class SolutionImageEntity {
   id: string;
 
   @Column('text', { nullable: true })
-  image: string;
+  image?: string;
 
-  @Column('varchar', { nullable: true })
-  alt: string;
-
-  @Column('uuid', { name: 'solution_id' })
+  @Column({ name: 'solution_id', type: 'uuid' })
   solutionId: string;
+
+  @Column({ name: 'is_banner', type: 'boolean', default: false })
+  isBanner: boolean;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
   createdAt: Date;
@@ -25,6 +25,5 @@ export class SolutionImageEntity {
 
   setAttributes(object: any) {
     this.solutionId = object.solutionId;
-    this.alt = object.alt;
   }
 }

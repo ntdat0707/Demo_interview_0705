@@ -12,6 +12,9 @@ export class FocusedEntity {
   @Column('varchar')
   title: string;
 
+  @Column('varchar')
+  code: string;
+
   @Column({ name: 'feature_image', type: 'text', nullable: true })
   featureImage: string;
 

@@ -14,6 +14,7 @@ import { ResourceImageEntity } from '../entities/resourceImage.entity';
 import { ResourceLabelEntity } from '../entities/resourceLabel.entity';
 import { CategoryEntity } from '../entities/category.entity';
 import { AuthorEntity } from '../entities/author.entity';
+import { LanguageEntity } from '../entities/language.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -25,6 +26,7 @@ import { AuthorEntity } from '../entities/author.entity';
       CategoryEntity,
       LabelEntity,
       AuthorEntity,
+      LanguageEntity,
     ]),
     MulterModule.registerAsync({
       useFactory: () => ({
