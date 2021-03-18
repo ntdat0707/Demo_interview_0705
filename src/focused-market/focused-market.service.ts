@@ -260,7 +260,7 @@ export class FocusedMarketService {
               for (const item of deleteFocusedMarketImage) {
                 const indexImage = focusedImages.findIndex((x: any) => x.image === item);
                 if (indexImage !== -1) {
-                  await transactionalEntityManager.softDelete<FocusedImageEntity[]>(
+                  await transactionalEntityManager.softDelete<FocusedImageEntity>(
                     FocusedImageEntity,
                     focusedImages[indexImage],
                   );
