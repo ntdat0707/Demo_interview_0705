@@ -42,7 +42,6 @@ export class FocusedEntity {
   setAttributes(object: any) {
     this.languageId = object.languageId;
     this.title = object.title;
-    this.code = object.code;
     this.featureImage = object.featureImage ? object.featureImage : null;
     this.status = object.status;
     this.isPublish = object.isPublish ? object.isPublish : false;
