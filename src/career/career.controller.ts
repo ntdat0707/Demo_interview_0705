@@ -2,7 +2,6 @@ import { CreateCareerPipe } from './../lib/validatePipe/career/createCareerPipe.
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseFilters } from '@nestjs/common';
 import { ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
-import { CheckUUID } from '../lib/validatePipe/uuidPipe.class';
 import { CareerService } from './career.service';
 import { CreateCareerInput, UpdateCareerInput } from './career.dto';
 import { UpdateCareerPipe } from '../lib/validatePipe/career/updateCareerPipe.class';
@@ -31,28 +30,28 @@ export class CareerController {
     return await this.careerService.getAllCareer(page, limit, searchValue, status, countries);
   }
 
-  @Get('/:id')
-  async getCareer(@Param('id', new CheckUUID()) id: string) {
-    return await this.careerService.getCareer(id);
+  @Get('/:code')
+  async getCareer(@Param('code') code: string) {
+    return await this.careerService.getCareer(code);
   }
 
   @Post()
-  @ApiBody({ type: CreateCareerInput })
-  async createCareer(@Body(new CreateCareerPipe()) createCareerInput: CreateCareerInput) {
+  @ApiBody({ type: [CreateCareerInput] })
+  async createCareer(@Body(new CreateCareerPipe()) createCareerInput: [CreateCareerInput]) {
     return await this.careerService.createCareer(createCareerInput);
   }
 
-  @Put('/:id')
-  @ApiBody({ type: UpdateCareerInput })
+  @Put('/:code')
+  @ApiBody({ type: [UpdateCareerInput] })
   async updateCareer(
-    @Param('id', new CheckUUID()) id: string,
-    @Body(new UpdateCareerPipe()) updateCareerInput: UpdateCareerInput,
+    @Param('code') code: string,
+    @Body(new UpdateCareerPipe()) updateCareerInput: [UpdateCareerInput],
   ) {
-    return await this.careerService.updateCareer(id, updateCareerInput);
+    return await this.careerService.updateCareer(code, updateCareerInput);
   }
 
-  @Delete('/:id')
-  async deleteCareer(@Param('id', new CheckUUID()) id: string) {
-    return await this.careerService.deleteCareer(id);
+  @Delete('/:code')
+  async deleteCareer(@Param('code') code: string) {
+    return await this.careerService.deleteCareer(code);
   }
 }

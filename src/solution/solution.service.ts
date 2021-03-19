@@ -6,6 +6,8 @@ import { CreateSolutionInput, UpdateSolutionInput } from './solution.dto';
 import { SolutionImageEntity } from '../entities/solutionImage.entity';
 import { countSolution, isSolutionAvailable } from '../lib/subFunction/solution';
 import { LanguageEntity } from '../entities/language.entity';
+import _ = require('lodash');
+import { isDuplicateLanguageValid, isLanguageENValid } from '../lib/pipeUtils/languageValidate';
 
 @Injectable()
 export class SolutionService {
@@ -40,28 +42,13 @@ export class SolutionService {
 
   async createSolution(createSolutionList: [CreateSolutionInput]) {
     this.logger.debug('Create solution');
-    const solutions = [];
-    let isLanguageEN = false;
     //Need check max and different solution when create
     const code = Math.random()
       .toString(36)
       .substring(2, 8)
       .toUpperCase();
-    for (const item of createSolutionList) {
-      const language = await this.languageRepository.findOne({ where: { id: item.languageId } });
-      if (language.code === 'EN') {
-        isLanguageEN = true;
-      }
-    }
-    if (isLanguageEN === false) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'MUST_CREATE_SOLUTION_ENGLISH',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    await isLanguageENValid(createSolutionList, this.languageRepository);
+    await isDuplicateLanguageValid(createSolutionList, this.languageRepository);
     for (const item of createSolutionList) {
       const currItems: any = await countSolution(this.solutionRepository, item.languageId);
       if (currItems.isValid === true) {
@@ -95,22 +82,15 @@ export class SolutionService {
               await transactionalEntityManager.save<SolutionImageEntity[]>(solutionImages);
             }
           }
-          if (item.bannerImage) {
-            const solutionImage: any = new SolutionImageEntity();
-            solutionImage.image = item.bannerImage;
-            solutionImage.solutionId = newSolution.id;
-            solutionImage.isBanner = true;
-            await transactionalEntityManager.save<SolutionImageEntity>(solutionImage);
-          }
-          solutions.push(newSolution);
         });
       }
     }
-    return { data: solutions };
+    return {};
   }
 
   async getAllSolution(languageId: string, code?: string) {
     this.logger.debug('Get all solution');
+    await this.connection.queryResultCache.clear();
     const solutionQuery = this.solutionRepository.createQueryBuilder('solution');
     const query: any = solutionQuery
       .leftJoinAndMapMany(
@@ -134,19 +114,11 @@ export class SolutionService {
 
   async updateSolution(code: string, data: [UpdateSolutionInput]) {
     this.logger.debug('update solution');
+    await isDuplicateLanguageValid(data, this.languageRepository);
     await this.connection.queryResultCache.clear();
     const currSolutions = await this.solutionRepository.find({ where: { code: code } });
     //check duplicate
-    const checkDupLanguageInput = await isSolutionAvailable(data, this.languageRepository);
-    if (checkDupLanguageInput === true) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.CONFLICT,
-          message: 'SOLUTION_LANGUAGE_DUPLICATE',
-        },
-        HttpStatus.CONFLICT,
-      );
-    }
+    await isSolutionAvailable(data, this.languageRepository);
     await getManager().transaction(async transactionalEntityManager => {
       for (const item of data) {
         if (item.id) {
@@ -161,18 +133,39 @@ export class SolutionService {
             );
           }
           currSolutions[index].setAttributes(item);
-
           //images update
           if (item.images && item.images.length > 0) {
-            const currImages = await this.solutionImageRepository.find({ where: { solutionId: item.id } });
-            await transactionalEntityManager.update<SolutionImageEntity[]>(
-              SolutionImageEntity,
-              { solutionId: item.id },
-              currImages,
-            );
+            const solutionImages = await this.solutionImageRepository.find({ where: { solutionId: item.id } });
+            const curImages = solutionImages.map((x: any) => {
+              const y = { image: x.image };
+              return y;
+            });
+            const addImages = _.difference(item.images, curImages);
+            const diffImages = _.difference(curImages, item.images);
+            if (addImages.length > 0) {
+              const newImages: any = [];
+              for (const image of addImages) {
+                const newImage = new SolutionImageEntity();
+                newImage.solutionId = item.id;
+                newImage.image = image.image;
+                newImages.push(newImage);
+              }
+              await transactionalEntityManager.save<SolutionImageEntity[]>(newImages);
+            }
+            if (diffImages.length > 0) {
+              for (const image of diffImages) {
+                const indexImage = solutionImages.findIndex((x: any) => x.image === image.image);
+                if (indexImage > -1) {
+                  await transactionalEntityManager.softDelete<SolutionImageEntity>(
+                    SolutionImageEntity,
+                    solutionImages[indexImage],
+                  );
+                }
+              }
+            }
           } else {
             const solutionImages = await this.solutionImageRepository.find({ where: { solutionId: item.id } });
-            await transactionalEntityManager.softRemove<SolutionImageEntity[]>(solutionImages);
+            await transactionalEntityManager.softDelete<SolutionImageEntity[]>(SolutionImageEntity, solutionImages);
           }
           await transactionalEntityManager.update<SolutionEntity>(
             SolutionEntity,
@@ -206,7 +199,7 @@ export class SolutionService {
         }
       }
     });
-    return { data: {} };
+    return {};
   }
 
   async deleteSolution(code: string) {
@@ -229,5 +222,6 @@ export class SolutionService {
         await transactionalEntityManager.softDelete(SolutionEntity, { id: solution[i].id });
       }
     });
+    return {};
   }
 }

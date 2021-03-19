@@ -9,8 +9,14 @@ export class CareerEntity {
   @Column('varchar')
   title: string;
 
-  @Column('numeric', { name: 'vancancies', default: 0 })
-  vancancies: number;
+  @Column('varchar')
+  code: string;
+
+  @Column('varchar', { name: 'language_id', nullable: false })
+  languageId: string;
+
+  @Column('numeric', { name: 'vacancies', default: 0 })
+  vacancies: number;
 
   @Column('varchar')
   country: string;
@@ -45,7 +51,7 @@ export class CareerEntity {
   @Column('varchar', { default: ECareerStatus.ACTIVE })
   status: string;
 
-  @Column('date', { name: 'closing_date', nullable: true })
+  @Column({ name: 'closing_date', type: 'timestamptz', nullable: true })
   closingDate: Date;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
@@ -59,7 +65,8 @@ export class CareerEntity {
 
   setAttributes(object: any) {
     this.title = object.title;
-    this.vancancies = object.vancancies ? object.vancancies : 0;
+    this.languageId = object.languageId;
+    this.vacancies = object.vacancies ? object.vacancies : 0;
     this.country = object.country;
     this.city = object.city;
     this.educationLevel = object.educationLevel ? object.educationLevel : EEducationLevelStatus.NONE;
