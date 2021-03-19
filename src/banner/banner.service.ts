@@ -1,13 +1,16 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import _ = require('lodash');
 import { Connection, getManager, LessThan, Repository } from 'typeorm';
 import { BannerEntity } from '../entities/banner.entity';
+import { LanguageEntity } from '../entities/language.entity';
 import { BannerIndexInput, BannerInput } from './banner.dto';
 @Injectable()
 export class BannerService {
   private readonly logger = new Logger(BannerService.name);
   constructor(
     @InjectRepository(BannerEntity) private bannerRepository: Repository<BannerEntity>,
+    @InjectRepository(LanguageEntity) private languageRepository: Repository<LanguageEntity>,
     private connection: Connection,
   ) {}
 
@@ -29,78 +32,196 @@ export class BannerService {
     };
   }
 
-  async createBanner(bannerInput: BannerInput) {
+  async createBanner(bannerInputs: [BannerInput]) {
     this.logger.debug('create banner');
-    let banner = new BannerEntity();
-    banner.setAttributes(bannerInput);
-    await this.connection.queryResultCache.clear();
-    banner = await this.bannerRepository.save(banner);
-    return {
-      data: banner,
-    };
-  }
-
-  async updateBanner(id: string, bannerInput: BannerInput) {
-    this.logger.debug('update banner');
-    let banner = await this.bannerRepository.findOne({ where: { id: id } });
-    if (!banner) {
+    let isLanguageEN = false;
+    const languageIds = [];
+    const banners = [];
+    const code = Math.random()
+      .toString(36)
+      .substring(2, 8)
+      .toUpperCase();
+    for (const bannerInput of bannerInputs) {
+      const language = await this.languageRepository.findOne({ where: { id: bannerInput.languageId } });
+      if (!language) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.NOT_FOUND,
+            message: 'LANGUAGE_NOT_FOUND',
+          },
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      if (language.code === 'EN') {
+        isLanguageEN = true;
+      }
+      languageIds.push(bannerInput.languageId);
+      const banner = new BannerEntity();
+      banner.setAttributes(bannerInput);
+      banner.code = code;
+      banners.push(banner);
+    }
+    if (_.uniq(languageIds).length !== languageIds.length) {
       throw new HttpException(
         {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'BANNER_NOT_FOUND',
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'DUPLICATE_LANGUAGE',
         },
-        HttpStatus.NOT_FOUND,
+        HttpStatus.BAD_REQUEST,
       );
     }
-    banner.setAttributes(bannerInput);
-    await this.connection.queryResultCache.clear();
-    banner = await this.bannerRepository.save(banner);
-    return {
-      data: banner,
-    };
-  }
-
-  async getBanner(id: string) {
-    this.logger.debug('get banner');
-    const banner = await this.bannerRepository.findOne({ where: { id: id } });
-    if (!banner) {
+    if (isLanguageEN === false) {
       throw new HttpException(
         {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'BANNER_NOT_FOUND',
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'BANNER_MUST_BE_HAD_ENGLISH',
         },
-        HttpStatus.NOT_FOUND,
-      );
-    }
-    return {
-      data: banner,
-    };
-  }
-
-  async deleteBanner(id: string) {
-    this.logger.debug('delete banner');
-    const banner = await this.bannerRepository.findOne({ where: { id: id } });
-    if (!banner) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'BANNER_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
+        HttpStatus.BAD_REQUEST,
       );
     }
     await this.connection.queryResultCache.clear();
-    await this.bannerRepository.softDelete(banner);
+    await this.bannerRepository.save(banners);
     return {};
   }
 
-  async getAllBanner(page = 1, limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10)) {
+  async updateBanner(code: string, bannerInputs: [BannerInput]) {
+    this.logger.debug('update banner');
+    const oldBanner = await this.bannerRepository.find({ where: { code: code } });
+    if (oldBanner.length === 0) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: 'BANNER_NOT_FOUND',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    let isLanguageEN = false;
+    const languageIds = [];
+    let languageEnId: string;
+    for (const bannerInput of bannerInputs) {
+      const language = await this.languageRepository.findOne({ where: { id: bannerInput.languageId } });
+      if (!language) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.NOT_FOUND,
+            message: 'LANGUAGE_NOT_FOUND',
+          },
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      if (language.code === 'EN') {
+        languageEnId = language.id;
+        isLanguageEN = true;
+      }
+      languageIds.push(bannerInput.languageId);
+    }
+    if (_.uniq(languageIds).length !== languageIds.length) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'DUPLICATE_LANGUAGE',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    if (isLanguageEN === false) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'BANNER_MUST_BE_HAD_ENGLISH',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    for (const item of bannerInputs) {
+      if (item.id) {
+        const index = oldBanner.findIndex((x: any) => x.id === item.id);
+        if (index === -1) {
+          throw new HttpException(
+            {
+              statusCode: HttpStatus.NOT_FOUND,
+              message: 'BANNER_NOT_FOUND',
+            },
+            HttpStatus.NOT_FOUND,
+          );
+        }
+        oldBanner[index].setAttributes(item);
+      } else {
+        if (item.languageId === languageEnId) {
+          throw new HttpException(
+            {
+              statusCode: HttpStatus.BAD_REQUEST,
+              message: 'CAN NOT CREATE ENGLISH LANGUAGE FOR BANNER',
+            },
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+        const newBanner = new BannerEntity();
+        newBanner.setAttributes(newBanner);
+        newBanner.code = code;
+        oldBanner.push(newBanner);
+      }
+    }
+
+    await this.connection.queryResultCache.clear();
+    await this.bannerRepository.save(oldBanner);
+    return {};
+  }
+
+  async getBanner(code: string, languageId?: string) {
+    this.logger.debug('get banner');
+    const queryExc = this.bannerRepository.createQueryBuilder('banner').where(`code = :value`, { value: `${code}` });
+    if (languageId) {
+      queryExc.andWhere(`language_id = :languageId`, { languageId: `${languageId}` });
+    }
+    await this.connection.queryResultCache.clear();
+    const banners = await queryExc.getMany();
+    if (banners.length === 0) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: 'BANNER_NOT_FOUND',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    return {
+      data: banners,
+    };
+  }
+
+  async deleteBanner(code: string) {
+    this.logger.debug('delete banner');
+    const banners = await this.bannerRepository.find({ where: { code: code } });
+    if (banners.length === 0) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: 'BANNER_NOT_FOUND',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    await this.connection.queryResultCache.clear();
+    await this.bannerRepository.softRemove(banners);
+    return {};
+  }
+
+  async getAllBanner(
+    languageId: string,
+    page = 1,
+    limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
+  ) {
     this.logger.debug('get all banner');
     const queryExc = this.bannerRepository
       .createQueryBuilder('banner')
+      .where(`language_id = :value`, { value: `${languageId}` })
       .orderBy('banner_valid_to', 'DESC')
       .limit(limit)
       .offset((page - 1) * limit);
+    await this.connection.queryResultCache.clear();
     const countResult = await queryExc.cache(`banners_count_page${page}_limit${limit}`).getCount();
     const result = await queryExc.cache(`banners__page${page}_limit${limit}`).getMany();
     const pages = Math.ceil(Number(countResult) / limit);
@@ -119,10 +240,10 @@ export class BannerService {
     await getManager().transaction(async transactionalEntityManager => {
       await this.connection.queryResultCache.clear();
       for (const banner of banners) {
-        await transactionalEntityManager.update(BannerEntity, { id: banner.id }, { index: 0 });
+        await transactionalEntityManager.update(BannerEntity, { code: banner.code }, { index: 0 });
       }
       for (const input of listBanner) {
-        await transactionalEntityManager.update(BannerEntity, { id: input.id }, { index: input.index });
+        await transactionalEntityManager.update(BannerEntity, { code: input.code }, { index: input.index });
       }
     });
     return {};

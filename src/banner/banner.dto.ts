@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class BannerInput {
+  @ApiProperty({ required: false })
+  readonly id: string;
+
+  @ApiProperty({ required: true })
+  readonly languageId: string;
+
   @ApiProperty({ required: true })
   readonly title: string;
 
@@ -45,7 +51,7 @@ export class ImageBannerInput {
 
 export class BannerIndexInput {
   @ApiProperty({ required: true })
-  readonly id: string;
+  readonly code: string;
 
   @ApiProperty({ required: true })
   readonly index: number;

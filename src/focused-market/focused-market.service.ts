@@ -192,6 +192,7 @@ export class FocusedMarketService {
       );
     }
     let isLanguageEN: boolean = false;
+    let languageEnId: string;
     for (const item of focusedMarketList) {
       const language = await this.languageRepository.findOne({ where: { id: item.languageId } });
       if (!language) {
@@ -204,6 +205,7 @@ export class FocusedMarketService {
         );
       }
       if (language.code === 'EN') {
+        languageEnId = language.id;
         isLanguageEN = true;
       }
     }
@@ -273,6 +275,15 @@ export class FocusedMarketService {
             }
           }
         } else {
+          if (focusedMarket.languageId === languageEnId) {
+            throw new HttpException(
+              {
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: 'CAN NOT CREATE ENGLISH LANGUAGE FOR FOCUSED MARKET',
+              },
+              HttpStatus.BAD_REQUEST,
+            );
+          }
           const newFocusedMarket = new FocusedEntity();
           newFocusedMarket.setAttributes(focusedMarket);
           newFocusedMarket.code = code;

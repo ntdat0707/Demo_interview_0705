@@ -5,12 +5,13 @@ import { diskStorage } from 'multer';
 import { basename, extname, resolve } from 'path';
 import shortid = require('shortid');
 import { BannerEntity } from '../entities/banner.entity';
+import { LanguageEntity } from '../entities/language.entity';
 import { BannerController } from './banner.controller';
 import { BannerService } from './banner.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([BannerEntity]),
+    TypeOrmModule.forFeature([BannerEntity, LanguageEntity]),
     MulterModule.registerAsync({
       useFactory: () => ({
         storage: diskStorage({
