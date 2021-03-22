@@ -71,7 +71,7 @@ export class BannerController {
     return await this.bannerService.deleteBanner(code);
   }
 
-  @Put('/update-index-banner')
+  @Put('available/update/')
   @ApiBody({ type: [BannerIndexInput] })
   async updateIndexBanner(@Body(new UpdateIndexBannerPipe()) bannerIndexInput: [BannerIndexInput]) {
     return await this.bannerService.updateIndexBanner(bannerIndexInput);

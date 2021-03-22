@@ -37,10 +37,17 @@ export class BannerService {
     let isLanguageEN = false;
     const languageIds = [];
     const banners = [];
-    const code = Math.random()
-      .toString(36)
-      .substring(2, 8)
-      .toUpperCase();
+    let randomCode = '';
+    while (true) {
+      randomCode = Math.random()
+        .toString(36)
+        .substring(2, 10)
+        .toUpperCase();
+      const existBannerCode = await this.bannerRepository.findOne({ where: { code: randomCode } });
+      if (!existBannerCode) {
+        break;
+      }
+    }
     for (const bannerInput of bannerInputs) {
       const language = await this.languageRepository.findOne({ where: { id: bannerInput.languageId } });
       if (!language) {
@@ -58,7 +65,7 @@ export class BannerService {
       languageIds.push(bannerInput.languageId);
       const banner = new BannerEntity();
       banner.setAttributes(bannerInput);
-      banner.code = code;
+      banner.code = randomCode;
       banners.push(banner);
     }
     if (_.uniq(languageIds).length !== languageIds.length) {
@@ -159,7 +166,7 @@ export class BannerService {
           );
         }
         const newBanner = new BannerEntity();
-        newBanner.setAttributes(newBanner);
+        newBanner.setAttributes(item);
         newBanner.code = code;
         oldBanner.push(newBanner);
       }
