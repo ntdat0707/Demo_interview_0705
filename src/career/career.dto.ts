@@ -56,6 +56,9 @@ export class UpdateCareerInput {
   readonly id: string;
 
   @ApiProperty({ required: true })
+  readonly code: string;
+
+  @ApiProperty({ required: true })
   readonly languageId: string;
 
   @ApiProperty({ required: true })

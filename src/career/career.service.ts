@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import moment = require('moment');
-import { Brackets, Connection, Repository } from 'typeorm';
+import { Brackets, Connection, getManager, Repository } from 'typeorm';
 import { CareerEntity } from '../entities/career.entity';
 import { LanguageEntity } from '../entities/language.entity';
 import { ECareerStatus } from '../lib/constant';
@@ -40,7 +40,6 @@ export class CareerService {
       let career = new CareerEntity();
       career.setAttributes(item);
       career.code = code;
-      await this.connection.queryResultCache.clear();
       career = await this.careerRepository.save(career);
       return {};
     }
@@ -115,6 +114,7 @@ export class CareerService {
 
   async getCareer(code: string) {
     this.logger.debug('get-career');
+    await this.connection.queryResultCache.clear();
     const career = await this.careerRepository.findOne({ where: { code: code } });
     return {
       data: career,
@@ -134,45 +134,48 @@ export class CareerService {
         HttpStatus.NOT_FOUND,
       );
     }
-    for (const career of careerInput) {
-      const existTitle = await this.careerRepository.findOne({ where: { title: career.title } });
-      if (existTitle) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.CONFLICT,
-            message: `TITLE_HAS_BEEN_EXISTED `,
-          },
-          HttpStatus.CONFLICT,
-        );
-      }
-
-      if (career.id) {
-        const index: any = curCareers.findIndex((item: any) => item.id === career.id);
-        if (index === -1) {
+    await this.connection.queryResultCache.clear();
+    await getManager().transaction(async transactionalEntityManager => {
+      for (const career of careerInput) {
+        const existTitle = await this.careerRepository.findOne({ where: { title: career.title } });
+        if (existTitle) {
           throw new HttpException(
             {
-              statusCode: HttpStatus.NOT_FOUND,
-              message: `CAREER_${career.id}_NOT_EXIST `,
+              statusCode: HttpStatus.CONFLICT,
+              message: `TITLE_HAS_BEEN_EXISTED `,
             },
-            HttpStatus.NOT_FOUND,
+            HttpStatus.CONFLICT,
           );
         }
-        curCareers[index].setAttributes(career);
-        if (career.status === ECareerStatus.CLOSED) {
-          curCareers[index].closingDate = moment().format('YYYY-MM-DD h:mm');
+
+        if (career.id) {
+          const index: any = curCareers.findIndex((item: any) => item.id === career.id);
+          if (index === -1) {
+            throw new HttpException(
+              {
+                statusCode: HttpStatus.NOT_FOUND,
+                message: `CAREER_${career.id}_NOT_EXIST `,
+              },
+              HttpStatus.NOT_FOUND,
+            );
+          }
+          curCareers[index].setAttributes(career);
+          if (career.status === ECareerStatus.CLOSED) {
+            curCareers[index].closingDate = moment().format('YYYY-MM-DD h:mm');
+          }
+          await transactionalEntityManager.update<CareerEntity>(CareerEntity, { id: career.id }, curCareers[index]);
+        } else {
+          const newCar = new CareerEntity();
+          newCar.setAttributes(career);
+          newCar.code = career.code;
+          if (career.status === ECareerStatus.CLOSED) {
+            newCar.closingDate = new Date(moment().format('YYYY-MM-DD h:mm'));
+          }
+          await transactionalEntityManager.save<CareerEntity>(newCar);
         }
-        await this.connection.queryResultCache.clear();
-        await this.careerRepository.update({ id: career.id }, curCareers[index]);
-      } else {
-        const newCar = new CareerEntity();
-        newCar.setAttributes(career);
-        if (career.status === ECareerStatus.CLOSED) {
-          newCar.closingDate = new Date(moment().format('YYYY-MM-DD h:mm'));
-        }
-        await this.careerRepository.save(newCar);
       }
-      return {};
-    }
+    });
+    return {};
   }
 
   async deleteCareer(code: string) {
