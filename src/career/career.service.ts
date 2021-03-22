@@ -22,10 +22,17 @@ export class CareerService {
     this.logger.debug('create career');
     await isLanguageENValid(careerInput, this.languageRepository);
     await isDuplicateLanguageValid(careerInput, this.languageRepository);
-    const code = Math.random()
-      .toString(36)
-      .substring(2, 8)
-      .toUpperCase();
+    let randomCode = '';
+    while (true) {
+      randomCode = Math.random()
+        .toString(36)
+        .substring(2, 10)
+        .toUpperCase();
+      const existCode = await this.careerRepository.findOne({ where: { code: randomCode } });
+      if (!existCode) {
+        break;
+      }
+    }
     for (const item of careerInput) {
       const existTitle = await this.careerRepository.findOne({ where: { title: item.title } });
       if (existTitle) {
@@ -39,12 +46,13 @@ export class CareerService {
       }
       let career = new CareerEntity();
       career.setAttributes(item);
-      career.code = code;
+      career.code = randomCode;
       career = await this.careerRepository.save(career);
       return {};
     }
   }
   async getAllCareer(
+    languageId: string,
     page = 1,
     limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
     searchValue: string,
@@ -56,7 +64,7 @@ export class CareerService {
     await this.connection.queryResultCache.clear();
     const careerQuery = this.careerRepository
       .createQueryBuilder('career')
-      // .where('career."deleted_at" is null')
+      .where(`career."language_id"=${languageId}`)
       .limit(limit)
       .offset((page - 1) * limit)
       .orderBy('created_at', 'DESC');
@@ -112,13 +120,20 @@ export class CareerService {
     };
   }
 
-  async getCareer(code: string) {
+  async getCareer(code: string, languageId?: string) {
     this.logger.debug('get-career');
     await this.connection.queryResultCache.clear();
-    const career = await this.careerRepository.findOne({ where: { code: code } });
-    return {
-      data: career,
-    };
+    if (!languageId) {
+      const career = await this.careerRepository.find({ where: { code: code } });
+      return {
+        data: career,
+      };
+    } else {
+      const career = await this.careerRepository.findOne({ where: { code: code, languageId: languageId } });
+      return {
+        data: career,
+      };
+    }
   }
 
   async updateCareer(code: string, careerInput: [UpdateCareerInput]) {
@@ -147,7 +162,6 @@ export class CareerService {
             HttpStatus.CONFLICT,
           );
         }
-
         if (career.id) {
           const index: any = curCareers.findIndex((item: any) => item.id === career.id);
           if (index === -1) {
@@ -181,7 +195,7 @@ export class CareerService {
   async deleteCareer(code: string) {
     this.logger.debug('delete career');
     const curCareers: any = await this.careerRepository.find({ where: { code: code } });
-    if (!curCareers) {
+    if (curCareers.length === 0) {
       throw new HttpException(
         {
           statusCode: HttpStatus.NOT_FOUND,
@@ -191,6 +205,6 @@ export class CareerService {
       );
     }
     await this.connection.queryResultCache.clear();
-    await this.careerRepository.delete(curCareers);
+    await this.careerRepository.softDelete(curCareers);
   }
 }

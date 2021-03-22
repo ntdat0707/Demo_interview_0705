@@ -15,24 +15,27 @@ export class CareerController {
   constructor(private careerService: CareerService) {}
 
   @Get()
+  @ApiQuery({ name: 'languageId', required: true })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'status', required: false })
   @ApiQuery({ name: 'countries', type: String, isArray: true, required: false })
   @ApiQuery({ name: 'searchValue', required: false })
   async getAllCareer(
+    @Query('languageId') languageId: string,
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
     @Query('status') status: string,
     @Query('countries', new ConvertArray()) countries: string[],
     @Query('searchValue') searchValue: string,
   ) {
-    return await this.careerService.getAllCareer(page, limit, searchValue, status, countries);
+    return await this.careerService.getAllCareer(languageId, page, limit, searchValue, status, countries);
   }
 
   @Get('/:code')
-  async getCareer(@Param('code') code: string) {
-    return await this.careerService.getCareer(code);
+  @ApiQuery({ name: 'languageId', required: true })
+  async getCareer(@Param('code') code: string, @Query('languageId') languageId: string) {
+    return await this.careerService.getCareer(code, languageId);
   }
 
   @Post()

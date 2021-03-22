@@ -43,10 +43,17 @@ export class SolutionService {
   async createSolution(createSolutionList: [CreateSolutionInput]) {
     this.logger.debug('Create solution');
     //Need check max and different solution when create
-    const code = Math.random()
-      .toString(36)
-      .substring(2, 8)
-      .toUpperCase();
+    let randomCode = '';
+    while (true) {
+      randomCode = Math.random()
+        .toString(36)
+        .substring(2, 10)
+        .toUpperCase();
+      const existCode = await this.solutionRepository.findOne({ where: { code: randomCode } });
+      if (!existCode) {
+        break;
+      }
+    }
     await isLanguageENValid(createSolutionList, this.languageRepository);
     await isDuplicateLanguageValid(createSolutionList, this.languageRepository);
     for (const item of createSolutionList) {
@@ -67,7 +74,7 @@ export class SolutionService {
         newSolution.setAttributes(item);
         await this.connection.queryResultCache.clear();
         await getManager().transaction(async transactionalEntityManager => {
-          newSolution.code = code;
+          newSolution.code = randomCode;
           await transactionalEntityManager.save<SolutionEntity>(newSolution);
           this.logger.debug('Create solution');
           if ((item.images && item.images.length > 0) || item.bannerImage) {
