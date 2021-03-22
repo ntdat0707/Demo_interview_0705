@@ -1,7 +1,11 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, Connection, Repository } from 'typeorm';
+import moment = require('moment');
+import { Brackets, Connection, getManager, Repository } from 'typeorm';
 import { CareerEntity } from '../entities/career.entity';
+import { LanguageEntity } from '../entities/language.entity';
+import { ECareerStatus } from '../lib/constant';
+import { isDuplicateLanguageValid, isLanguageENValid } from '../lib/pipeUtils/languageValidate';
 import { convertTv } from '../lib/utils';
 import { CreateCareerInput, UpdateCareerInput } from './career.dto';
 
@@ -10,21 +14,45 @@ export class CareerService {
   private readonly logger = new Logger(CareerService.name);
   constructor(
     @InjectRepository(CareerEntity) private careerRepository: Repository<CareerEntity>,
+    @InjectRepository(LanguageEntity) private languageRepository: Repository<LanguageEntity>,
     private connection: Connection,
   ) {}
 
-  async createCareer(careerInput: CreateCareerInput) {
+  async createCareer(careerInput: [CreateCareerInput]) {
     this.logger.debug('create career');
-    let career = new CareerEntity();
-    career.setAttributes(careerInput);
-    await this.connection.queryResultCache.clear();
-    career = await this.careerRepository.save(career);
-    return {
-      data: career,
-    };
+    await isLanguageENValid(careerInput, this.languageRepository);
+    await isDuplicateLanguageValid(careerInput, this.languageRepository);
+    let randomCode = '';
+    while (true) {
+      randomCode = Math.random()
+        .toString(36)
+        .substring(2, 10)
+        .toUpperCase();
+      const existCode = await this.careerRepository.findOne({ where: { code: randomCode } });
+      if (!existCode) {
+        break;
+      }
+    }
+    for (const item of careerInput) {
+      const existTitle = await this.careerRepository.findOne({ where: { title: item.title } });
+      if (existTitle) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.CONFLICT,
+            message: `TITLE_HAS_BEEN_EXISTED `,
+          },
+          HttpStatus.CONFLICT,
+        );
+      }
+      let career = new CareerEntity();
+      career.setAttributes(item);
+      career.code = randomCode;
+      career = await this.careerRepository.save(career);
+      return {};
+    }
   }
-
   async getAllCareer(
+    languageId: string,
     page = 1,
     limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
     searchValue: string,
@@ -36,7 +64,7 @@ export class CareerService {
     await this.connection.queryResultCache.clear();
     const careerQuery = this.careerRepository
       .createQueryBuilder('career')
-      // .where('career."deleted_at" is null')
+      .where(`career."language_id"=${languageId}`)
       .limit(limit)
       .offset((page - 1) * limit)
       .orderBy('created_at', 'DESC');
@@ -92,49 +120,91 @@ export class CareerService {
     };
   }
 
-  async getCareer(careerId: string) {
+  async getCareer(code: string, languageId?: string) {
     this.logger.debug('get-career');
-    const career = await this.careerRepository.findOne({ where: { id: careerId } });
-    return {
-      data: career,
-    };
+    await this.connection.queryResultCache.clear();
+    if (!languageId) {
+      const career = await this.careerRepository.find({ where: { code: code } });
+      return {
+        data: career,
+      };
+    } else {
+      const career = await this.careerRepository.findOne({ where: { code: code, languageId: languageId } });
+      return {
+        data: career,
+      };
+    }
   }
 
-  async updateCareer(careerId: string, careerInput: UpdateCareerInput) {
+  async updateCareer(code: string, careerInput: [UpdateCareerInput]) {
     this.logger.debug('update career');
-    const careerUpdate = new CareerEntity();
-    careerUpdate.setAttributes(careerInput);
-    let currCareer = await this.careerRepository.findOne({ where: { id: careerId } });
-    if (!currCareer) {
+    await isDuplicateLanguageValid(careerInput, this.languageRepository);
+    const curCareers: any = await this.careerRepository.find({ where: { code: code } });
+    if (curCareers.length === 0) {
       throw new HttpException(
         {
           statusCode: HttpStatus.NOT_FOUND,
-          message: `Career id ${careerId} is not exist `,
+          message: `CAREERS_NOT_EXIST `,
         },
         HttpStatus.NOT_FOUND,
       );
     }
-    currCareer = careerUpdate;
     await this.connection.queryResultCache.clear();
-    await this.careerRepository.update({ id: careerId }, currCareer);
-    return {
-      data: currCareer,
-    };
+    await getManager().transaction(async transactionalEntityManager => {
+      for (const career of careerInput) {
+        const existTitle = await this.careerRepository.findOne({ where: { title: career.title } });
+        if (existTitle) {
+          throw new HttpException(
+            {
+              statusCode: HttpStatus.CONFLICT,
+              message: `TITLE_HAS_BEEN_EXISTED `,
+            },
+            HttpStatus.CONFLICT,
+          );
+        }
+        if (career.id) {
+          const index: any = curCareers.findIndex((item: any) => item.id === career.id);
+          if (index === -1) {
+            throw new HttpException(
+              {
+                statusCode: HttpStatus.NOT_FOUND,
+                message: `CAREER_${career.id}_NOT_EXIST `,
+              },
+              HttpStatus.NOT_FOUND,
+            );
+          }
+          curCareers[index].setAttributes(career);
+          if (career.status === ECareerStatus.CLOSED) {
+            curCareers[index].closingDate = moment().format('YYYY-MM-DD h:mm');
+          }
+          await transactionalEntityManager.update<CareerEntity>(CareerEntity, { id: career.id }, curCareers[index]);
+        } else {
+          const newCar = new CareerEntity();
+          newCar.setAttributes(career);
+          newCar.code = career.code;
+          if (career.status === ECareerStatus.CLOSED) {
+            newCar.closingDate = new Date(moment().format('YYYY-MM-DD h:mm'));
+          }
+          await transactionalEntityManager.save<CareerEntity>(newCar);
+        }
+      }
+    });
+    return {};
   }
 
-  async deleteCareer(careerId: string) {
+  async deleteCareer(code: string) {
     this.logger.debug('delete career');
-    const currCareer = await this.careerRepository.findOne({ where: { id: careerId } });
-    if (!currCareer) {
+    const curCareers: any = await this.careerRepository.find({ where: { code: code } });
+    if (curCareers.length === 0) {
       throw new HttpException(
         {
           statusCode: HttpStatus.NOT_FOUND,
-          message: `Career id ${careerId} is not exist `,
+          message: `CAREERS_NOT_EXIST`,
         },
         HttpStatus.NOT_FOUND,
       );
     }
     await this.connection.queryResultCache.clear();
-    await this.careerRepository.softRemove<CareerEntity>(currCareer);
+    await this.careerRepository.softDelete(curCareers);
   }
 }

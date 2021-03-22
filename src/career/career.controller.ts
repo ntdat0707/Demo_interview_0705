@@ -2,7 +2,6 @@ import { CreateCareerPipe } from './../lib/validatePipe/career/createCareerPipe.
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseFilters } from '@nestjs/common';
 import { ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
-import { CheckUUID } from '../lib/validatePipe/uuidPipe.class';
 import { CareerService } from './career.service';
 import { CreateCareerInput, UpdateCareerInput } from './career.dto';
 import { UpdateCareerPipe } from '../lib/validatePipe/career/updateCareerPipe.class';
@@ -16,43 +15,46 @@ export class CareerController {
   constructor(private careerService: CareerService) {}
 
   @Get()
+  @ApiQuery({ name: 'languageId', required: true })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'status', required: false })
   @ApiQuery({ name: 'countries', type: String, isArray: true, required: false })
   @ApiQuery({ name: 'searchValue', required: false })
   async getAllCareer(
+    @Query('languageId') languageId: string,
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
     @Query('status') status: string,
     @Query('countries', new ConvertArray()) countries: string[],
     @Query('searchValue') searchValue: string,
   ) {
-    return await this.careerService.getAllCareer(page, limit, searchValue, status, countries);
+    return await this.careerService.getAllCareer(languageId, page, limit, searchValue, status, countries);
   }
 
-  @Get('/:id')
-  async getCareer(@Param('id', new CheckUUID()) id: string) {
-    return await this.careerService.getCareer(id);
+  @Get('/:code')
+  @ApiQuery({ name: 'languageId', required: true })
+  async getCareer(@Param('code') code: string, @Query('languageId') languageId: string) {
+    return await this.careerService.getCareer(code, languageId);
   }
 
   @Post()
-  @ApiBody({ type: CreateCareerInput })
-  async createCareer(@Body(new CreateCareerPipe()) createCareerInput: CreateCareerInput) {
+  @ApiBody({ type: [CreateCareerInput] })
+  async createCareer(@Body(new CreateCareerPipe()) createCareerInput: [CreateCareerInput]) {
     return await this.careerService.createCareer(createCareerInput);
   }
 
-  @Put('/:id')
-  @ApiBody({ type: UpdateCareerInput })
+  @Put('/:code')
+  @ApiBody({ type: [UpdateCareerInput] })
   async updateCareer(
-    @Param('id', new CheckUUID()) id: string,
-    @Body(new UpdateCareerPipe()) updateCareerInput: UpdateCareerInput,
+    @Param('code') code: string,
+    @Body(new UpdateCareerPipe()) updateCareerInput: [UpdateCareerInput],
   ) {
-    return await this.careerService.updateCareer(id, updateCareerInput);
+    return await this.careerService.updateCareer(code, updateCareerInput);
   }
 
-  @Delete('/:id')
-  async deleteCareer(@Param('id', new CheckUUID()) id: string) {
-    return await this.careerService.deleteCareer(id);
+  @Delete('/:code')
+  async deleteCareer(@Param('code') code: string) {
+    return await this.careerService.deleteCareer(code);
   }
 }

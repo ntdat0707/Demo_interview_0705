@@ -62,16 +62,23 @@ export class ResourceService {
     this.logger.debug('Create resource');
     await checkConditionInputCreate(this.resourceRepository, createResources, this.languageRepository);
     const newResources = [];
-    const code = Math.random()
-      .toString(36)
-      .substring(2, 8)
-      .toUpperCase();
+    let randomCode = '';
+    while (true) {
+      randomCode = Math.random()
+        .toString(36)
+        .substring(2, 10)
+        .toUpperCase();
+      const existCode = await this.resourceRepository.findOne({ where: { code: randomCode } });
+      if (!existCode) {
+        break;
+      }
+    }
     for (const createResource of createResources) {
       let newResource = new ResourceEntity();
       newResource.setAttributes(createResource);
       await this.connection.queryResultCache.clear();
       await getManager().transaction(async transactionalEntityManager => {
-        newResource.code = code;
+        newResource.code = randomCode;
         newResource = await transactionalEntityManager.save<ResourceEntity>(newResource);
         this.logger.debug('Create resource categories');
         if (createResource.categoryIds && createResource.categoryIds.length > 0) {
