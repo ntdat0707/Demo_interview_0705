@@ -16,11 +16,7 @@ export class DocumentService {
 
   async uploadDocument(file: any, documentInput: DocumentInput) {
     this.logger.debug('upload document');
-    const fileName: string = file.filename;
-    const lastName = fileName.split('.');
-    const name = fileName.substring(0, fileName.lastIndexOf('_')) + '.' + lastName[lastName.length - 1];
     let pathFile = '';
-
     let newDocument = new DocumentEntity();
     await this.connection.queryResultCache.clear();
     await getManager().transaction(async transactionalEntityManager => {
@@ -31,7 +27,7 @@ export class DocumentService {
         }
       } else {
         const existDocument = await this.documentRepository.findOne({
-          where: { name: name, flag: documentInput.flag },
+          where: { name: file.originalname, flag: documentInput.flag },
         });
         if (existDocument) {
           pathFile = process.env.UPLOAD_DOCUMENT_PATH + '/' + existDocument.file;
@@ -39,8 +35,8 @@ export class DocumentService {
         }
       }
       newDocument.setAttributes(documentInput);
-      newDocument.file = fileName;
-      newDocument.name = name;
+      newDocument.file = file.filename;
+      newDocument.name = file.originalname;
       await this.connection.queryResultCache.clear();
       newDocument = await transactionalEntityManager.save<DocumentEntity>(newDocument);
     });

@@ -6,8 +6,14 @@ export class BannerEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ name: 'language_id', type: 'uuid' })
+  languageId: string;
+
   @Column('varchar')
   title: string;
+
+  @Column('varchar')
+  code: string;
 
   @Column({ default: 0, nullable: true })
   index: number;
@@ -55,6 +61,7 @@ export class BannerEntity {
   deletedAt: Date;
 
   setAttributes(object: any) {
+    this.languageId = object.languageId;
     this.title = object.title;
     this.description = object.description ? object.description : null;
     this.textColor = object.textColor ? object.textColor : null;

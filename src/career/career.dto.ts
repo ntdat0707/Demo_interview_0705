@@ -3,10 +3,13 @@ import { EEducationLevelStatus } from '../lib/constant';
 
 export class CreateCareerInput {
   @ApiProperty({ required: true })
+  readonly languageId: string;
+
+  @ApiProperty({ required: true })
   readonly title: string;
 
   @ApiProperty({ required: false })
-  readonly vancancies: number;
+  readonly vacancies: number;
 
   @ApiProperty({ required: true })
   readonly country: string;
@@ -49,11 +52,20 @@ export class CreateCareerInput {
 }
 
 export class UpdateCareerInput {
+  @ApiProperty({ required: false })
+  readonly id: string;
+
+  @ApiProperty({ required: true })
+  readonly code: string;
+
+  @ApiProperty({ required: true })
+  readonly languageId: string;
+
   @ApiProperty({ required: true })
   readonly title: string;
 
   @ApiProperty({ required: false })
-  readonly vancancies: number;
+  readonly vacancies: number;
 
   @ApiProperty({ required: true })
   readonly country: string;

@@ -12,11 +12,12 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
-import { CreateBannerPipe } from '../lib/validatePipe/banner/createBannerPipe.class';
+import { BannerInputPipe } from '../lib/validatePipe/banner/bannerInputPipe.class';
 import { UpdateIndexBannerPipe } from '../lib/validatePipe/banner/updateIndexBannerPipe.class';
 import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
+import { CheckLanguagePipe } from '../lib/validatePipe/focused-market/checkLanguagePipe.class';
 import { CheckUUID } from '../lib/validatePipe/uuidPipe.class';
 import { BannerIndexInput, BannerInput, ImageBannerInput } from './banner.dto';
 import { BannerService } from './banner.service';
@@ -28,16 +29,19 @@ export class BannerController {
   constructor(private bannerService: BannerService) {}
 
   @Get('')
+  @ApiQuery({ name: 'languageId', required: true, type: String })
   async getAllBanner(
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
+    @Query('languageId', new CheckUUID()) languageId: string,
   ) {
-    return await this.bannerService.getAllBanner(page, limit);
+    return await this.bannerService.getAllBanner(languageId, page, limit);
   }
 
-  @Get('/:id')
-  async getBanner(@Param('id', new CheckUUID()) id: string) {
-    return await this.bannerService.getBanner(id);
+  @Get('/:code')
+  @ApiQuery({ name: 'languageId', required: false, type: String })
+  async getBanner(@Param('code') code: string, @Query('languageId', new CheckLanguagePipe()) languageId: string) {
+    return await this.bannerService.getBanner(code, languageId);
   }
 
   @Post('/upload-image-resource')
@@ -51,26 +55,23 @@ export class BannerController {
   }
 
   @Post('')
-  @ApiBody({ type: BannerInput })
-  async createBanner(@Body(new CreateBannerPipe()) createBannerInput: BannerInput) {
+  @ApiBody({ type: [BannerInput] })
+  async createBanner(@Body(new BannerInputPipe()) createBannerInput: [BannerInput]) {
     return await this.bannerService.createBanner(createBannerInput);
   }
 
-  @Put('/:id')
-  @ApiBody({ type: BannerInput })
-  async updateBanner(
-    @Param('id', new CheckUUID()) id: string,
-    @Body(new CreateBannerPipe()) updateBannerInput: BannerInput,
-  ) {
-    return await this.bannerService.updateBanner(id, updateBannerInput);
+  @Put('/:code')
+  @ApiBody({ type: [BannerInput] })
+  async updateBanner(@Param('code') code: string, @Body(new BannerInputPipe()) updateBannerInput: [BannerInput]) {
+    return await this.bannerService.updateBanner(code, updateBannerInput);
   }
 
-  @Delete('/:id')
-  async deleteBanner(@Param('id', new CheckUUID()) id: string) {
-    return await this.bannerService.deleteBanner(id);
+  @Delete('/:code')
+  async deleteBanner(@Param('code') code: string) {
+    return await this.bannerService.deleteBanner(code);
   }
 
-  @Put('/update-index-banner')
+  @Put('available/update/')
   @ApiBody({ type: [BannerIndexInput] })
   async updateIndexBanner(@Body(new UpdateIndexBannerPipe()) bannerIndexInput: [BannerIndexInput]) {
     return await this.bannerService.updateIndexBanner(bannerIndexInput);

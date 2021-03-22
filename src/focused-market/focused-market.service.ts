@@ -63,10 +63,17 @@ export class FocusedMarketService {
         HttpStatus.BAD_REQUEST,
       );
     }
-    const code = Math.random()
-      .toString(36)
-      .substring(2, 8)
-      .toUpperCase();
+    let randomCode = '';
+    while (true) {
+      randomCode = Math.random()
+        .toString(36)
+        .substring(2, 10)
+        .toUpperCase();
+      const existFocusedCode = await this.focusedMarketRepository.findOne({ where: { code: randomCode } });
+      if (!existFocusedCode) {
+        break;
+      }
+    }
     const dataForcusedMarket = [];
     const dataForcusedMarketImage = [];
     let isLanguageEN = false;
@@ -98,7 +105,7 @@ export class FocusedMarketService {
       }
       const focusedMarket = new FocusedEntity();
       focusedMarket.setAttributes(item);
-      focusedMarket.code = code;
+      focusedMarket.code = randomCode;
       focusedMarket.id = uuidv4();
       for (const focusImage of item.images) {
         const focusedMarketImage = new FocusedImageEntity();
@@ -192,6 +199,7 @@ export class FocusedMarketService {
       );
     }
     let isLanguageEN: boolean = false;
+    let languageEnId: string;
     for (const item of focusedMarketList) {
       const language = await this.languageRepository.findOne({ where: { id: item.languageId } });
       if (!language) {
@@ -204,6 +212,7 @@ export class FocusedMarketService {
         );
       }
       if (language.code === 'EN') {
+        languageEnId = language.id;
         isLanguageEN = true;
       }
     }
@@ -273,6 +282,15 @@ export class FocusedMarketService {
             }
           }
         } else {
+          if (focusedMarket.languageId === languageEnId) {
+            throw new HttpException(
+              {
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: 'CAN NOT CREATE ENGLISH LANGUAGE FOR FOCUSED MARKET',
+              },
+              HttpStatus.BAD_REQUEST,
+            );
+          }
           const newFocusedMarket = new FocusedEntity();
           newFocusedMarket.setAttributes(focusedMarket);
           newFocusedMarket.code = code;

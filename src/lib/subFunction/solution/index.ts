@@ -1,3 +1,4 @@
+import { HttpException, HttpStatus } from '@nestjs/common';
 import _ = require('lodash');
 import { Repository } from 'typeorm';
 import { LanguageEntity } from '../../../entities/language.entity';
@@ -20,17 +21,31 @@ export async function countSolution(solutionRepository: Repository<SolutionEntit
 
 export async function isSolutionAvailable(data: [UpdateSolutionInput], languageRepository: Repository<LanguageEntity>) {
   const solutions = [];
-  let checkDuplicates = false;
 
   for (const item of data) {
+    if (!item.id) {
+      const language = await languageRepository.findOne({ where: { id: item.languageId } });
+      if (language.code === 'EN') {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.CONFLICT,
+            message: 'SOLUTION_LANGUAGE_DUPLICATE',
+          },
+          HttpStatus.CONFLICT,
+        );
+      }
+    }
     solutions.push(item.languageId);
   }
   if (hasDuplicates(solutions)) {
-    checkDuplicates = true;
-  } else {
-    checkDuplicates = false;
+    throw new HttpException(
+      {
+        statusCode: HttpStatus.CONFLICT,
+        message: 'SOLUTION_LANGUAGE_DUPLICATE',
+      },
+      HttpStatus.CONFLICT,
+    );
   }
-  return checkDuplicates;
 }
 
 function hasDuplicates(arr: any) {
