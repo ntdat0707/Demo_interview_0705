@@ -20,7 +20,7 @@ import { CheckUUID } from '../lib/validatePipe/uuidPipe.class';
 import { CheckFlagPipe } from '../lib/validatePipe/video/checkQueryStringPipe.class';
 import { UpdateVideoPipe } from '../lib/validatePipe/video/updateVideoPipe.class';
 import { UploadVideoPipe } from '../lib/validatePipe/video/uploadVideoPipe.class';
-import { UpdateVideoInput, UploadVideoInput } from './video.dto';
+import { UpdateVideoInput, UploadVideoInput, VideoInput } from './video.dto';
 import { VideoService } from './video.service';
 
 @Controller('video')
@@ -31,37 +31,41 @@ export class VideoController {
 
   @Get('')
   @ApiQuery({ name: 'flag', type: String, required: true, enum: Object.values(EFlagUploadVideo) })
+  @ApiQuery({ name: 'languageId', type: String, required: true })
   async getAllVideo(
     @Query('flag', new CheckFlagPipe()) flag: string,
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
+    @Query('languageId') languageId: string,
   ) {
-    return await this.videoService.getAllVideo(flag, page, limit);
+    return await this.videoService.getAllVideo(flag, page, limit, languageId);
   }
 
-  @Get('/:id')
-  async getVideo(@Param('id', new CheckUUID()) id: string) {
-    return await this.videoService.getVideo(id);
+  @Get('/:code')
+  async getVideo(@Param('code') code: string, @Query('languageId') languageId: string) {
+    return await this.videoService.getVideo(code, languageId);
   }
 
   @Post('/upload-video')
+  @ApiBody({ type: [UploadVideoInput] })
+  async uploadVideo(@Body(new UploadVideoPipe()) uploadVideos: [UploadVideoInput]) {
+    return await this.videoService.uploadVideos(uploadVideos);
+  }
+
+  @Post('/upload-video-file')
   @UseInterceptors(FileInterceptor('video'))
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ type: UploadVideoInput })
-  async uploadVideo(@UploadedFile() video: any, @Body(new UploadVideoPipe()) uploadVideo: UploadVideoInput) {
-    return await this.videoService.uploadVideo(video, uploadVideo);
+  @ApiBody({
+    type: VideoInput,
+  })
+  async uploadVideoFile(@UploadedFile() video: VideoInput) {
+    return await this.videoService.uploadVideoFile(video);
   }
 
   @Put('/:id')
-  @UseInterceptors(FileInterceptor('video'))
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({ type: UpdateVideoInput })
-  async updateVideo(
-    @Param('id', new CheckUUID()) id: string,
-    @UploadedFile() video: any,
-    @Body(new UpdateVideoPipe()) updateVideo: UpdateVideoInput,
-  ) {
-    return await this.videoService.updateVideo(id, video, updateVideo);
+  @ApiBody({ type: [UpdateVideoInput] })
+  async updateVideo(@Param('code') code: string, @Body(new UpdateVideoPipe()) updateVideos: [UpdateVideoInput]) {
+    return await this.videoService.updateVideo(code, updateVideos);
   }
 
   @Delete('/:id')

@@ -128,16 +128,6 @@ export class SolutionService {
     await isSolutionAvailable(data, this.languageRepository);
     await getManager().transaction(async transactionalEntityManager => {
       for (const item of data) {
-        const existTitle = await this.solutionRepository.findOne({ where: { title: item.title } });
-        if (existTitle) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.CONFLICT,
-              message: `TITLE_HAS_BEEN_EXISTED `,
-            },
-            HttpStatus.CONFLICT,
-          );
-        }
         if (item.id) {
           const index = currSolutions.findIndex((x: any) => x.id === item.id);
           if (index === -1) {
@@ -148,6 +138,20 @@ export class SolutionService {
               },
               HttpStatus.NOT_FOUND,
             );
+          }
+          if (currSolutions[index].title !== item.title) {
+            const existTitle = await this.solutionRepository.findOne({
+              where: { title: item.title, languageId: item.languageId },
+            });
+            if (existTitle) {
+              throw new HttpException(
+                {
+                  statusCode: HttpStatus.CONFLICT,
+                  message: `TITLE_HAS_BEEN_EXISTED `,
+                },
+                HttpStatus.CONFLICT,
+              );
+            }
           }
           currSolutions[index].setAttributes(item);
           //images update
@@ -190,6 +194,18 @@ export class SolutionService {
             currSolutions[index],
           );
         } else {
+          const existTitle = await this.solutionRepository.findOne({
+            where: { title: item.title, languageId: item.languageId },
+          });
+          if (existTitle) {
+            throw new HttpException(
+              {
+                statusCode: HttpStatus.CONFLICT,
+                message: `TITLE_HAS_BEEN_EXISTED `,
+              },
+              HttpStatus.CONFLICT,
+            );
+          }
           const newSolution = new SolutionEntity();
           newSolution.setAttributes(item);
           newSolution.code = code;
