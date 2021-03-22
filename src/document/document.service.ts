@@ -56,6 +56,7 @@ export class DocumentService {
       .where(`flag =  :value`, { value: `${flag}` })
       .limit(limit)
       .offset((page - 1) * limit);
+    await this.connection.queryResultCache.clear();
     const countResult = await queryExc.cache(`documents_count_page${page}_limit${limit}`).getCount();
     const result = await queryExc.cache(`documents__page${page}_limit${limit}`).getMany();
     const pages = Math.ceil(Number(countResult) / limit);
@@ -107,6 +108,7 @@ export class DocumentService {
 
   async getDocument(id: string) {
     this.logger.debug('get document');
+    await this.connection.queryResultCache.clear();
     const document = await this.documentRepository.findOne({ where: { id: id } });
     if (!document) {
       throw new HttpException(
