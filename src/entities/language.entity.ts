@@ -11,7 +11,7 @@ export class LanguageEntity {
   @Column('varchar')
   code: string;
 
-  @Column('text')
+  @Column('text', { nullable: true })
   image: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
