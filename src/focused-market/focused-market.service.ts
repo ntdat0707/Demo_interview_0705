@@ -98,7 +98,7 @@ export class FocusedMarketService {
         throw new HttpException(
           {
             statusCode: HttpStatus.CONFLICT,
-            message: 'FOCUSED_MARKET_ALREADY_EXIST',
+            message: 'FOCUSED_MARKET_TITLE_ALREADY_EXIST',
           },
           HttpStatus.CONFLICT,
         );
@@ -241,6 +241,20 @@ export class FocusedMarketService {
               HttpStatus.NOT_FOUND,
             );
           }
+          if (focusedMarket.title !== oldFocusedMarket[index].title) {
+            const checkTitle = await this.focusedMarketRepository.findOne({
+              where: { languageId: focusedMarket.languageId, title: focusedMarket.title },
+            });
+            if (checkTitle) {
+              throw new HttpException(
+                {
+                  statusCode: HttpStatus.CONFLICT,
+                  message: 'FOCUSED_MARKET_TITLE_ALREADY_EXIST',
+                },
+                HttpStatus.CONFLICT,
+              );
+            }
+          }
           oldFocusedMarket[index].setAttributes(focusedMarket);
           await transactionalEntityManager.save<FocusedEntity>(oldFocusedMarket[index]);
           const focusedImages = await this.focusedMarketImageRepository.find({
@@ -289,6 +303,18 @@ export class FocusedMarketService {
                 message: 'CAN NOT CREATE ENGLISH LANGUAGE FOR FOCUSED MARKET',
               },
               HttpStatus.BAD_REQUEST,
+            );
+          }
+          const checkTitle = await this.focusedMarketRepository.findOne({
+            where: { languageId: focusedMarket.languageId, title: focusedMarket.title },
+          });
+          if (checkTitle) {
+            throw new HttpException(
+              {
+                statusCode: HttpStatus.CONFLICT,
+                message: 'FOCUSED_MARKET_TITLE_ALREADY_EXIST',
+              },
+              HttpStatus.CONFLICT,
             );
           }
           const newFocusedMarket = new FocusedEntity();
