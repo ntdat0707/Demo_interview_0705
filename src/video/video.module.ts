@@ -7,6 +7,7 @@ import shortid = require('shortid');
 import { LanguageEntity } from '../entities/language.entity';
 import { VideoEntity } from '../entities/video.entity';
 import { VideoController } from './video.controller';
+
 import { VideoService } from './video.service';
 
 @Module({

@@ -11,6 +11,12 @@ export class VideoEntity {
   @Column('varchar')
   flag: string;
 
+  @Column('varchar', { name: 'language_id', nullable: false })
+  languageId: string;
+
+  @Column('varchar', { nullable: false })
+  code: string;
+
   @Column('varchar', { nullable: true })
   description: string;
 
@@ -34,6 +40,8 @@ export class VideoEntity {
 
   setAttributes(object: any) {
     this.title = object.title;
+    this.languageId = object.languageId;
+    this.flag = object.flag;
     this.description = object.description ? object.description : null;
     this.video = object.video ? object.video : null;
     this.linkVideo = object.linkVideo ? object.linkVideo : null;

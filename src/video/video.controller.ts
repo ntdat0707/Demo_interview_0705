@@ -16,7 +16,6 @@ import { ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { EFlagUploadVideo } from '../lib/constant';
 import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
-import { CheckUUID } from '../lib/validatePipe/uuidPipe.class';
 import { CheckFlagPipe } from '../lib/validatePipe/video/checkQueryStringPipe.class';
 import { UpdateVideoPipe } from '../lib/validatePipe/video/updateVideoPipe.class';
 import { UploadVideoPipe } from '../lib/validatePipe/video/uploadVideoPipe.class';
@@ -62,14 +61,14 @@ export class VideoController {
     return await this.videoService.uploadVideoFile(video);
   }
 
-  @Put('/:id')
+  @Put('/:code')
   @ApiBody({ type: [UpdateVideoInput] })
   async updateVideo(@Param('code') code: string, @Body(new UpdateVideoPipe()) updateVideos: [UpdateVideoInput]) {
     return await this.videoService.updateVideo(code, updateVideos);
   }
 
-  @Delete('/:id')
-  async deleteVideo(@Param('id', new CheckUUID()) id: string) {
-    return await this.videoService.deleteVideo(id);
+  @Delete('/:code')
+  async deleteVideo(@Param('code') code: string) {
+    return await this.videoService.deleteVideo(code);
   }
 }

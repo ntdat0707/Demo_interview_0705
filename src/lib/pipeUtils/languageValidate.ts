@@ -50,7 +50,7 @@ export async function isDuplicateLanguageValid(value: any[], languageRepository:
     throw new HttpException(
       {
         statusCode: HttpStatus.CONFLICT,
-        message: 'LANGUAGE_CREATE_HAS_BEEN_DUPLICATE',
+        message: 'LANGUAGE_HAS_BEEN_DUPLICATE',
       },
       HttpStatus.CONFLICT,
     );
