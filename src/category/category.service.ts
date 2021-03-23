@@ -20,4 +20,12 @@ export class CategoryService {
       data: newCategory,
     };
   }
+
+  async getAllCategory() {
+    this.logger.debug('get all category');
+    const categories = await this.categoryRepository.find({});
+    return {
+      data: categories,
+    };
+  }
 }
