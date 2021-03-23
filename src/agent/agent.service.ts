@@ -42,7 +42,7 @@ export class AgentService {
     await this.agentRepository.update({ id: agentId }, agent);
   }
 
-  async createAgent(agentInput: AgentInput, isCMS: string) {
+  async createAgent(agentInput: AgentInput) {
     this.logger.debug('create agent');
     let agent = new AgentEntity();
     agent.setAttributes(agentInput);
@@ -58,13 +58,10 @@ export class AgentService {
       }
     }
     agent.code = randomCode;
-    //console.log('isCMS:::', typeof isCMS);
-    if (isCMS === 'false') {
-      // console.log('isCMS is false');
+    if (agentInput.createdOn === 'web') {
       try {
         const SEND_TO = 'nguyentandat.email07@gmail.com';
         const pathFile = path.join(__dirname, '../../template/new_account.ejs');
-        // console.log('PathFile::', pathFile);
         const dataEmail = {
           companyPhone: agentInput.companyPhone,
           companyName: agentInput.companyName,

@@ -51,8 +51,7 @@ export class AgentController {
 
   @Post('')
   @ApiBody({ type: AgentInput })
-  @ApiQuery({ name: 'isCMS', required: true, type: String })
-  async createAgent(@Body(new CreateAgentPipe()) createAgentInput: AgentInput, @Query('isCMS') isCMS: string) {
-    return await this.agentService.createAgent(createAgentInput, isCMS);
+  async createAgent(@Body(new CreateAgentPipe()) createAgentInput: AgentInput) {
+    return await this.agentService.createAgent(createAgentInput);
   }
 }

@@ -1,9 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EBannerStatus } from '../lib/constant';
+import { EAgentCreatedOn, EBannerStatus } from '../lib/constant';
 
 export class AgentInput {
   @ApiProperty({ required: true })
   readonly companyPhone: string;
+
+  @ApiProperty({ enum: [...Object.values(EAgentCreatedOn)] })
+  readonly createdOn: string;
 
   @ApiProperty({ required: true })
   readonly companyName: string;
