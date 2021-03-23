@@ -5,4 +5,7 @@ export class LanguageInput {
 
   @ApiProperty({ required: true })
   readonly code: string;
+
+  @ApiProperty({ required: true })
+  readonly image: string;
 }

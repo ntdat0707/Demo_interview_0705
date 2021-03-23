@@ -22,6 +22,15 @@ export class CreateLanguagePipe implements PipeTransform<any> {
         HttpStatus.BAD_REQUEST,
       );
     }
+    if (!value.image) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'IMAGE_REQUIRED',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     return value;
   }
 }
