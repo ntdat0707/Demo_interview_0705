@@ -24,4 +24,12 @@ export class AuthorService {
       },
     };
   }
+
+  async getAllAuthor() {
+    this.logger.debug('get all author');
+    const authors = await this.authorRepository.find({});
+    return {
+      data: authors,
+    };
+  }
 }

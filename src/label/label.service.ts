@@ -21,4 +21,12 @@ export class LabelService {
       data: newLabel,
     };
   }
+
+  async getAllLabel() {
+    this.logger.debug('get all label');
+    const labels = await this.labelRepository.find({});
+    return {
+      data: labels,
+    };
+  }
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseFilters } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseFilters } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { CreateAuthorPipe } from '../lib/validatePipe/author/createAuthorPipe.class';
@@ -19,5 +19,10 @@ export class AuthorController {
   // @Roles([CREATE_BLOG, UPDATE_BLOG])
   async createCate(@Body(new CreateAuthorPipe()) authorInput: AuthorInput) {
     return await this.authorService.createAuthor(authorInput);
+  }
+
+  @Get()
+  async getAllAuthor() {
+    return await this.authorService.getAllAuthor();
   }
 }

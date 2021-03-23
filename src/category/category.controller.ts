@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseFilters } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseFilters } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { CreateCatePipe } from '../lib/validatePipe/category/createCatePipe.class';
@@ -19,5 +19,10 @@ export class CategoryController {
   // @Roles([CREATE_BLOG, UPDATE_BLOG])
   async createCate(@Body(new CreateCatePipe()) cateInput: CategoryInput) {
     return await this.categoryService.createCategory(cateInput);
+  }
+
+  @Get()
+  async getAllCategory() {
+    return await this.categoryService.getAllCategory();
   }
 }

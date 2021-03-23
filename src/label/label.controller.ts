@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseFilters } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseFilters } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { CreateLabelPipe } from '../lib/validatePipe/label/createLabelPipe.class';
@@ -18,5 +18,10 @@ export class LabelController {
   // @Roles([CREATE_BLOG, UPDATE_BLOG])
   async createLabel(@Body(new CreateLabelPipe()) labelInput: LabelInput) {
     return this.labelService.createLabel(labelInput);
+  }
+
+  @Get()
+  async getAllLabel() {
+    return await this.labelService.getAllLabel();
   }
 }
