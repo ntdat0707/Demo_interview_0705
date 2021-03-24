@@ -75,6 +75,17 @@ export class UpdateResourcePipe implements PipeTransform<any> {
           }
         }
       }
+      if (value.isEditSEO === true) {
+        if (!value.link || value.link === '' || value.link === 'null') {
+          throw new HttpException(
+            {
+              statusCode: HttpStatus.BAD_REQUEST,
+              message: 'SEO_URL_IS_REQUIRED',
+            },
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+      }
     }
     return values;
   }

@@ -14,9 +14,6 @@ export class ResourceImageEntity {
   @Column('uuid', { name: 'resource_id' })
   resourceId: string;
 
-  @Column('boolean', { name: 'is_avatar', default: false })
-  isAvatar: boolean;
-
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
   createdAt: Date;
 

@@ -11,7 +11,6 @@ import { ResourceAuthorEntity } from '../entities/resourceAuthor.entity';
 import { ResourceCateEntity } from '../entities/resourceCate.entity';
 import { ResourceImageEntity } from '../entities/resourceImage.entity';
 import { ResourceLabelEntity } from '../entities/resourceLabel.entity';
-import { mapDataResource } from '../lib/mapData/resource';
 import { checkConditionInputCreate, checkConditionInputUpdate } from '../lib/validatePipe/resource/checkCondition';
 
 import { CreateResourceInput, UpdateResourceInput } from './resource.dto';
@@ -145,7 +144,7 @@ export class ResourceService {
         }
         // create imageAttach file
         this.logger.debug('Create resource Images');
-        if ((createResource.images && createResource.images.length > 0) || createResource.avatar) {
+        if (createResource.images && createResource.images.length > 0) {
           if (createResource.images && createResource.images.length > 0) {
             const resourceImageList = [];
             for (const item of createResource.images) {
@@ -156,14 +155,6 @@ export class ResourceService {
             }
             await transactionalEntityManager.save<ResourceImageEntity[]>(resourceImageList);
           }
-          if (createResource.avatar) {
-            const resourceImage: any = new ResourceImageEntity();
-            resourceImage.image = createResource.avatar;
-            resourceImage.resourceId = newResource.id;
-            resourceImage.alt = createResource.alt ? createResource.alt : '';
-            resourceImage.isAvatar = true;
-            await transactionalEntityManager.save<ResourceImageEntity>(resourceImage);
-          }
         }
         newResources.push(newResource);
       });
@@ -171,8 +162,14 @@ export class ResourceService {
     return { data: newResources };
   }
 
-  async getAllResource(page = 1, limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10)) {
-    const resourceQuery = this.resourceRepository.createQueryBuilder('resource');
+  async getAllResource(
+    page = 1,
+    limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
+    languageId: string,
+  ) {
+    const resourceQuery = this.resourceRepository
+      .createQueryBuilder('resource')
+      .where('resource."deleted_at" is null AND resource."language_id" =:languageId', { languageId });
     const resourceCount = await resourceQuery.cache(`resources_count_page${page}_limit${limit}`).getCount();
     const resources: any = await resourceQuery
       .leftJoinAndMapMany(
@@ -202,7 +199,7 @@ export class ResourceService {
         '"resource_category"."resource_id"="resource".id',
       )
       .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."category_id"')
-      .where('resource."deleted_at" is null')
+      // .where(`resource."deleted_at" is null AND resource."language_id" = '${languageId}'`)
       .limit(limit)
       .offset((page - 1) * limit)
       .orderBy('resource."created_at"', 'DESC')
@@ -215,7 +212,7 @@ export class ResourceService {
       totalPages: pages,
       limit: Number(limit),
       totalRecords: resourceCount,
-      data: mapDataResource(resources, true),
+      data: resources,
     };
   }
 
@@ -251,7 +248,42 @@ export class ResourceService {
       )
       .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."category_id"')
       .getMany();
-    return { data: mapDataResource(resource, true) };
+    return { data: resource };
+  }
+
+  async getResourceSEO(link: any) {
+    const resource: any = await this.resourceRepository
+      .createQueryBuilder('resource')
+      .where('"resource".link=:link and "resource".is_edit_seo is TRUE', { link })
+      .leftJoinAndMapMany(
+        'resource.images',
+        ResourceImageEntity,
+        'resource_image',
+        '"resource_image"."resource_id"="resource".id and resource_image.deleted_at is null',
+      )
+      .leftJoinAndMapOne(
+        'resource.author',
+        ResourceAuthorEntity,
+        'resource_author',
+        '"resource_author"."resource_id"="resource".id and resource_author.deleted_at is null',
+      )
+      .leftJoinAndMapOne('authors', AuthorEntity, 'author', '"author".id="resource_author"."author_id" ')
+      .leftJoinAndMapMany(
+        'resource.labels',
+        ResourceLabelEntity,
+        'resource_label',
+        '"resource_label"."resource_id"="resource".id and resource_label.deleted_at is null',
+      )
+      .leftJoinAndMapMany('labels', LabelEntity, 'label', '"label".id = "resource_label"."label_id"')
+      .leftJoinAndMapMany(
+        'resource.categories',
+        ResourceCateEntity,
+        'resource_category',
+        '"resource_category"."resource_id"="resource".id and resource_category.deleted_at is null',
+      )
+      .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."category_id"')
+      .getOne();
+    return { data: resource };
   }
 
   async updateResource(code: string, resourcesUpdate: [UpdateResourceInput]) {
@@ -263,12 +295,10 @@ export class ResourceService {
       for (const resourceUpdate of resourcesUpdate) {
         if (resourceUpdate.id) {
           let currResource: any = new ResourceEntity();
-          for (let i = 0; i < currResources.length; i++) {
-            if (currResources[i].id === resourceUpdate.id) {
-              currResource = currResources[i];
-            }
+          const index = currResources.findIndex((item: any) => item.id === resourceUpdate.id);
+          if (index > -1) {
+            currResource = currResources[index];
           }
-          this.logger.debug('Update resource data');
           //update Author
           this.logger.debug('Update resource author');
           if (!resourceUpdate.authorId) {
@@ -309,7 +339,7 @@ export class ResourceService {
           const resourceLabels = await this.resourceLabelEntityRepository.find({
             where: { resourceId: resourceUpdate.id },
           });
-          if (!resourceLabels.length) {
+          if (resourceLabels.length === 0) {
             const resourceLabelList = [];
             for (const item of resourceUpdate.labelIds) {
               const resourceLabel = new ResourceLabelEntity();
@@ -349,7 +379,7 @@ export class ResourceService {
             //update category
             this.logger.debug('Update resource categories');
             const resourceCates = await this.resourceCateRepository.find({ where: { resourceId: resourceUpdate.id } });
-            if (!resourceCates.length) {
+            if (resourceCates.length === 0) {
               const resourceCateList = [];
               for (const item of resourceUpdate.categoryIds) {
                 const resourceLabel = new ResourceCateEntity();
@@ -390,9 +420,11 @@ export class ResourceService {
             // update images
             this.logger.debug('Update resource images');
             if (resourceUpdate.images && resourceUpdate.images.length > 0) {
-              const oldImages: string[] = currResource.images.map((item: any) => {
-                return item.image;
-              });
+              const oldImages: any = (
+                await this.resourceImageRepository.find({
+                  where: { resourceId: resourceUpdate.id },
+                })
+              ).map((item: any) => item.image);
               const newImages: string[] = resourceUpdate.images.map((item: any) => {
                 return item.image;
               });
@@ -410,39 +442,15 @@ export class ResourceService {
               const deleteImages = _.difference(oldImages, newImages);
               if (deleteImages.length > 0) {
                 for (const item of deleteImages) {
-                  const index = currResource.findIndex((x: any) => x.image === item);
-                  if (index > -1) {
-                    await transactionalEntityManager.softDelete<ResourceImageEntity>(
-                      ResourceImageEntity,
-                      deleteImages[index],
-                    );
-                  }
+                  await transactionalEntityManager.softDelete<ResourceImageEntity>(ResourceImageEntity, {
+                    image: item,
+                  });
                 }
               }
-            } else if (currResource.images.length > 0) {
-              await transactionalEntityManager.softDelete<ResourceImageEntity[]>(
-                ResourceImageEntity,
-                currResource.images,
-              );
-            }
-            if (resourceUpdate.avatar) {
-              const resourcePictureData: any = new ResourceImageEntity();
-              resourcePictureData.image = resourceUpdate.avatar;
-              resourcePictureData.resourceId = resourceUpdate.id;
-              resourcePictureData.isAvatar = true;
-              const deleteAvatar = await this.resourceImageRepository.find({
-                where: { resourceId: resourceUpdate.id, isAvatar: true },
-              });
-              await transactionalEntityManager.softRemove<ResourceImageEntity>(deleteAvatar);
-              await transactionalEntityManager.save<ResourceImageEntity>(resourcePictureData);
-            } else {
-              const deleteAvatar = await this.resourceImageRepository.find({
-                where: { resourceId: resourceUpdate.id, isAvatar: true },
-              });
-              if (deleteAvatar) await transactionalEntityManager.softRemove<ResourceImageEntity>(deleteAvatar);
             }
             this.logger.debug('Update resource have id');
             currResource.setAttributes(resourceUpdate);
+
             await transactionalEntityManager.update<ResourceEntity>(
               ResourceEntity,
               { id: resourceUpdate.id },
@@ -451,13 +459,15 @@ export class ResourceService {
           }
         } else {
           // add new resource
-          const newResources = new ResourceEntity();
-          newResources.setAttributes(resourceUpdate);
+          this.logger.debug('Update resource have no id');
+          const newResource = new ResourceEntity();
+          newResource.setAttributes(resourceUpdate);
+          await transactionalEntityManager.save<ResourceEntity>(newResource);
           if (resourceUpdate.categoryIds && resourceUpdate.categoryIds.length > 0) {
             const resourceCateList = [];
             for (const item of resourceUpdate.categoryIds) {
               //check category
-              const category = await this.cateRepository.findOne({ where: { id: item } });
+              const category: any = await this.cateRepository.findOne({ where: { id: item } });
               if (!category) {
                 throw new HttpException(
                   {
@@ -468,8 +478,8 @@ export class ResourceService {
                 );
               }
               const resourceCate = new ResourceCateEntity();
-              resourceCate.resourceId = resourceUpdate.id;
-              resourceCate.categoryId = item;
+              resourceCate.resourceId = newResource.id;
+              resourceCate.categoryId = category.id;
               resourceCateList.push(resourceCate);
             }
             await transactionalEntityManager.save<ResourceCateEntity[]>(resourceCateList);
@@ -488,7 +498,7 @@ export class ResourceService {
               );
             }
             const resourceAuthor = new ResourceAuthorEntity();
-            resourceAuthor.resourceId = resourceUpdate.id;
+            resourceAuthor.resourceId = newResource.id;
             resourceAuthor.authorId = resourceUpdate.authorId;
             await this.connection.queryResultCache.clear();
             await transactionalEntityManager.save<ResourceAuthorEntity>(resourceAuthor);
@@ -509,7 +519,7 @@ export class ResourceService {
                 );
               }
               const resourceLabel = new ResourceLabelEntity();
-              resourceLabel.resourceId = resourceUpdate.id;
+              resourceLabel.resourceId = newResource.id;
               resourceLabel.labelId = item;
               resourceLabelList.push(resourceLabel);
             }
@@ -517,27 +527,16 @@ export class ResourceService {
           }
           // create imageAttach file
           this.logger.debug('Create resource Images');
-          if ((resourceUpdate.images && resourceUpdate.images.length > 0) || resourceUpdate.avatar) {
-            if (resourceUpdate.images && resourceUpdate.images.length > 0) {
-              const resourceImageList = [];
-              for (const item of resourceUpdate.images) {
-                const resourceImage: any = new ResourceImageEntity();
-                resourceImage.image = item.image;
-                resourceImage.resourceId = resourceUpdate.id;
-                resourceImageList.push(resourceImage);
-              }
-              await transactionalEntityManager.save<ResourceImageEntity[]>(resourceImageList);
-            }
-            if (resourceUpdate.avatar) {
+          if (resourceUpdate.images && resourceUpdate.images.length > 0) {
+            const resourceImageList = [];
+            for (const item of resourceUpdate.images) {
               const resourceImage: any = new ResourceImageEntity();
-              resourceImage.image = resourceUpdate.avatar;
-              resourceImage.resourceId = resourceUpdate.id;
-              resourceImage.alt = resourceUpdate.alt ? resourceUpdate.alt : '';
-              resourceImage.isAvatar = true;
-              await transactionalEntityManager.save<ResourceImageEntity>(resourceImage);
+              resourceImage.image = item.image;
+              resourceImage.resourceId = newResource.id;
+              resourceImageList.push(resourceImage);
             }
+            await transactionalEntityManager.save<ResourceImageEntity[]>(resourceImageList);
           }
-          await transactionalEntityManager.save<ResourceEntity>(newResources);
         }
       }
     });
