@@ -68,8 +68,8 @@ export class ResourceController {
   }
 
   @Get('/SEO/:link')
-  async getResourceSEO(@Param('link') link: string) {
-    return await this.resourceService.getResourceSEO(link);
+  async getResourceSEO(@Param('link') link: string, @Query('languageId') languageId: string) {
+    return await this.resourceService.getResourceSEO(link, languageId);
   }
 
   @Put('/:code')

@@ -9,7 +9,6 @@ import { LanguageEntity } from '../entities/language.entity';
 import { ResourceEntity } from '../entities/resource.entity';
 import { ResourceAuthorEntity } from '../entities/resourceAuthor.entity';
 import { ResourceCateEntity } from '../entities/resourceCate.entity';
-import { ResourceImageEntity } from '../entities/resourceImage.entity';
 import { ResourceLabelEntity } from '../entities/resourceLabel.entity';
 import { checkConditionInputCreate, checkConditionInputUpdate } from '../lib/validatePipe/resource/checkCondition';
 
@@ -25,8 +24,6 @@ export class ResourceService {
     private resourceAuthorRepository: Repository<ResourceAuthorEntity>,
     @InjectRepository(ResourceCateEntity)
     private resourceCateRepository: Repository<ResourceCateEntity>,
-    @InjectRepository(ResourceImageEntity)
-    private resourceImageRepository: Repository<ResourceImageEntity>,
     @InjectRepository(ResourceLabelEntity)
     private resourceLabelEntityRepository: Repository<ResourceLabelEntity>,
 
@@ -42,7 +39,7 @@ export class ResourceService {
   ) {}
 
   async uploadImage(image: any) {
-    this.logger.debug('upload image');
+    this.logger.debug('upload image resource');
     if (!image) {
       throw new HttpException(
         {
@@ -143,19 +140,6 @@ export class ResourceService {
           await transactionalEntityManager.save<ResourceLabelEntity[]>(resourceLabelList);
         }
         // create imageAttach file
-        this.logger.debug('Create resource Images');
-        if (createResource.images && createResource.images.length > 0) {
-          if (createResource.images && createResource.images.length > 0) {
-            const resourceImageList = [];
-            for (const item of createResource.images) {
-              const resourceImage: any = new ResourceImageEntity();
-              resourceImage.image = item.image;
-              resourceImage.resourceId = newResource.id;
-              resourceImageList.push(resourceImage);
-            }
-            await transactionalEntityManager.save<ResourceImageEntity[]>(resourceImageList);
-          }
-        }
         newResources.push(newResource);
       });
     }
@@ -172,12 +156,6 @@ export class ResourceService {
       .where('resource."deleted_at" is null AND resource."language_id" =:languageId', { languageId });
     const resourceCount = await resourceQuery.cache(`resources_count_page${page}_limit${limit}`).getCount();
     const resources: any = await resourceQuery
-      .leftJoinAndMapMany(
-        'resource.images',
-        ResourceImageEntity,
-        'resource_image',
-        '"resource_image"."resource_id"="resource".id',
-      )
       .leftJoinAndMapMany(
         'resource.authors',
         ResourceAuthorEntity,
@@ -219,12 +197,6 @@ export class ResourceService {
     const resource: any = await this.resourceRepository
       .createQueryBuilder('resource')
       .where('"resource".code=:code', { code })
-      .leftJoinAndMapMany(
-        'resource.images',
-        ResourceImageEntity,
-        'resource_image',
-        '"resource_image"."resource_id"="resource".id and resource_image.deleted_at is null',
-      )
       .leftJoinAndMapOne(
         'resource.author',
         ResourceAuthorEntity,
@@ -250,16 +222,13 @@ export class ResourceService {
     return { data: resource };
   }
 
-  async getResourceSEO(link: any) {
+  async getResourceSEO(link: string, languageId: string) {
     const resource: any = await this.resourceRepository
       .createQueryBuilder('resource')
-      .where('"resource".link=:link and "resource".is_edit_seo is TRUE', { link })
-      .leftJoinAndMapMany(
-        'resource.images',
-        ResourceImageEntity,
-        'resource_image',
-        '"resource_image"."resource_id"="resource".id and resource_image.deleted_at is null',
-      )
+      .where('"resource".link=:link and "resource".is_edit_seo is TRUE and "resource".language_id =:languageId', {
+        link,
+        languageId,
+      })
       .leftJoinAndMapOne(
         'resource.author',
         ResourceAuthorEntity,
@@ -417,39 +386,8 @@ export class ResourceService {
               }
             }
             // update images
-            this.logger.debug('Update resource images');
-            if (resourceUpdate.images && resourceUpdate.images.length > 0) {
-              const oldImages: any = (
-                await this.resourceImageRepository.find({
-                  where: { resourceId: resourceUpdate.id },
-                })
-              ).map((item: any) => item.image);
-              const newImages: string[] = resourceUpdate.images.map((item: any) => {
-                return item.image;
-              });
-              const addImages = _.difference(newImages, oldImages);
-              if (addImages.length > 0) {
-                const listResourceImage = [];
-                addImages.map((item: any) => {
-                  const dataImage = new ResourceImageEntity();
-                  dataImage.resourceId = resourceUpdate.id;
-                  dataImage.image = item;
-                  listResourceImage.push(dataImage);
-                });
-                await transactionalEntityManager.save<ResourceImageEntity[]>(listResourceImage);
-              }
-              const deleteImages = _.difference(oldImages, newImages);
-              if (deleteImages.length > 0) {
-                for (const item of deleteImages) {
-                  await transactionalEntityManager.softDelete<ResourceImageEntity>(ResourceImageEntity, {
-                    image: item,
-                  });
-                }
-              }
-            }
             this.logger.debug('Update resource have id');
             currResource.setAttributes(resourceUpdate);
-
             await transactionalEntityManager.update<ResourceEntity>(
               ResourceEntity,
               { id: resourceUpdate.id },
@@ -525,17 +463,6 @@ export class ResourceService {
             await transactionalEntityManager.save<ResourceLabelEntity[]>(resourceLabelList);
           }
           // create imageAttach file
-          this.logger.debug('Create resource Images');
-          if (resourceUpdate.images && resourceUpdate.images.length > 0) {
-            const resourceImageList = [];
-            for (const item of resourceUpdate.images) {
-              const resourceImage: any = new ResourceImageEntity();
-              resourceImage.image = item.image;
-              resourceImage.resourceId = newResource.id;
-              resourceImageList.push(resourceImage);
-            }
-            await transactionalEntityManager.save<ResourceImageEntity[]>(resourceImageList);
-          }
         }
       }
     });
@@ -558,7 +485,6 @@ export class ResourceService {
       const resourceAuthor: any = await this.resourceAuthorRepository.findOne({ where: { resourceId: resource.id } });
       const resourceCateList: any = await this.resourceCateRepository.find({ where: { resourceId: resource.id } });
       const resourceLabel: any = await this.resourceLabelEntityRepository.find({ where: { resourceId: resource.id } });
-      const resourceImages: any = await this.resourceImageRepository.find({ where: { resourceId: resource.id } });
       await this.connection.queryResultCache.clear();
       await getManager().transaction(async transactionalEntityManager => {
         await transactionalEntityManager.softDelete(ResourceEntity, resource);
@@ -570,9 +496,6 @@ export class ResourceService {
         }
         if (resourceLabel.length > 0) {
           await transactionalEntityManager.softRemove(ResourceLabelEntity, resourceLabel);
-        }
-        if (resourceImages.length > 0) {
-          await transactionalEntityManager.softRemove(ResourceImageEntity, resourceImages);
         }
       });
     }

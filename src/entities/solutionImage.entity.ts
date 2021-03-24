@@ -11,9 +11,6 @@ export class SolutionImageEntity {
   @Column({ name: 'solution_id', type: 'uuid' })
   solutionId: string;
 
-  @Column({ name: 'is_banner', type: 'boolean', default: false })
-  isBanner: boolean;
-
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
   createdAt: Date;
 

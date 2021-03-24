@@ -3,10 +3,8 @@ import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, getManager, Repository } from 'typeorm';
 import { CreateSolutionInput, UpdateSolutionInput } from './solution.dto';
-import { SolutionImageEntity } from '../entities/solutionImage.entity';
 import { countSolution, isSolutionAvailable } from '../lib/subFunction/solution';
 import { LanguageEntity } from '../entities/language.entity';
-import _ = require('lodash');
 import { isDuplicateLanguageValid, isLanguageENValid } from '../lib/pipeUtils/languageValidate';
 
 @Injectable()
@@ -16,14 +14,12 @@ export class SolutionService {
   constructor(
     @InjectRepository(SolutionEntity)
     private solutionRepository: Repository<SolutionEntity>,
-    @InjectRepository(SolutionImageEntity)
-    private solutionImageRepository: Repository<SolutionImageEntity>,
     @InjectRepository(LanguageEntity)
     private languageRepository: Repository<LanguageEntity>,
     private connection: Connection,
   ) {}
   async uploadImage(image: any) {
-    this.logger.debug('upload image');
+    this.logger.debug('upload image solution');
     if (!image) {
       throw new HttpException(
         {
@@ -73,23 +69,9 @@ export class SolutionService {
         const newSolution = new SolutionEntity();
         newSolution.setAttributes(item);
         await this.connection.queryResultCache.clear();
-        await getManager().transaction(async transactionalEntityManager => {
-          newSolution.code = randomCode;
-          await transactionalEntityManager.save<SolutionEntity>(newSolution);
-          this.logger.debug('Create solution');
-          if ((item.images && item.images.length > 0) || item.bannerImage) {
-            if (item.images && item.images.length > 0) {
-              const solutionImages = [];
-              for (const solution of item.images) {
-                const solutionImage: any = new SolutionImageEntity();
-                solutionImage.image = solution.image;
-                solutionImage.solutionId = newSolution.id;
-                solutionImages.push(solutionImage);
-              }
-              await transactionalEntityManager.save<SolutionImageEntity[]>(solutionImages);
-            }
-          }
-        });
+        newSolution.code = randomCode;
+        await this.solutionRepository.save<SolutionEntity>(newSolution);
+        this.logger.debug('Create solution');
       }
     }
     return {};
@@ -100,15 +82,7 @@ export class SolutionService {
     await this.connection.queryResultCache.clear();
     const solutionQuery = this.solutionRepository.createQueryBuilder('solution');
     const query: any = solutionQuery
-      .leftJoinAndMapMany(
-        'solution.images',
-        SolutionImageEntity,
-        'solution_image',
-        '"solution_image"."solution_id"="solution".id',
-      )
-      .where('solution."deleted_at" is null')
-      .andWhere(`solution."language_id"='${languageId}'`)
-      .andWhere('"solution_image"."is_banner" is false')
+      .where('solution."deleted_at" is null AND solution."language_id"=:languageId', { languageId })
       .orderBy('solution."created_at"', 'DESC');
     if (code) {
       query.andWhere(`solution."code" = '${code}'`);
@@ -141,39 +115,6 @@ export class SolutionService {
           }
           currSolutions[index].setAttributes(item);
           //images update
-          if (item.images && item.images.length > 0) {
-            const solutionImages = await this.solutionImageRepository.find({ where: { solutionId: item.id } });
-            const curImages = solutionImages.map((x: any) => {
-              const y = { image: x.image };
-              return y;
-            });
-            const addImages = _.difference(item.images, curImages);
-            const diffImages = _.difference(curImages, item.images);
-            if (addImages.length > 0) {
-              const newImages: any = [];
-              for (const image of addImages) {
-                const newImage = new SolutionImageEntity();
-                newImage.solutionId = item.id;
-                newImage.image = image.image;
-                newImages.push(newImage);
-              }
-              await transactionalEntityManager.save<SolutionImageEntity[]>(newImages);
-            }
-            if (diffImages.length > 0) {
-              for (const image of diffImages) {
-                const indexImage = solutionImages.findIndex((x: any) => x.image === image.image);
-                if (indexImage > -1) {
-                  await transactionalEntityManager.softDelete<SolutionImageEntity>(
-                    SolutionImageEntity,
-                    solutionImages[indexImage],
-                  );
-                }
-              }
-            }
-          } else {
-            const solutionImages = await this.solutionImageRepository.find({ where: { solutionId: item.id } });
-            await transactionalEntityManager.softDelete<SolutionImageEntity[]>(SolutionImageEntity, solutionImages);
-          }
           await transactionalEntityManager.update<SolutionEntity>(
             SolutionEntity,
             { id: item.id },
@@ -184,25 +125,6 @@ export class SolutionService {
           newSolution.setAttributes(item);
           newSolution.code = code;
           await transactionalEntityManager.save<SolutionEntity>(newSolution);
-          if ((item.images && item.images.length > 0) || item.bannerImage) {
-            if (item.images && item.images.length > 0) {
-              const solutionImages = [];
-              for (const solution of item.images) {
-                const solutionImage: any = new SolutionImageEntity();
-                solutionImage.image = solution.image;
-                solutionImage.solutionId = newSolution.id;
-                solutionImages.push(solutionImage);
-              }
-              await transactionalEntityManager.save<SolutionImageEntity[]>(solutionImages);
-            }
-          }
-          if (item.bannerImage) {
-            const solutionImage: any = new SolutionImageEntity();
-            solutionImage.image = item.bannerImage;
-            solutionImage.solutionId = newSolution.id;
-            solutionImage.isBanner = true;
-            await transactionalEntityManager.save<SolutionImageEntity>(solutionImage);
-          }
         }
       }
     });
@@ -224,8 +146,6 @@ export class SolutionService {
     await this.connection.queryResultCache.clear();
     await getManager().transaction(async transactionalEntityManager => {
       for (let i = 0; i < solution.length; i++) {
-        const solutionImages = await this.solutionImageRepository.find({ where: { id: solution[i].id } });
-        await transactionalEntityManager.softRemove<SolutionImageEntity[]>(solutionImages);
         await transactionalEntityManager.softDelete(SolutionEntity, { id: solution[i].id });
       }
     });

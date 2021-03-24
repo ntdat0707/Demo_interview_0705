@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import _ = require('lodash');
 import { Repository } from 'typeorm';
 import { LanguageEntity } from '../../../entities/language.entity';
 import { ResourceEntity } from '../../../entities/resource.entity';
@@ -13,7 +12,6 @@ export async function checkConditionInputCreate(
 ) {
   await isLanguageENValid(createResource, languageRepository);
   await isDuplicateLanguageValid(createResource, languageRepository);
-  const links = [];
   for (const resource of createResource) {
     const existPost = await resourceRepository
       .createQueryBuilder('resource')
@@ -29,9 +27,8 @@ export async function checkConditionInputCreate(
       );
     }
     if (resource.isEditSEO === true) {
-      links.push(resource.link);
       const url = await resourceRepository.findOne({
-        where: { isEditSEO: true, link: resource.link },
+        where: { isEditSEO: true, link: resource.link, languageId: resource.languageId },
       });
       if (url) {
         throw new HttpException(
@@ -43,15 +40,6 @@ export async function checkConditionInputCreate(
         );
       }
     }
-    if (hasDuplicates(links)) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.CONFLICT,
-          message: 'LINKS_HAS_BEEN_DUPLICATE',
-        },
-        HttpStatus.CONFLICT,
-      );
-    }
   }
 }
 
@@ -61,7 +49,6 @@ export async function checkConditionInputUpdate(
   languageRepository: Repository<LanguageEntity>,
 ) {
   await isDuplicateLanguageValid(updateResource, languageRepository);
-  const links = [];
   for (const resource of updateResource) {
     const existPost = await resourceRepository
       .createQueryBuilder('resource')
@@ -77,8 +64,9 @@ export async function checkConditionInputUpdate(
       );
     }
     if (resource.isEditSEO === true && !resource.id) {
-      links.push(resource.link);
-      const url = await resourceRepository.findOne({ where: { isEditSEO: true, link: resource.link } });
+      const url = await resourceRepository.findOne({
+        where: { isEditSEO: true, link: resource.link, languageId: resource.languageId },
+      });
       if (url) {
         throw new HttpException(
           {
@@ -89,17 +77,5 @@ export async function checkConditionInputUpdate(
         );
       }
     }
-    if (hasDuplicates(links)) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.CONFLICT,
-          message: 'LINKS_HAS_BEEN_DUPLICATE',
-        },
-        HttpStatus.CONFLICT,
-      );
-    }
   }
-}
-function hasDuplicates(arr: any) {
-  return _.uniq(arr).length !== arr.length;
 }

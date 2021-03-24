@@ -4,16 +4,6 @@ export class ResourcePictureInput {
   @ApiProperty({ type: 'string', format: 'binary' })
   readonly image: string;
 }
-class ResourceImage {
-  @ApiProperty({ required: true })
-  readonly image: string;
-}
-
-class AttachImage {
-  @ApiProperty({ required: true })
-  readonly image: string;
-}
-
 export class CreateResourceInput {
   @ApiProperty({ required: true })
   readonly title: string;
@@ -56,9 +46,6 @@ export class CreateResourceInput {
 
   @ApiProperty({ required: false })
   readonly avatar: string;
-
-  @ApiProperty({ type: [AttachImage], required: false })
-  readonly images?: AttachImage[];
 
   @ApiProperty({ required: false })
   readonly languageId: string;
@@ -109,9 +96,6 @@ export class UpdateResourceInput {
 
   @ApiProperty({ required: false })
   readonly avatar: string;
-
-  @ApiProperty({ type: [ResourceImage], required: false })
-  readonly images?: ResourceImage[];
 
   @ApiProperty({ required: false })
   readonly languageId: string;

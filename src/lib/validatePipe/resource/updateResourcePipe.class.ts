@@ -76,7 +76,7 @@ export class UpdateResourcePipe implements PipeTransform<any> {
         }
       }
       if (value.isEditSEO === true) {
-        if (!value.link || value.link === '' || value.link === 'null') {
+        if (!value.link) {
           throw new HttpException(
             {
               statusCode: HttpStatus.BAD_REQUEST,
