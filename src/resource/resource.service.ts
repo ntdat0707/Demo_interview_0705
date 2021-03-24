@@ -199,7 +199,6 @@ export class ResourceService {
         '"resource_category"."resource_id"="resource".id',
       )
       .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."category_id"')
-      // .where(`resource."deleted_at" is null AND resource."language_id" = '${languageId}'`)
       .limit(limit)
       .offset((page - 1) * limit)
       .orderBy('resource."created_at"', 'DESC')
