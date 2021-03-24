@@ -35,4 +35,17 @@ enum EDocmentFlag {
   EXPORT = 'export',
 }
 
-export { EBannerStatus, EResourceStatus, EEducationLevelStatus, ECareerStatus, EFlagUploadVideo, EDocmentFlag };
+enum EAgentCreatedOn {
+  WEB = 'web',
+  CMS = 'cms',
+}
+
+export {
+  EBannerStatus,
+  EResourceStatus,
+  EEducationLevelStatus,
+  ECareerStatus,
+  EFlagUploadVideo,
+  EDocmentFlag,
+  EAgentCreatedOn,
+};
