@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import _ = require('lodash');
 import { Connection, getManager, Repository } from 'typeorm';
 import { FocusedEntity } from '../entities/focused.entity';
-import { FocusedImageEntity } from '../entities/focusedImage.entity';
 import { LanguageEntity } from '../entities/language.entity';
 import { FocusedMarketInput } from './focused-market.dto';
 import { v4 as uuidv4 } from 'uuid';
@@ -14,12 +13,11 @@ export class FocusedMarketService {
   constructor(
     @InjectRepository(FocusedEntity) private focusedMarketRepository: Repository<FocusedEntity>,
     @InjectRepository(LanguageEntity) private languageRepository: Repository<LanguageEntity>,
-    @InjectRepository(FocusedImageEntity) private focusedMarketImageRepository: Repository<FocusedImageEntity>,
     private connection: Connection,
   ) {}
 
   async uploadImage(image: any) {
-    this.logger.debug('upload image');
+    this.logger.debug('upload image focused ');
     if (!image) {
       throw new HttpException(
         {
@@ -75,7 +73,6 @@ export class FocusedMarketService {
       }
     }
     const dataForcusedMarket = [];
-    const dataForcusedMarketImage = [];
     let isLanguageEN = false;
     for (const item of focusedMarketList) {
       const language = await this.languageRepository.findOne({ where: { id: item.languageId } });
@@ -107,19 +104,12 @@ export class FocusedMarketService {
       focusedMarket.setAttributes(item);
       focusedMarket.code = randomCode;
       focusedMarket.id = uuidv4();
-      for (const focusImage of item.images) {
-        const focusedMarketImage = new FocusedImageEntity();
-        focusedMarketImage.image = focusImage.image;
-        focusedMarketImage.focusedId = focusedMarket.id;
-        dataForcusedMarketImage.push(focusedMarketImage);
-      }
       dataForcusedMarket.push(focusedMarket);
     }
     if (isLanguageEN === true) {
       await this.connection.queryResultCache.clear();
       await getManager().transaction(async transactionalEntityManager => {
         await transactionalEntityManager.save<FocusedEntity>(dataForcusedMarket);
-        await transactionalEntityManager.save<FocusedImageEntity>(dataForcusedMarketImage);
       });
     } else {
       throw new HttpException(
@@ -149,13 +139,7 @@ export class FocusedMarketService {
     this.logger.debug('get focused market');
     const queryExc = this.focusedMarketRepository
       .createQueryBuilder('focused_market')
-      .where(`code = :value`, { value: `${code}` })
-      .leftJoinAndMapMany(
-        'focused_market.images',
-        FocusedImageEntity,
-        'focused_market_image',
-        'focused_market_image."focused_id" = focused_market."id" and focused_market_image."deleted_at" is null',
-      );
+      .where(`code = :value`, { value: `${code}` });
     if (languageId) {
       queryExc.andWhere(`language_id = :languageId`, { languageId: `${languageId}` });
     }
@@ -257,44 +241,6 @@ export class FocusedMarketService {
           }
           oldFocusedMarket[index].setAttributes(focusedMarket);
           await transactionalEntityManager.save<FocusedEntity>(oldFocusedMarket[index]);
-          const focusedImages = await this.focusedMarketImageRepository.find({
-            where: { focusedId: focusedMarket.id },
-          });
-          if (focusedMarket.images && focusedMarket.images.length > 0) {
-            const oldFocusedMarketImage: string[] = focusedImages.map((item: any) => {
-              return item.image;
-            });
-            const newFocusedMarketImage: string[] = focusedMarket.images.map((item: any) => {
-              return item.image;
-            });
-            const addFocusedMarketImage = _.difference(newFocusedMarketImage, oldFocusedMarketImage);
-            if (addFocusedMarketImage.length > 0) {
-              const listFocusedMarketImage = [];
-              addFocusedMarketImage.map((item: any) => {
-                const dataFocusedImage = new FocusedImageEntity();
-                dataFocusedImage.focusedId = focusedMarket.id;
-                dataFocusedImage.image = item;
-                listFocusedMarketImage.push(dataFocusedImage);
-              });
-              await transactionalEntityManager.save<FocusedImageEntity>(listFocusedMarketImage);
-            }
-            const deleteFocusedMarketImage: any = _.difference(oldFocusedMarketImage, newFocusedMarketImage);
-            if (deleteFocusedMarketImage.length > 0) {
-              for (const item of deleteFocusedMarketImage) {
-                const indexImage = focusedImages.findIndex((x: any) => x.image === item);
-                if (indexImage !== -1) {
-                  await transactionalEntityManager.softDelete<FocusedImageEntity>(
-                    FocusedImageEntity,
-                    focusedImages[indexImage],
-                  );
-                }
-              }
-            }
-          } else {
-            if (focusedImages.length > 0) {
-              await transactionalEntityManager.softDelete<FocusedImageEntity[]>(FocusedImageEntity, focusedImages);
-            }
-          }
         } else {
           if (focusedMarket.languageId === languageEnId) {
             throw new HttpException(
@@ -321,15 +267,7 @@ export class FocusedMarketService {
           newFocusedMarket.setAttributes(focusedMarket);
           newFocusedMarket.code = code;
           newFocusedMarket.id = uuidv4();
-          const dataForcusedMarketImage = [];
-          for (const focusImage of focusedMarket.images) {
-            const focusedMarketImage = new FocusedImageEntity();
-            focusedMarketImage.image = focusImage.image;
-            focusedMarketImage.focusedId = newFocusedMarket.id;
-            dataForcusedMarketImage.push(focusedMarketImage);
-          }
           await transactionalEntityManager.save<FocusedEntity>(newFocusedMarket);
-          await transactionalEntityManager.save<FocusedImageEntity>(dataForcusedMarketImage);
         }
       }
     });
@@ -349,10 +287,6 @@ export class FocusedMarketService {
     }
     await this.connection.queryResultCache.clear();
     await getManager().transaction(async transactionalEntityManager => {
-      focusedMarkets.map(async (focusedMarket: any) => {
-        const focusedImages = await this.focusedMarketImageRepository.find({ where: { focused_id: focusedMarket.id } });
-        await transactionalEntityManager.softDelete<FocusedImageEntity[]>(FocusedImageEntity, focusedImages);
-      });
       await transactionalEntityManager.softDelete<FocusedEntity[]>(FocusedEntity, focusedMarkets);
     });
     return {};

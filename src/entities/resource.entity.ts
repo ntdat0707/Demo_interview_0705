@@ -18,6 +18,9 @@ export class ResourceEntity {
   @Column('timestamptz', { name: 'publish_date', nullable: true })
   publishDate: Date;
 
+  @Column('text', { name: 'avatar', nullable: true })
+  avatar: string;
+
   @Column('varchar', { nullable: true })
   description: string;
 
@@ -59,5 +62,6 @@ export class ResourceEntity {
     this.descriptionSEO = object.descriptionSEO ? object.descriptionSEO : null;
     this.link = object.link ? object.link : null;
     this.languageId = object.languageId;
+    this.avatar = object.avatar ? object.avatar : null;
   }
 }

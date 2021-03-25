@@ -5,11 +5,6 @@ export class SolutionPictureInput {
   @ApiProperty({ type: 'string', format: 'binary' })
   readonly image: string;
 }
-class AttachImage {
-  @ApiProperty({ required: true })
-  readonly image: string;
-}
-
 export class FocusedMarketInput {
   @ApiProperty({ required: true })
   readonly id: string;
@@ -34,9 +29,6 @@ export class FocusedMarketInput {
 
   @ApiProperty({ required: false })
   readonly featureImage: string;
-
-  @ApiProperty({ type: [AttachImage], required: false })
-  readonly images: AttachImage[];
 }
 
 export class UploadFocusedMarketInput {

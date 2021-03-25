@@ -152,16 +152,6 @@ export class CareerService {
     await this.connection.queryResultCache.clear();
     await getManager().transaction(async transactionalEntityManager => {
       for (const career of careerInput) {
-        const existTitle = await this.careerRepository.findOne({ where: { title: career.title } });
-        if (existTitle) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.CONFLICT,
-              message: `TITLE_HAS_BEEN_EXISTED `,
-            },
-            HttpStatus.CONFLICT,
-          );
-        }
         if (career.id) {
           const index: any = curCareers.findIndex((item: any) => item.id === career.id);
           if (index === -1) {
@@ -173,12 +163,38 @@ export class CareerService {
               HttpStatus.NOT_FOUND,
             );
           }
+          if (curCareers[index].title !== career.title) {
+            const existTitle = await this.careerRepository.findOne({
+              where: { title: career.title, languageId: career.languageId },
+            });
+            if (existTitle) {
+              throw new HttpException(
+                {
+                  statusCode: HttpStatus.CONFLICT,
+                  message: `TITLE_HAS_BEEN_EXISTED `,
+                },
+                HttpStatus.CONFLICT,
+              );
+            }
+          }
           curCareers[index].setAttributes(career);
           if (career.status === ECareerStatus.CLOSED) {
             curCareers[index].closingDate = moment().format('YYYY-MM-DD h:mm');
           }
           await transactionalEntityManager.update<CareerEntity>(CareerEntity, { id: career.id }, curCareers[index]);
         } else {
+          const existTitle = await this.careerRepository.findOne({
+            where: { title: career.title, languageId: career.languageId },
+          });
+          if (existTitle) {
+            throw new HttpException(
+              {
+                statusCode: HttpStatus.CONFLICT,
+                message: `TITLE_HAS_BEEN_EXISTED `,
+              },
+              HttpStatus.CONFLICT,
+            );
+          }
           const newCar = new CareerEntity();
           newCar.setAttributes(career);
           newCar.code = career.code;

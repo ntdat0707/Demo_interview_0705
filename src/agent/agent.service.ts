@@ -1,10 +1,12 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import path = require('path');
 import { Connection, Repository } from 'typeorm';
 import { AgentEntity } from '../entities/agent.entity';
 import { convertTv } from '../lib/utils';
 import { AgentInput } from './agent.dto';
-
+import * as ejs from 'ejs';
+import { executeSendingEmail } from '../lib/emailer/config';
 @Injectable()
 export class AgentService {
   private readonly logger = new Logger(AgentService.name);
@@ -56,7 +58,42 @@ export class AgentService {
       }
     }
     agent.code = randomCode;
-    await this.connection.queryResultCache.clear();
+    if (agentInput.isSendMail === true) {
+      try {
+        const SEND_TO = 'nguyentandat.email07@gmail.com';
+        const pathFile = path.join(__dirname, '../../template/new_account.ejs');
+        const dataEmail = {
+          companyPhone: agentInput.companyPhone,
+          companyName: agentInput.companyName,
+          website: agentInput.website,
+          companyEmail: agentInput.companyEmail,
+          country: agentInput.country,
+          city: agentInput.city,
+          street: agentInput.street,
+          contactName: agentInput.contactName,
+          contactEmail: agentInput.contactEmail,
+          contactPhone: agentInput.contactPhone,
+          jobTitle: agentInput.jobTitle,
+          description: agentInput.description,
+          status: agentInput.status,
+        };
+        ejs.renderFile(pathFile, dataEmail, async (err, data) => {
+          if (err) {
+            //   console.log(err);
+          } else {
+            // console.log('OK Send mail::');
+            await executeSendingEmail({
+              receivers: SEND_TO,
+              message: data,
+              subject: '[Test] Kích hoạt tài khoản',
+              type: 'html',
+            });
+          }
+        });
+      } catch (error) {
+        //console.log(error);
+      }
+    }
     agent = await this.agentRepository.save(agent);
     return {
       data: agent,

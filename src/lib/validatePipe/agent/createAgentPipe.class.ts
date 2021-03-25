@@ -136,6 +136,15 @@ export class CreateAgentPipe implements PipeTransform<any> {
         );
       }
     }
+    if (!value.isSendMail) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'IS_SEND_MAIL_REQUIRED',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     return value;
   }
 }

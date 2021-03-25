@@ -6,6 +6,9 @@ export class AgentInput {
   readonly companyPhone: string;
 
   @ApiProperty({ required: true })
+  readonly isSendMail: boolean;
+
+  @ApiProperty({ required: true })
   readonly companyName: string;
 
   @ApiProperty({ required: false })

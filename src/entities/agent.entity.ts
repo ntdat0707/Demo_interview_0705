@@ -9,6 +9,9 @@ export class AgentEntity {
   @Column('varchar')
   code: string;
 
+  @Column('boolean', { name: 'is_send_mail', nullable: false })
+  isSendMail: boolean;
+
   @Column('varchar', { name: 'company_phone' })
   companyPhone: string;
 
@@ -71,5 +74,6 @@ export class AgentEntity {
     this.jobTitle = object.jobTitle ? object.jobTitle : null;
     this.description = object.description ? object.description : null;
     this.status = object.status;
+    this.isSendMail = object.isSendMail;
   }
 }

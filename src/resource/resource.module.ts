@@ -10,7 +10,6 @@ import { ResourceService } from './resource.service';
 import * as shortid from 'shortid';
 import { ResourceAuthorEntity } from '../entities/resourceAuthor.entity';
 import { ResourceCateEntity } from '../entities/resourceCate.entity';
-import { ResourceImageEntity } from '../entities/resourceImage.entity';
 import { ResourceLabelEntity } from '../entities/resourceLabel.entity';
 import { CategoryEntity } from '../entities/category.entity';
 import { AuthorEntity } from '../entities/author.entity';
@@ -21,7 +20,6 @@ import { LanguageEntity } from '../entities/language.entity';
       ResourceEntity,
       ResourceAuthorEntity,
       ResourceCateEntity,
-      ResourceImageEntity,
       ResourceLabelEntity,
       CategoryEntity,
       LabelEntity,

@@ -26,6 +26,20 @@ export async function checkConditionInputCreate(
         HttpStatus.CONFLICT,
       );
     }
+    if (resource.isEditSEO === true) {
+      const url = await resourceRepository.findOne({
+        where: { isEditSEO: true, link: resource.link, languageId: resource.languageId },
+      });
+      if (url) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.CONFLICT,
+            message: 'SEO_URL_IS_EXISTED',
+          },
+          HttpStatus.CONFLICT,
+        );
+      }
+    }
   }
 }
 
@@ -48,6 +62,20 @@ export async function checkConditionInputUpdate(
         },
         HttpStatus.CONFLICT,
       );
+    }
+    if (resource.isEditSEO === true && !resource.id) {
+      const url = await resourceRepository.findOne({
+        where: { isEditSEO: true, link: resource.link, languageId: resource.languageId },
+      });
+      if (url) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.CONFLICT,
+            message: 'SEO_URL_IS_EXISTED',
+          },
+          HttpStatus.CONFLICT,
+        );
+      }
     }
   }
 }

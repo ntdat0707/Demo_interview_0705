@@ -136,6 +136,15 @@ export class UpdateAgentPipe implements PipeTransform<any> {
         );
       }
     }
+    if (!value.isSendMail) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'CREATED_ON_INVALID',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     return value;
   }
 }
