@@ -41,7 +41,6 @@ export class VideoEntity {
   setAttributes(object: any) {
     this.title = object.title;
     this.languageId = object.languageId;
-    this.flag = object.flag;
     this.description = object.description ? object.description : null;
     this.video = object.video ? object.video : null;
     this.linkVideo = object.linkVideo ? object.linkVideo : null;

@@ -5,14 +5,13 @@ import { diskStorage } from 'multer';
 import { basename, extname, resolve } from 'path';
 import shortid = require('shortid');
 import { FocusedEntity } from '../entities/focused.entity';
-import { FocusedImageEntity } from '../entities/focusedImage.entity';
 import { LanguageEntity } from '../entities/language.entity';
 import { FocusedMarketController } from './focused-market.controller';
 import { FocusedMarketService } from './focused-market.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([FocusedEntity, FocusedImageEntity, LanguageEntity]),
+    TypeOrmModule.forFeature([FocusedEntity, LanguageEntity]),
     MulterModule.registerAsync({
       useFactory: () => ({
         storage: diskStorage({

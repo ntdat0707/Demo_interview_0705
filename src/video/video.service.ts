@@ -76,7 +76,6 @@ export class VideoService {
             );
           }
         }
-
         const newVideo: any = new VideoEntity();
         newVideo.setAttributes(item);
         newVideo.code = randomCode;
@@ -112,17 +111,31 @@ export class VideoService {
     };
   }
 
-  async getVideo(code: string, languageId: string) {
+  async getVideo(code: string, languageId?: string) {
     this.logger.debug('get video');
-    const video = await this.videoRepository.findOne({ where: { code: code, languageId: languageId } });
-    if (!video) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'VIDEO_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+    let video: any = [];
+    if (!languageId) {
+      video = await this.videoRepository.find({ where: { code: code } });
+      if (video.length === 0) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.NOT_FOUND,
+            message: 'VIDEO_NOT_FOUND',
+          },
+          HttpStatus.NOT_FOUND,
+        );
+      }
+    } else {
+      video = await this.videoRepository.find({ where: { code: code, languageId: languageId } });
+      if (video.length === 0) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.NOT_FOUND,
+            message: 'VIDEO_NOT_FOUND',
+          },
+          HttpStatus.NOT_FOUND,
+        );
+      }
     }
     return {
       data: video,

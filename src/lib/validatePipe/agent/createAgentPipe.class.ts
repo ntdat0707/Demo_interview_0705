@@ -1,6 +1,6 @@
 import { ArgumentMetadata, HttpException, HttpStatus, Injectable, PipeTransform } from '@nestjs/common';
 import { AgentInput } from '../../../agent/agent.dto';
-import { EAgentCreatedOn, EBannerStatus } from '../../constant';
+import { EBannerStatus } from '../../constant';
 import { checkEmail } from '../../pipeUtils/emailValidate';
 import { checkPhoneNumber } from '../../pipeUtils/phoneNumberValidate';
 
@@ -136,17 +136,14 @@ export class CreateAgentPipe implements PipeTransform<any> {
         );
       }
     }
-    if (value.createdOn) {
-      const resource: any = value.createdOn;
-      if (!Object.values(EAgentCreatedOn).includes(resource)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'CREATED_ON_INVALID',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
+    if (!value.isSendMail) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'IS_SEND_MAIL_REQUIRED',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
     }
     return value;
   }

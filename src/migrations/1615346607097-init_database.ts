@@ -35,9 +35,6 @@ export class InitDatabase1615346607097 implements MigrationInterface {
       `CREATE TABLE "focused_market" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "language_id" uuid NOT NULL, "title" character varying NOT NULL, "feature_image" text, "status" character varying NOT NULL DEFAULT 'unpublish', "is_publish" boolean NOT NULL DEFAULT false, "publish_date" TIMESTAMP WITH TIME ZONE, "description" character varying, "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "deleted_at" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_97adf469bf1f41b4b006c1754e4" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "focused_market_image" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "image" text, "alt" character varying, "focused_id" uuid NOT NULL, "is_avatar" boolean NOT NULL DEFAULT false, "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "deleted_at" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_ea95c85034ef615560394e2c31c" PRIMARY KEY ("id"))`,
-    );
-    await queryRunner.query(
       `CREATE TABLE "label" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "deleted_at" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_5692ac5348861d3776eb5843672" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
@@ -59,9 +56,6 @@ export class InitDatabase1615346607097 implements MigrationInterface {
       `CREATE TABLE "resource_category" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "resource_id" uuid NOT NULL, "category_id" uuid, "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "deleted_at" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_477e614ecbd504c16e97402dcd4" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "resource_image" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "image" text, "alt" character varying, "resource_id" uuid NOT NULL, "is_avatar" boolean NOT NULL DEFAULT false, "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "deleted_at" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_1a3a0147ada01855fe55e9f659c" PRIMARY KEY ("id"))`,
-    );
-    await queryRunner.query(
       `CREATE TABLE "resource_label" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "resource_id" uuid NOT NULL, "label_id" uuid, "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "deleted_at" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_c0c785d612d109f8557cb4740a4" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
@@ -71,20 +65,15 @@ export class InitDatabase1615346607097 implements MigrationInterface {
       `CREATE TABLE "solution" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "language_id" uuid NOT NULL, "title" character varying NOT NULL, "banner_image" text, "status" character varying NOT NULL DEFAULT 'unpublish', "is_publish" boolean NOT NULL DEFAULT false, "publish_date" TIMESTAMP WITH TIME ZONE, "description" character varying, "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "deleted_at" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_73fc40b114205776818a2f2f248" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "solution_image" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "image" text, "alt" character varying, "solution_id" uuid NOT NULL, "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "deleted_at" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_d13e46bce3b4f840e1bda29ce30" PRIMARY KEY ("id"))`,
-    );
-    await queryRunner.query(
       `CREATE TABLE "video" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "title" character varying NOT NULL, "flag" character varying NOT NULL, "description" character varying, "video" text, "link_video" text, "status" character varying NOT NULL, "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, "deleted_at" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_1a2f3856250765d72e7e1636c8e" PRIMARY KEY ("id"))`,
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DROP TABLE "video"`);
-    await queryRunner.query(`DROP TABLE "solution_image"`);
     await queryRunner.query(`DROP TABLE "solution"`);
     await queryRunner.query(`DROP TABLE "role"`);
     await queryRunner.query(`DROP TABLE "resource_label"`);
-    await queryRunner.query(`DROP TABLE "resource_image"`);
     await queryRunner.query(`DROP TABLE "resource_category"`);
     await queryRunner.query(`DROP TABLE "resource_author"`);
     await queryRunner.query(`DROP TABLE "resource"`);
@@ -92,7 +81,6 @@ export class InitDatabase1615346607097 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE "permission"`);
     await queryRunner.query(`DROP TABLE "language"`);
     await queryRunner.query(`DROP TABLE "label"`);
-    await queryRunner.query(`DROP TABLE "focused_market_image"`);
     await queryRunner.query(`DROP TABLE "focused_market"`);
     await queryRunner.query(`DROP TABLE "employee"`);
     await queryRunner.query(`DROP TABLE "customer"`);

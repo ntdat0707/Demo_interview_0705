@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import _ = require('lodash');
 import { Connection, getManager, Repository } from 'typeorm';
 import { FocusedEntity } from '../entities/focused.entity';
-import { FocusedImageEntity } from '../entities/focusedImage.entity';
 import { LanguageEntity } from '../entities/language.entity';
 import { FocusedMarketInput } from './focused-market.dto';
 import { v4 as uuidv4 } from 'uuid';
@@ -74,7 +73,6 @@ export class FocusedMarketService {
       }
     }
     const dataForcusedMarket = [];
-    const dataForcusedMarketImage = [];
     let isLanguageEN = false;
     for (const item of focusedMarketList) {
       const language = await this.languageRepository.findOne({ where: { id: item.languageId } });
@@ -112,7 +110,6 @@ export class FocusedMarketService {
       await this.connection.queryResultCache.clear();
       await getManager().transaction(async transactionalEntityManager => {
         await transactionalEntityManager.save<FocusedEntity>(dataForcusedMarket);
-        await transactionalEntityManager.save<FocusedImageEntity>(dataForcusedMarketImage);
       });
     } else {
       throw new HttpException(

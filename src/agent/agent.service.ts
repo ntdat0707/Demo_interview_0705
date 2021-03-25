@@ -58,7 +58,7 @@ export class AgentService {
       }
     }
     agent.code = randomCode;
-    if (agentInput.createdOn === 'web') {
+    if (agentInput.isSendMail === true) {
       try {
         const SEND_TO = 'nguyentandat.email07@gmail.com';
         const pathFile = path.join(__dirname, '../../template/new_account.ejs');
