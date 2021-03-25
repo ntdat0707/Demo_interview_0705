@@ -34,10 +34,10 @@ import { SolutionModule } from './solution/solution.module';
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DATABASE_HOST || 'localhost',
-      port: process.env.DATABASE_PORT ? parseInt(process.env.DATABASE_PORT, 10) : 5436,
+      port: process.env.DATABASE_PORT ? parseInt(process.env.DATABASE_PORT, 10) : 5431,
       username: process.env.DATABASE_USER_NAME || 'postgres',
       password: process.env.DATABASE_PASSWORD || 'postgres',
-      database: process.env.DATABASE_NAME || 'vico',
+      database: process.env.DATABASE_NAME || 'front_end_vico',
       entities: ['./dist/**/**.entity{.ts,.js}'],
       subscribers: ['./dist/**/**.subscriber{.ts,.js}'],
       synchronize: false,
@@ -49,10 +49,10 @@ import { SolutionModule } from './solution/solution.module';
       },
       cache: {
         type: 'redis',
-        duration: 3000, // 30 seconds
+        duration: 1000, // 30 seconds
         options: {
           host: process.env.REDIS_HOST || 'localhost',
-          port: process.env.REDIS_PORT || '6381',
+          port: process.env.REDIS_PORT || '6383',
           password: process.env.REDIS_PASSWORD || 'ed5f884edd376efe6b792e93da90ad6d5b77ba509d4006e75ef141bf0e42d29a',
         },
       },
