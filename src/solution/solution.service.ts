@@ -52,28 +52,29 @@ export class SolutionService {
     }
     await isLanguageENValid(createSolutionList, this.languageRepository);
     await isDuplicateLanguageValid(createSolutionList, this.languageRepository);
-    for (const item of createSolutionList) {
-      const currItems: any = await countSolution(this.solutionRepository, item.languageId);
-      if (currItems.isValid === true) {
-        const index: any = currItems.solutions.findIndex((solution: any) => solution.title === item.title);
-        if (index > -1) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.CONFLICT,
-              message: 'SOLUTION_THIS_LANGUAGE_ALREADY_EXIST',
-            },
-            HttpStatus.CONFLICT,
-          );
+    await getManager().transaction(async transactionalEntityManager => {
+      this.logger.debug('Create solution');
+      for (const item of createSolutionList) {
+        const currItems: any = await countSolution(this.solutionRepository, item.languageId);
+        if (currItems.isValid === true) {
+          const index: any = currItems.solutions.findIndex((solution: any) => solution.title === item.title);
+          if (index > -1) {
+            throw new HttpException(
+              {
+                statusCode: HttpStatus.CONFLICT,
+                message: 'SOLUTION_THIS_LANGUAGE_ALREADY_EXIST',
+              },
+              HttpStatus.CONFLICT,
+            );
+          }
+          const newSolution = new SolutionEntity();
+          newSolution.setAttributes(item);
+          await this.connection.queryResultCache.clear();
+          newSolution.code = randomCode;
+          await transactionalEntityManager.save<SolutionEntity>(newSolution);
         }
-
-        const newSolution = new SolutionEntity();
-        newSolution.setAttributes(item);
-        await this.connection.queryResultCache.clear();
-        newSolution.code = randomCode;
-        await this.solutionRepository.save<SolutionEntity>(newSolution);
-        this.logger.debug('Create solution');
       }
-    }
+    });
     return {};
   }
 

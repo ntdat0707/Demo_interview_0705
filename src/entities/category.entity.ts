@@ -5,8 +5,17 @@ export class CategoryEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('varchar')
-  name: string;
+  @Column('varchar', { name: 'language_id', nullable: false })
+  languageId: string;
+
+  @Column('varchar', { name: 'title', nullable: false })
+  title: string;
+
+  @Column('varchar', { name: 'link', nullable: false })
+  link: string;
+
+  @Column('varchar', { name: 'code', nullable: false })
+  code: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
   createdAt: Date;
@@ -18,6 +27,8 @@ export class CategoryEntity {
   deletedAt: Date;
 
   setAttributes(object: any) {
-    this.name = object.name;
+    this.title = object.title ? object.title : '';
+    this.link = object.link;
+    this.languageId = object.languageId;
   }
 }
