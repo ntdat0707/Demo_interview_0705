@@ -6,16 +6,16 @@ services:
     # command: redis-server --appendonly yes --requirepass ed5f884edd376efe6b792e93da90ad6d5b77ba509d4006e75ef141bf0e42d29a
     command: redis-server /usr/local/etc/redis/redis.conf
     ports:
-      - 6383:6379
+      - 6381:6379
     volumes:
       - ./redis:/data
       - ./redis/config/redis.conf:/usr/local/etc/redis/redis.conf
     networks:
-      - vico_backend_network_fe
-  fe_vico_backend_postgresql:
+      - vico_backend_network
+  vico_backend_postgresql:
     image: bitnami/postgresql:11
     ports:
-      - 5431:5432
+      - 5436:5432
     volumes:
       - postgresql_data:/bitnami/postgresql
       - ./database:/docker-entrypoint-initdb.d/create-data.sql
@@ -23,9 +23,9 @@ services:
       - DATABASE_HOST=127.0.0.1
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=front_end_vico
+      - POSTGRES_DB=vico
     networks:
-      - vico_backend_network_fe
+      - vico_backend_network
 
   # mi_dom_backend:
   #   build:
@@ -77,4 +77,4 @@ volumes:
   postgresql_data:
     driver: local
 networks:
-  vico_backend_network_fe:
+  vico_backend_network:
