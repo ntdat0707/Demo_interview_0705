@@ -82,13 +82,13 @@ export class ResourceService {
           for (const item of createResource.categoryIds) {
             //check category
             const category = await this.cateRepository.findOne({ where: { id: item } });
-            if (!category) {
+            if (!category || category.languageId !== createResource.languageId) {
               throw new HttpException(
                 {
-                  statusCode: HttpStatus.NOT_FOUND,
-                  message: `CATEGORY_${item}_NOT_FOUND`,
+                  statusCode: HttpStatus.BAD_REQUEST,
+                  message: `CATEGORY_${item}_NOT_VALID`,
                 },
-                HttpStatus.NOT_FOUND,
+                HttpStatus.BAD_REQUEST,
               );
             }
             const resourceCate = new ResourceCateEntity();
@@ -258,6 +258,15 @@ export class ResourceService {
     this.logger.debug('Update resource');
     await checkConditionInputUpdate(this.resourceRepository, resourcesUpdate, this.languageRepository);
     const currResources = await this.resourceRepository.find({ where: { code: code } });
+    if (currResources.length === 0) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: `CODE_${code}_NOT_FOUND`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
     await this.connection.queryResultCache.clear();
     await getManager().transaction(async transactionalEntityManager => {
       for (const resourceUpdate of resourcesUpdate) {
@@ -346,7 +355,9 @@ export class ResourceService {
             }
             //update category
             this.logger.debug('Update resource categories');
-            const resourceCates = await this.resourceCateRepository.find({ where: { resourceId: resourceUpdate.id } });
+            const resourceCates = await this.resourceCateRepository.find({
+              where: { resourceId: resourceUpdate.id },
+            });
             if (resourceCates.length === 0) {
               const resourceCateList = [];
               for (const item of resourceUpdate.categoryIds) {
@@ -368,13 +379,13 @@ export class ResourceService {
                 const resourceCateList = [];
                 for (const item of addCate) {
                   const category = await this.cateRepository.findOne({ where: { id: item } });
-                  if (!category) {
+                  if (!category || category.languageId !== resourceUpdate.languageId) {
                     throw new HttpException(
                       {
-                        statusCode: HttpStatus.NOT_FOUND,
-                        message: `CATEGORY_${item}_NOT_FOUND`,
+                        statusCode: HttpStatus.BAD_REQUEST,
+                        message: `CATEGORY_${item}_NOT_VALID`,
                       },
-                      HttpStatus.NOT_FOUND,
+                      HttpStatus.BAD_REQUEST,
                     );
                   }
                   const resourceLabel = new ResourceCateEntity();
@@ -471,7 +482,7 @@ export class ResourceService {
 
   async deleteResource(code: string) {
     this.logger.debug('Delete resource');
-    const resources: any = await this.resourceRepository.find({ where: { code: code } });
+    const resources = await this.resourceRepository.find({ where: { code: code } });
     if (resources.length === 0) {
       throw new HttpException(
         {

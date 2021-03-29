@@ -6,9 +6,9 @@ import { SolutionEntity } from '../../../entities/solution.entity';
 import { UpdateSolutionInput } from '../../../solution/solution.dto';
 
 export async function countSolution(solutionRepository: Repository<SolutionEntity>, languageId: string) {
-  const [solutions, total] = await solutionRepository.findAndCount({ where: { languageId: languageId } });
+  const solutions = await solutionRepository.find({ where: { languageId: languageId } });
   const data: any = {};
-  if (total < 10) {
+  if (solutions.length < 10) {
     data.solutions = solutions;
     data.isValid = true;
     return data;

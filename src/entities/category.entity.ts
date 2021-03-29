@@ -17,6 +17,12 @@ export class CategoryEntity {
   @Column('varchar', { name: 'code', nullable: false })
   code: string;
 
+  @Column('varchar', { name: 'status', nullable: false })
+  status: string;
+
+  @Column('varchar', { name: 'type', nullable: false })
+  type: string;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
   createdAt: Date;
 
@@ -30,5 +36,6 @@ export class CategoryEntity {
     this.title = object.title ? object.title : '';
     this.link = object.link;
     this.languageId = object.languageId;
+    this.status = object.status;
   }
 }

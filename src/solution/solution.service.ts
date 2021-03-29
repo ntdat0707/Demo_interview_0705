@@ -52,29 +52,29 @@ export class SolutionService {
     }
     await isLanguageENValid(createSolutionList, this.languageRepository);
     await isDuplicateLanguageValid(createSolutionList, this.languageRepository);
-    await getManager().transaction(async transactionalEntityManager => {
-      this.logger.debug('Create solution');
-      for (const item of createSolutionList) {
-        const currItems: any = await countSolution(this.solutionRepository, item.languageId);
-        if (currItems.isValid === true) {
-          const index: any = currItems.solutions.findIndex((solution: any) => solution.title === item.title);
-          if (index > -1) {
-            throw new HttpException(
-              {
-                statusCode: HttpStatus.CONFLICT,
-                message: 'SOLUTION_THIS_LANGUAGE_ALREADY_EXIST',
-              },
-              HttpStatus.CONFLICT,
-            );
-          }
-          const newSolution = new SolutionEntity();
-          newSolution.setAttributes(item);
-          await this.connection.queryResultCache.clear();
-          newSolution.code = randomCode;
-          await transactionalEntityManager.save<SolutionEntity>(newSolution);
+    const listSolution = [];
+    this.logger.debug('Create solution');
+    for (const item of createSolutionList) {
+      const currItems: any = await countSolution(this.solutionRepository, item.languageId);
+      if (currItems.isValid === true) {
+        const index: any = currItems.solutions.findIndex((solution: any) => solution.title === item.title);
+        if (index > -1) {
+          throw new HttpException(
+            {
+              statusCode: HttpStatus.CONFLICT,
+              message: 'SOLUTION_THIS_LANGUAGE_ALREADY_EXIST',
+            },
+            HttpStatus.CONFLICT,
+          );
         }
+        const newSolution = new SolutionEntity();
+        newSolution.setAttributes(item);
+        await this.connection.queryResultCache.clear();
+        newSolution.code = randomCode;
+        listSolution.push(newSolution);
       }
-    });
+    }
+    await this.solutionRepository.save(listSolution);
     return {};
   }
 

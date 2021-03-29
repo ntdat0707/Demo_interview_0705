@@ -8,6 +8,11 @@ enum EResourceStatus {
   UNPUBLISH = 'unpublish',
 }
 
+enum ECategoryType {
+  POST = 'post',
+  VIDEO = 'video',
+}
+
 enum EFlagUploadVideo {
   HOMEPAGE = 'homepage',
   RESOURCE = 'resource',
@@ -35,4 +40,12 @@ enum EDocmentFlag {
   EXPORT = 'export',
 }
 
-export { EBannerStatus, EResourceStatus, EEducationLevelStatus, ECareerStatus, EFlagUploadVideo, EDocmentFlag };
+export {
+  EBannerStatus,
+  EResourceStatus,
+  EEducationLevelStatus,
+  ECareerStatus,
+  EFlagUploadVideo,
+  EDocmentFlag,
+  ECategoryType,
+};
