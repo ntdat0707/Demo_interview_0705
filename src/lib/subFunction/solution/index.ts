@@ -10,13 +10,10 @@ export async function countSolution(solutionRepository: Repository<SolutionEntit
     .createQueryBuilder('solution')
     .select('DISTINCT solution."code"')
     .getRawMany();
-  const data: any = {};
   if (total.length < 10) {
-    data.isValid = true;
-    return data;
+    return false;
   } else {
-    data.isValid = false;
-    return data;
+    return true;
   }
 }
 

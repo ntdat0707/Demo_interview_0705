@@ -50,8 +50,8 @@ export class SolutionService {
         break;
       }
     }
-    const currItems: any = await countSolution(this.solutionRepository);
-    if (currItems.isValid === false) {
+    const isLimitSolution: any = await countSolution(this.solutionRepository);
+    if (isLimitSolution === true) {
       throw new HttpException(
         {
           statusCode: HttpStatus.BAD_REQUEST,
