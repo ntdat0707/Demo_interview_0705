@@ -50,30 +50,37 @@ export class SolutionService {
         break;
       }
     }
+    const isLimitSolution: any = await countSolution(this.solutionRepository);
+    if (isLimitSolution === true) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'SOLUTION_HAS_BEEN_MAX',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     await isLanguageENValid(createSolutionList, this.languageRepository);
     await isDuplicateLanguageValid(createSolutionList, this.languageRepository);
+    const solutions = [];
     for (const item of createSolutionList) {
-      const currItems: any = await countSolution(this.solutionRepository, item.languageId);
-      if (currItems.isValid === true) {
-        const index: any = currItems.solutions.findIndex((solution: any) => solution.title === item.title);
-        if (index > -1) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.CONFLICT,
-              message: 'SOLUTION_THIS_LANGUAGE_ALREADY_EXIST',
-            },
-            HttpStatus.CONFLICT,
-          );
-        }
-
-        const newSolution = new SolutionEntity();
-        newSolution.setAttributes(item);
-        await this.connection.queryResultCache.clear();
-        newSolution.code = randomCode;
-        await this.solutionRepository.save<SolutionEntity>(newSolution);
-        this.logger.debug('Create solution');
+      const currSolutions = await this.solutionRepository.find({ where: { languageId: item.languageId } });
+      const index: any = currSolutions.findIndex((solution: any) => solution.title === item.title);
+      if (index > -1) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.CONFLICT,
+            message: 'SOLUTION_THIS_LANGUAGE_ALREADY_EXIST',
+          },
+          HttpStatus.CONFLICT,
+        );
       }
+      const newSolution = new SolutionEntity();
+      newSolution.setAttributes(item);
+      newSolution.code = randomCode;
+      solutions.push(newSolution);
     }
+    await this.solutionRepository.save<SolutionEntity>(solutions);
     return {};
   }
 
