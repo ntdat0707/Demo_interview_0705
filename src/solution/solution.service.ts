@@ -52,6 +52,7 @@ export class SolutionService {
     }
     await isLanguageENValid(createSolutionList, this.languageRepository);
     await isDuplicateLanguageValid(createSolutionList, this.languageRepository);
+    const solutions = [];
     for (const item of createSolutionList) {
       const currItems: any = await countSolution(this.solutionRepository, item.languageId);
       if (currItems.isValid === true) {
@@ -65,15 +66,13 @@ export class SolutionService {
             HttpStatus.CONFLICT,
           );
         }
-
         const newSolution = new SolutionEntity();
         newSolution.setAttributes(item);
-        await this.connection.queryResultCache.clear();
         newSolution.code = randomCode;
-        await this.solutionRepository.save<SolutionEntity>(newSolution);
-        this.logger.debug('Create solution');
+        solutions.push(newSolution);
       }
     }
+    await this.solutionRepository.save<SolutionEntity>(solutions);
     return {};
   }
 
