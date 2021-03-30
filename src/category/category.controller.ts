@@ -24,13 +24,15 @@ export class CategoryController {
   @Get()
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'type', required: true })
   @ApiQuery({ name: 'languageId', required: true })
   async getAllCategory(
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
+    @Query('type') type: string,
     @Query('languageId') languageId: string,
   ) {
-    return await this.categoryService.getAllCategory(page, limit, languageId);
+    return await this.categoryService.getAllCategory(page, limit, type, languageId);
   }
 
   @Get('/:code')

@@ -5,10 +5,10 @@ export class VideoCateEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('uuid', { name: 'resource_id' })
+  @Column('uuid', { name: 'video_id' })
   videoId: string;
 
-  @Column('uuid', { name: 'category_id', nullable: true })
+  @Column('uuid', { name: 'category_id' })
   categoryId: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })

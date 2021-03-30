@@ -35,7 +35,4 @@ export class UpdateCategoryInput {
 
   @ApiProperty({ required: true, enum: Object.values(EResourceStatus) })
   readonly status: string;
-
-  @ApiProperty({ required: true, enum: Object.values(ECategoryType) })
-  readonly type: string;
 }

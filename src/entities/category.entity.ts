@@ -37,5 +37,6 @@ export class CategoryEntity {
     this.link = object.link;
     this.languageId = object.languageId;
     this.status = object.status;
+    this.type = object.type;
   }
 }

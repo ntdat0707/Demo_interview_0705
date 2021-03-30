@@ -1,6 +1,6 @@
 import { ArgumentMetadata, HttpException, HttpStatus, PipeTransform } from '@nestjs/common';
 import { UpdateCategoryInput } from '../../../category/category.dto';
-import { ECategoryType, EResourceStatus } from '../../constant';
+import { EResourceStatus } from '../../constant';
 
 export class UpdateCatePipe implements PipeTransform<any> {
   transform(values: [UpdateCategoryInput], metadata: ArgumentMetadata) {
@@ -55,25 +55,6 @@ export class UpdateCatePipe implements PipeTransform<any> {
             {
               statusCode: HttpStatus.BAD_REQUEST,
               message: 'STATUS_INVALID',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-      }
-      if (!value.type) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'TYPE_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        if (!(Object.values(ECategoryType) as any[]).includes(value.type)) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'TYPE__INVALID',
             },
             HttpStatus.BAD_REQUEST,
           );

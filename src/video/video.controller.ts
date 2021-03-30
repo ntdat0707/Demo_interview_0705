@@ -41,6 +41,7 @@ export class VideoController {
   }
 
   @Get('/:code')
+  @ApiQuery({ name: 'languageId', type: String, required: false })
   async getVideo(@Param('code') code: string, @Query('languageId') languageId: string) {
     return await this.videoService.getVideo(code, languageId);
   }
@@ -68,7 +69,8 @@ export class VideoController {
   }
 
   @Delete('/:code')
-  async deleteVideo(@Param('code') code: string) {
-    return await this.videoService.deleteVideo(code);
+  @ApiQuery({ name: 'categoryId', type: String, required: false })
+  async deleteVideo(@Param('code') code: string, @Query('categoryId') category: string) {
+    return await this.videoService.deleteVideo(code, category);
   }
 }

@@ -63,13 +63,17 @@ export class CategoryService {
   async getAllCategory(
     page = 1,
     limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
+    type: string,
     languageId: string,
   ) {
     this.logger.debug('get all category');
     await this.connection.queryResultCache.clear();
     const query = this.categoryRepository
       .createQueryBuilder('category')
-      .where('category."deleted_at" is null AND category."language_id" =:languageId', { languageId });
+      .where('category."deleted_at" is null AND category."language_id" =:languageId AND category."type"=:type', {
+        languageId,
+        type,
+      });
     const cateCount = await query.cache(`category_count_page${page}_limit${limit}`).getCount();
     const categories: any = await query
       .limit(limit)
