@@ -2,7 +2,7 @@
 /dist
 /node_modules
 
-/uploads/*
+
 /upload.zip
 # Logs
 logs
