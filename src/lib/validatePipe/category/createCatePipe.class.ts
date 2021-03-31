@@ -82,7 +82,7 @@ export class StatusCatePipe implements PipeTransform<string, string> {
       throw new HttpException(
         {
           statusCode: HttpStatus.BAD_REQUEST,
-          message: 'STATUS__INVALID',
+          message: 'STATUS_INVALID',
         },
         HttpStatus.BAD_REQUEST,
       );

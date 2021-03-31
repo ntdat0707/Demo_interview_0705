@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, getManager, Repository } from 'typeorm';
 import { CategoryEntity } from '../entities/category.entity';
 import { LanguageEntity } from '../entities/language.entity';
-import { isDuplicateLanguageValid, isThreeLanguageValid } from '../lib/pipeUtils/languageValidate';
+import { isThreeLanguageValid } from '../lib/pipeUtils/languageValidate';
 import { CreateCategoryInput, UpdateCategoryInput } from './category.dto';
 
 @Injectable()
@@ -19,10 +19,7 @@ export class CategoryService {
 
   async createCategory(categoriesInput: [CreateCategoryInput], status: string) {
     this.logger.debug('Create category');
-    await Promise.all([
-      isThreeLanguageValid(categoriesInput, this.languageRepository),
-      isDuplicateLanguageValid(categoriesInput, this.languageRepository),
-    ]);
+    await isThreeLanguageValid(categoriesInput, this.languageRepository);
     let randomCode = '';
     while (true) {
       randomCode = Math.random()
@@ -107,10 +104,7 @@ export class CategoryService {
 
   async updateCategory(code: string, categoriesInput: [UpdateCategoryInput], status?: string) {
     this.logger.debug('Update category');
-    await Promise.all([
-      isThreeLanguageValid(categoriesInput, this.languageRepository),
-      isDuplicateLanguageValid(categoriesInput, this.languageRepository),
-    ]);
+    await isThreeLanguageValid(categoriesInput, this.languageRepository);
     const currCategories = await this.categoryRepository.find({ where: { code: code } });
     if (currCategories.length === 0) {
       throw new HttpException(
