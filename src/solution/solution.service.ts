@@ -50,47 +50,73 @@ export class SolutionService {
         break;
       }
     }
+    const isLimitSolution: any = await countSolution(this.solutionRepository);
+    if (isLimitSolution === true) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'SOLUTION_HAS_BEEN_MAX',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     await isLanguageENValid(createSolutionList, this.languageRepository);
     await isDuplicateLanguageValid(createSolutionList, this.languageRepository);
-    const listSolution = [];
-    this.logger.debug('Create solution');
+    const solutions = [];
     for (const item of createSolutionList) {
-      const currItems: any = await countSolution(this.solutionRepository, item.languageId);
-      if (currItems.isValid === true) {
-        const index: any = currItems.solutions.findIndex((solution: any) => solution.title === item.title);
-        if (index > -1) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.CONFLICT,
-              message: 'SOLUTION_THIS_LANGUAGE_ALREADY_EXIST',
-            },
-            HttpStatus.CONFLICT,
-          );
-        }
-        const newSolution = new SolutionEntity();
-        newSolution.setAttributes(item);
-        await this.connection.queryResultCache.clear();
-        newSolution.code = randomCode;
-        listSolution.push(newSolution);
+      const currSolutions = await this.solutionRepository.find({ where: { languageId: item.languageId } });
+      const index: any = currSolutions.findIndex((solution: any) => solution.title === item.title);
+      if (index > -1) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.CONFLICT,
+            message: 'SOLUTION_THIS_LANGUAGE_ALREADY_EXIST',
+          },
+          HttpStatus.CONFLICT,
+        );
       }
+      const newSolution = new SolutionEntity();
+      newSolution.setAttributes(item);
+      newSolution.code = randomCode;
+      solutions.push(newSolution);
     }
-    await this.solutionRepository.save(listSolution);
+    await this.solutionRepository.save<SolutionEntity>(solutions);
     return {};
   }
 
-  async getAllSolution(languageId: string, code?: string) {
+  async getAllSolution(languageId: string) {
     this.logger.debug('Get all solution');
     await this.connection.queryResultCache.clear();
-    const solutionQuery = this.solutionRepository.createQueryBuilder('solution');
-    const query: any = solutionQuery
-      .where('solution."deleted_at" is null AND solution."language_id"=:languageId', { languageId })
-      .orderBy('solution."created_at"', 'DESC');
-    if (code) {
-      query.andWhere(`solution."code" = '${code}'`);
-    }
-    const solutions = await query.getMany();
+    const solutions = await this.solutionRepository
+      .createQueryBuilder('solution')
+      .andWhere('solution."language_id"=:languageId', { languageId })
+      .orderBy('solution."created_at"', 'DESC')
+      .getMany();
     return {
       data: solutions,
+    };
+  }
+
+  async getSolution(code: string, languageId?: string) {
+    this.logger.debug('get solution');
+    const queryExc = this.solutionRepository
+      .createQueryBuilder('solution')
+      .where(`code = :value`, { value: `${code}` });
+    if (languageId) {
+      queryExc.andWhere('language_id = :languageId', { languageId });
+    }
+    const solution = await queryExc.getMany();
+    if (solution.length === 0) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: 'SOLUTION_NOT_FOUND',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    return {
+      data: solution,
     };
   }
 

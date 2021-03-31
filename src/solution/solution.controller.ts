@@ -18,6 +18,7 @@ import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateSolutionInput, SolutionPictureInput, UpdateSolutionInput } from './solution.dto';
 import { CreateSolutionPipe } from '../lib/validatePipe/solution/createSolutionPipe.class';
+import { CheckLanguagePipe } from '../lib/validatePipe/focused-market/checkLanguagePipe.class';
 
 @Controller('solution')
 @ApiTags('Solution')
@@ -45,9 +46,14 @@ export class SolutionController {
 
   @Get()
   @ApiQuery({ name: 'languageId', required: true })
-  @ApiQuery({ name: 'code', required: false })
-  async getAllSolution(@Query('languageId') languageId: string, @Query('code') code: string) {
-    return await this.solutionService.getAllSolution(languageId, code);
+  async getAllSolution(@Query('languageId') languageId: string) {
+    return await this.solutionService.getAllSolution(languageId);
+  }
+
+  @Get('/:code')
+  @ApiQuery({ name: 'languageId', required: false, type: String })
+  async getSolution(@Param('code') code: string, @Query('languageId', new CheckLanguagePipe()) languageId: string) {
+    return await this.solutionService.getSolution(code, languageId);
   }
 
   @Put('/:code')

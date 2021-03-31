@@ -5,17 +5,15 @@ import { LanguageEntity } from '../../../entities/language.entity';
 import { SolutionEntity } from '../../../entities/solution.entity';
 import { UpdateSolutionInput } from '../../../solution/solution.dto';
 
-export async function countSolution(solutionRepository: Repository<SolutionEntity>, languageId: string) {
-  const solutions = await solutionRepository.find({ where: { languageId: languageId } });
-  const data: any = {};
-  if (solutions.length < 10) {
-    data.solutions = solutions;
-    data.isValid = true;
-    return data;
+export async function countSolution(solutionRepository: Repository<SolutionEntity>) {
+  const total = await solutionRepository
+    .createQueryBuilder('solution')
+    .select('DISTINCT solution."code"')
+    .getRawMany();
+  if (total.length < 10) {
+    return false;
   } else {
-    data.solutions = solutions;
-    data.isValid = false;
-    return data;
+    return true;
   }
 }
 
