@@ -59,3 +59,18 @@ export async function isDuplicateLanguageValid(value: any[], languageRepository:
 function hasDuplicates(arr: any) {
   return _.uniq(arr).length !== arr.length;
 }
+
+export async function isThreeLanguageValid(values: any[], languageRepository: Repository<LanguageEntity>) {
+  const languageIdsInput = values.map((item: any) => item.languageId);
+  const languages = (await languageRepository.find({})).map((language: any) => language.id);
+  const diff = _.difference(languages, languageIdsInput);
+  if (diff.length > 0) {
+    throw new HttpException(
+      {
+        statusCode: HttpStatus.CONFLICT,
+        message: 'CATEGORY_MUST_HAVE_THREE_LANGUAGES',
+      },
+      HttpStatus.CONFLICT,
+    );
+  }
+}

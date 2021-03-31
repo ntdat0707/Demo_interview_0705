@@ -10,6 +10,7 @@ import { ResourceEntity } from '../entities/resource.entity';
 import { ResourceAuthorEntity } from '../entities/resourceAuthor.entity';
 import { ResourceCateEntity } from '../entities/resourceCate.entity';
 import { ResourceLabelEntity } from '../entities/resourceLabel.entity';
+import { ECategoryType } from '../lib/constant';
 import { checkConditionInputCreate, checkConditionInputUpdate } from '../lib/validatePipe/resource/checkCondition';
 
 import { CreateResourceInput, UpdateResourceInput } from './resource.dto';
@@ -81,8 +82,10 @@ export class ResourceService {
           const resourceCateList = [];
           for (const item of createResource.categoryIds) {
             //check category
-            const category = await this.cateRepository.findOne({ where: { id: item } });
-            if (!category || category.languageId !== createResource.languageId) {
+            const category = await this.cateRepository.findOne({
+              where: { id: item, languageId: createResource.languageId, type: ECategoryType.POST },
+            });
+            if (!category) {
               throw new HttpException(
                 {
                   statusCode: HttpStatus.BAD_REQUEST,
@@ -378,8 +381,10 @@ export class ResourceService {
               if (addCate.length > 0) {
                 const resourceCateList = [];
                 for (const item of addCate) {
-                  const category = await this.cateRepository.findOne({ where: { id: item } });
-                  if (!category || category.languageId !== resourceUpdate.languageId) {
+                  const category = await this.cateRepository.findOne({
+                    where: { id: item, languageId: resourceUpdate.languageId, type: ECategoryType.POST },
+                  });
+                  if (!category) {
                     throw new HttpException(
                       {
                         statusCode: HttpStatus.BAD_REQUEST,

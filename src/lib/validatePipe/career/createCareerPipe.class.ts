@@ -2,6 +2,7 @@ import { ArgumentMetadata, HttpException, HttpStatus, Injectable, PipeTransform 
 import { CreateCareerInput } from '../../../career/career.dto';
 import { ECareerStatus, EEducationLevelStatus } from '../../constant';
 import { checkDate } from '../../pipeUtils/dateValidate';
+import { checkUUID } from '../../pipeUtils/uuidValidate';
 
 @Injectable()
 export class CreateCareerPipe implements PipeTransform<any> {
@@ -114,6 +115,16 @@ export class CreateCareerPipe implements PipeTransform<any> {
           },
           HttpStatus.BAD_REQUEST,
         );
+      } else {
+        if (!checkUUID(value.languageId)) {
+          throw new HttpException(
+            {
+              statusCode: HttpStatus.BAD_REQUEST,
+              message: 'LANGUAGE_ID_INVALID',
+            },
+            HttpStatus.BAD_REQUEST,
+          );
+        }
       }
     }
     return values;

@@ -76,12 +76,20 @@ export class CreateResourcePipe implements PipeTransform<any> {
           }
         }
       }
-      if (value.languageId) {
+      if (!value.languageId) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.BAD_REQUEST,
+            message: 'LANGUAGE_IS_REQUIRED',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      } else {
         if (!checkUUID(value.languageId)) {
           throw new HttpException(
             {
               statusCode: HttpStatus.BAD_REQUEST,
-              message: 'LANGUAGE_UUID_INVALID',
+              message: 'LANGUAGE_ID_INVALID',
             },
             HttpStatus.BAD_REQUEST,
           );

@@ -22,9 +22,6 @@ export class UpdateCategoryInput {
   readonly id: string;
 
   @ApiProperty({ required: true })
-  readonly code: string;
-
-  @ApiProperty({ required: true })
   readonly title: string;
 
   @ApiProperty({ required: true })

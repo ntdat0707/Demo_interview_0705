@@ -33,10 +33,9 @@ export class CategoryEntity {
   deletedAt: Date;
 
   setAttributes(object: any) {
-    this.title = object.title ? object.title : '';
+    this.title = object.title;
     this.link = object.link;
     this.languageId = object.languageId;
-    this.status = object.status;
     this.type = object.type;
   }
 }

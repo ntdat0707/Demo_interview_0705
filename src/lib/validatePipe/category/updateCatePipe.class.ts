@@ -1,19 +1,10 @@
 import { ArgumentMetadata, HttpException, HttpStatus, PipeTransform } from '@nestjs/common';
 import { UpdateCategoryInput } from '../../../category/category.dto';
-import { EResourceStatus } from '../../constant';
+import { checkUUID } from '../../pipeUtils/uuidValidate';
 
 export class UpdateCatePipe implements PipeTransform<any> {
   transform(values: [UpdateCategoryInput], metadata: ArgumentMetadata) {
     for (const value of values) {
-      if (!value.code) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'CODE_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
       if (!value.title) {
         throw new HttpException(
           {
@@ -27,10 +18,20 @@ export class UpdateCatePipe implements PipeTransform<any> {
         throw new HttpException(
           {
             statusCode: HttpStatus.BAD_REQUEST,
-            message: 'LANGUAGE_REQUIRED',
+            message: 'LANGUAGE_IS_REQUIRED',
           },
           HttpStatus.BAD_REQUEST,
         );
+      } else {
+        if (!checkUUID(value.languageId)) {
+          throw new HttpException(
+            {
+              statusCode: HttpStatus.BAD_REQUEST,
+              message: 'LANGUAGE_ID_INVALID',
+            },
+            HttpStatus.BAD_REQUEST,
+          );
+        }
       }
       if (!value.link) {
         throw new HttpException(
@@ -40,25 +41,6 @@ export class UpdateCatePipe implements PipeTransform<any> {
           },
           HttpStatus.BAD_REQUEST,
         );
-      }
-      if (!value.status) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'STATUS_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        if (!(Object.values(EResourceStatus) as any[]).includes(value.status)) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'STATUS_INVALID',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
-        }
       }
     }
     return values;

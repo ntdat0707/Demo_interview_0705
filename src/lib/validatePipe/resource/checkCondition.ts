@@ -10,8 +10,10 @@ export async function checkConditionInputCreate(
   createResource: [CreateResourceInput],
   languageRepository: Repository<LanguageEntity>,
 ) {
-  await isLanguageENValid(createResource, languageRepository);
-  await isDuplicateLanguageValid(createResource, languageRepository);
+  await Promise.all([
+    isLanguageENValid(createResource, languageRepository),
+    isDuplicateLanguageValid(createResource, languageRepository),
+  ]);
   for (const resource of createResource) {
     const existPost = await resourceRepository
       .createQueryBuilder('resource')

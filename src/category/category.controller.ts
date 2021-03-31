@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseFilters } from '@nestjs/common';
 import { ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
-import { CreateCatePipe } from '../lib/validatePipe/category/createCatePipe.class';
+import { CreateCatePipe, StatusCatePipe } from '../lib/validatePipe/category/createCatePipe.class';
 import { UpdateCatePipe } from '../lib/validatePipe/category/updateCatePipe.class';
 import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
 import { CreateCategoryInput, UpdateCategoryInput } from './category.dto';
@@ -17,8 +17,12 @@ export class CategoryController {
   @ApiBody({
     type: [CreateCategoryInput],
   })
-  async createCate(@Body(new CreateCatePipe()) cateInput: [CreateCategoryInput]) {
-    return await this.categoryService.createCategory(cateInput);
+  @ApiQuery({ name: 'status', required: true })
+  async createCate(
+    @Body(new CreateCatePipe()) cateInput: [CreateCategoryInput],
+    @Query('status', new StatusCatePipe()) status: string,
+  ) {
+    return await this.categoryService.createCategory(cateInput, status);
   }
 
   @Get()
@@ -44,8 +48,13 @@ export class CategoryController {
   @ApiBody({
     type: [UpdateCategoryInput],
   })
-  async updateCate(@Param('code') code: string, @Body(new UpdateCatePipe()) cateInput: [UpdateCategoryInput]) {
-    return await this.categoryService.updateCategory(code, cateInput);
+  @ApiQuery({ name: 'status', required: false })
+  async updateCate(
+    @Param('code') code: string,
+    @Body(new UpdateCatePipe()) cateInput: [UpdateCategoryInput],
+    @Query('status', new StatusCatePipe()) status: string,
+  ) {
+    return await this.categoryService.updateCategory(code, cateInput, status);
   }
 
   @Delete('/:code')

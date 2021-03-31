@@ -3,8 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, getManager, Repository } from 'typeorm';
 import { CategoryEntity } from '../entities/category.entity';
 import { LanguageEntity } from '../entities/language.entity';
-import { checkStatusCategory } from '../lib/pipeUtils/categoryValidate';
-import { isDuplicateLanguageValid, isLanguageENValid } from '../lib/pipeUtils/languageValidate';
+import { isDuplicateLanguageValid, isThreeLanguageValid } from '../lib/pipeUtils/languageValidate';
 import { CreateCategoryInput, UpdateCategoryInput } from './category.dto';
 
 @Injectable()
@@ -18,11 +17,12 @@ export class CategoryService {
     private connection: Connection,
   ) {}
 
-  async createCategory(categoriesInput: [CreateCategoryInput]) {
+  async createCategory(categoriesInput: [CreateCategoryInput], status: string) {
     this.logger.debug('Create category');
-    await checkStatusCategory(categoriesInput);
-    await isLanguageENValid(categoriesInput, this.languageRepository);
-    await isDuplicateLanguageValid(categoriesInput, this.languageRepository);
+    await Promise.all([
+      isThreeLanguageValid(categoriesInput, this.languageRepository),
+      isDuplicateLanguageValid(categoriesInput, this.languageRepository),
+    ]);
     let randomCode = '';
     while (true) {
       randomCode = Math.random()
@@ -54,6 +54,7 @@ export class CategoryService {
       const newCategory = new CategoryEntity();
       newCategory.setAttributes(item);
       newCategory.code = randomCode;
+      newCategory.status = status;
       newCategories.push(newCategory);
     }
     await this.categoryRepository.save(newCategories);
@@ -94,19 +95,22 @@ export class CategoryService {
   async getCategory(code: string) {
     this.logger.debug('get category by coded');
     await this.connection.queryResultCache.clear();
-    const query = this.categoryRepository
+    const categories = this.categoryRepository
       .createQueryBuilder('category')
-      .where('category."deleted_at" is null AND category."code" =:code', { code });
-    const categories: any = await query.orderBy('category."created_at"', 'DESC').getMany();
+      .where('category."deleted_at" is null AND category."code" =:code', { code })
+      .orderBy('category."created_at"', 'DESC')
+      .getMany();
     return {
       data: categories,
     };
   }
 
-  async updateCategory(code: string, categoriesInput: [UpdateCategoryInput]) {
+  async updateCategory(code: string, categoriesInput: [UpdateCategoryInput], status?: string) {
     this.logger.debug('Update category');
-    await checkStatusCategory(categoriesInput);
-    await isDuplicateLanguageValid(categoriesInput, this.languageRepository);
+    await Promise.all([
+      isThreeLanguageValid(categoriesInput, this.languageRepository),
+      isDuplicateLanguageValid(categoriesInput, this.languageRepository),
+    ]);
     const currCategories = await this.categoryRepository.find({ where: { code: code } });
     if (currCategories.length === 0) {
       throw new HttpException(
@@ -132,23 +136,29 @@ export class CategoryService {
             );
           }
           currCategories[index].setAttributes(item);
+          if (status) {
+            currCategories[index].status = status;
+          }
           await transactionalEntityManager.update(CategoryEntity, { id: item.id }, currCategories[index]);
         } else {
           const cateExisted = await this.categoryRepository.findOne({
-            where: { code: item.code, languageId: item.languageId },
+            where: { code: code, languageId: item.languageId },
           });
           if (cateExisted) {
             throw new HttpException(
               {
-                statusCode: HttpStatus.NOT_FOUND,
+                statusCode: HttpStatus.BAD_REQUEST,
                 message: `THIS_CATEGORY_${item.languageId}_EXISTED`,
               },
-              HttpStatus.NOT_FOUND,
+              HttpStatus.BAD_REQUEST,
             );
           }
           const newCategory = new CategoryEntity();
           newCategory.setAttributes(item);
-          newCategory.code = item.code;
+          newCategory.code = code;
+          if (status) {
+            newCategory.status = status;
+          }
           await transactionalEntityManager.save(CategoryEntity, newCategory);
         }
       }
