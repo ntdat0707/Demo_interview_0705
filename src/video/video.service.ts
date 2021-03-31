@@ -98,6 +98,7 @@ export class VideoService {
         newVideo.setAttributes(item);
         newVideo.id = uuidv4();
         newVideo.code = randomCode;
+        newVideo.flag = item.flag;
         if (item.flag === EFlagUploadVideo.RESOURCE) {
           const newVideoCate = new VideoCateEntity();
           newVideoCate.categoryId = item.categoryId;

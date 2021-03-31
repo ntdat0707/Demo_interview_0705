@@ -473,7 +473,6 @@ export class ResourceService {
             }
             await transactionalEntityManager.save<ResourceLabelEntity[]>(resourceLabelList);
           }
-          // create imageAttach file
         }
       }
     });
