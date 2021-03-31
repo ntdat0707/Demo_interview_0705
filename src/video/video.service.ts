@@ -1,11 +1,14 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Connection, getManager, Repository } from 'typeorm';
+import { Connection, getManager, In, Repository } from 'typeorm';
 import { VideoEntity } from '../entities/video.entity';
-import { EFlagUploadVideo, EResourceStatus } from '../lib/constant';
+import { ECategoryType, EFlagUploadVideo, EResourceStatus } from '../lib/constant';
 import { UpdateVideoInput, UploadVideoInput } from './video.dto';
 import { isDuplicateLanguageValid, isLanguageENValid } from '../lib/pipeUtils/languageValidate';
 import { LanguageEntity } from '../entities/language.entity';
+import { CategoryEntity } from '../entities/category.entity';
+import { VideoCateEntity } from '../entities/videoCate.entity';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class VideoService {
@@ -13,6 +16,7 @@ export class VideoService {
   constructor(
     @InjectRepository(VideoEntity) private videoRepository: Repository<VideoEntity>,
     @InjectRepository(LanguageEntity) private languageRepository: Repository<LanguageEntity>,
+    @InjectRepository(CategoryEntity) private categoryRepository: Repository<CategoryEntity>,
     private connection: Connection,
   ) {}
   async uploadVideoFile(video: any) {
@@ -33,55 +37,83 @@ export class VideoService {
 
   async uploadVideos(uploadVideoInput: [UploadVideoInput]) {
     this.logger.debug('upload video');
-    await isLanguageENValid(uploadVideoInput, this.languageRepository);
-    await isDuplicateLanguageValid(uploadVideoInput, this.languageRepository);
+    await Promise.all([
+      isLanguageENValid(uploadVideoInput, this.languageRepository),
+      isDuplicateLanguageValid(uploadVideoInput, this.languageRepository),
+    ]);
     let randomCode = '';
     while (true) {
       randomCode = Math.random()
         .toString(36)
         .substring(2, 10)
         .toUpperCase();
-      const existAgentCode = await this.videoRepository.findOne({ where: { code: randomCode } });
-      if (!existAgentCode) {
+      const existCode = await this.videoRepository.findOne({ where: { code: randomCode } });
+      if (!existCode) {
         break;
       }
     }
     await this.connection.queryResultCache.clear();
-    await getManager().transaction(async transactionalEntityManager => {
-      const newVideos = [];
-      for (const item of uploadVideoInput) {
-        const existVideo = await this.videoRepository.findOne({
-          where: { title: item.title, flag: item.flag },
+
+    const newVideos = [];
+    const newVideoCates = [];
+    for (const item of uploadVideoInput) {
+      const existVideo = await this.videoRepository.findOne({
+        where: { title: item.title, flag: item.flag },
+      });
+      if (existVideo) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.CONFLICT,
+            message: 'TITLE_EXIST',
+          },
+          HttpStatus.CONFLICT,
+        );
+      }
+      //check category
+      if (item.categoryId && item.flag === EFlagUploadVideo.RESOURCE) {
+        const category = await this.categoryRepository.findOne({
+          where: { id: item.categoryId, type: ECategoryType.VIDEO },
         });
-        if (existVideo) {
+        if (!category) {
           throw new HttpException(
             {
-              statusCode: HttpStatus.CONFLICT,
-              message: 'TITLE_EXIST',
+              statusCode: HttpStatus.BAD_REQUEST,
+              message: 'CATEGORY_INVALID',
             },
-            HttpStatus.CONFLICT,
+            HttpStatus.BAD_REQUEST,
           );
         }
-        if (item.status === EResourceStatus.PUBLISH && item.flag === EFlagUploadVideo.HOMEPAGE) {
-          const checkPublishVideo = await this.videoRepository.findOne({
-            where: { status: EResourceStatus.PUBLISH, flag: EFlagUploadVideo.HOMEPAGE },
-          });
-          if (checkPublishVideo) {
-            throw new HttpException(
-              {
-                statusCode: HttpStatus.BAD_REQUEST,
-                message: 'CAN_NOT_PUBLISH_VIDEO',
-              },
-              HttpStatus.BAD_REQUEST,
-            );
-          }
-        }
-        const newVideo: any = new VideoEntity();
-        newVideo.setAttributes(item);
-        newVideo.code = randomCode;
-        newVideos.push(newVideo);
       }
+      if (item.status === EResourceStatus.PUBLISH && item.flag === EFlagUploadVideo.HOMEPAGE) {
+        const checkPublishVideo = await this.videoRepository.findOne({
+          where: { status: EResourceStatus.PUBLISH, flag: EFlagUploadVideo.HOMEPAGE },
+        });
+        if (checkPublishVideo) {
+          throw new HttpException(
+            {
+              statusCode: HttpStatus.BAD_REQUEST,
+              message: 'CAN_NOT_PUBLISH_VIDEO',
+            },
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+      }
+      const newVideo = new VideoEntity();
+      newVideo.setAttributes(item);
+      newVideo.id = uuidv4();
+      newVideo.code = randomCode;
+      newVideo.flag = item.flag;
+      if (item.flag === EFlagUploadVideo.RESOURCE) {
+        const newVideoCate = new VideoCateEntity();
+        newVideoCate.categoryId = item.categoryId;
+        newVideoCate.videoId = newVideo.id;
+        newVideoCates.push(newVideoCate);
+      }
+      newVideos.push(newVideo);
+    }
+    await getManager().transaction(async transactionalEntityManager => {
       await transactionalEntityManager.save<VideoEntity[]>(newVideos);
+      await transactionalEntityManager.save<VideoCateEntity[]>(newVideoCates);
     });
     return {};
   }
@@ -233,8 +265,10 @@ export class VideoService {
     return {};
   }
 
-  async deleteVideo(code: string) {
+  async deleteVideo(code: string, categoryId?: string) {
     this.logger.debug('delete video');
+    await this.connection.queryResultCache.clear();
+
     const checkVideo: any = await this.videoRepository.find({ where: { code: code } });
     if (checkVideo.length === 0) {
       throw new HttpException(
@@ -245,8 +279,25 @@ export class VideoService {
         HttpStatus.NOT_FOUND,
       );
     }
-    await this.connection.queryResultCache.clear();
-    await this.videoRepository.softDelete(checkVideo);
+    const videoIds = checkVideo.map((item: any) => item.id);
+    await getManager().transaction(async transactionalEntityManager => {
+      if (categoryId) {
+        const category: any = await this.categoryRepository.findOne({
+          where: { id: categoryId, type: ECategoryType.VIDEO },
+        });
+        if (!category) {
+          throw new HttpException(
+            {
+              statusCode: HttpStatus.NOT_FOUND,
+              message: 'CATEGORY_NOT_FOUND',
+            },
+            HttpStatus.NOT_FOUND,
+          );
+        }
+        await transactionalEntityManager.softDelete<VideoCateEntity[]>(VideoEntity, { videoId: In(videoIds) });
+      }
+      await transactionalEntityManager.softDelete<VideoEntity[]>(VideoEntity, { id: In(videoIds) });
+    });
     return {};
   }
 }

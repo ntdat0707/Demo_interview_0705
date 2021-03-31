@@ -1,8 +1,10 @@
-import { Body, Controller, Get, Post, UseFilters } from '@nestjs/common';
-import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseFilters } from '@nestjs/common';
+import { ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
-import { CreateCatePipe } from '../lib/validatePipe/category/createCatePipe.class';
-import { CategoryInput } from './category.dto';
+import { CreateCatePipe, StatusCatePipe } from '../lib/validatePipe/category/createCatePipe.class';
+import { UpdateCatePipe } from '../lib/validatePipe/category/updateCatePipe.class';
+import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
+import { CreateCategoryInput, UpdateCategoryInput } from './category.dto';
 import { CategoryService } from './category.service';
 
 @Controller('category')
@@ -10,19 +12,53 @@ import { CategoryService } from './category.service';
 @UseFilters(new HttpExceptionFilter())
 export class CategoryController {
   constructor(private categoryService: CategoryService) {}
+
   @Post()
   @ApiBody({
-    type: CategoryInput,
+    type: [CreateCategoryInput],
   })
-  // @ApiBearerAuth()
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles([CREATE_BLOG, UPDATE_BLOG])
-  async createCate(@Body(new CreateCatePipe()) cateInput: CategoryInput) {
-    return await this.categoryService.createCategory(cateInput);
+  @ApiQuery({ name: 'status', required: true })
+  async createCate(
+    @Body(new CreateCatePipe()) cateInput: [CreateCategoryInput],
+    @Query('status', new StatusCatePipe()) status: string,
+  ) {
+    return await this.categoryService.createCategory(cateInput, status);
   }
 
   @Get()
-  async getAllCategory() {
-    return await this.categoryService.getAllCategory();
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'type', required: true })
+  @ApiQuery({ name: 'languageId', required: true })
+  async getAllCategory(
+    @Query('page', new CheckUnSignIntPipe()) page: number,
+    @Query('limit', new CheckUnSignIntPipe()) limit: number,
+    @Query('type') type: string,
+    @Query('languageId') languageId: string,
+  ) {
+    return await this.categoryService.getAllCategory(page, limit, type, languageId);
+  }
+
+  @Get('/:code')
+  async getCategory(@Param('code') code: string) {
+    return await this.categoryService.getCategory(code);
+  }
+
+  @Put('/:code')
+  @ApiBody({
+    type: [UpdateCategoryInput],
+  })
+  @ApiQuery({ name: 'status', required: false })
+  async updateCate(
+    @Param('code') code: string,
+    @Body(new UpdateCatePipe()) cateInput: [UpdateCategoryInput],
+    @Query('status', new StatusCatePipe()) status: string,
+  ) {
+    return await this.categoryService.updateCategory(code, cateInput, status);
+  }
+
+  @Delete('/:code')
+  async DeleteCate(@Param('code') code: string) {
+    return await this.categoryService.deleteCategory(code);
   }
 }

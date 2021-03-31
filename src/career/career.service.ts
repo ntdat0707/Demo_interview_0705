@@ -20,8 +20,10 @@ export class CareerService {
 
   async createCareer(careerInput: [CreateCareerInput]) {
     this.logger.debug('create career');
-    await isLanguageENValid(careerInput, this.languageRepository);
-    await isDuplicateLanguageValid(careerInput, this.languageRepository);
+    await Promise.all([
+      isLanguageENValid(careerInput, this.languageRepository),
+      isDuplicateLanguageValid(careerInput, this.languageRepository),
+    ]);
     let randomCode = '';
     while (true) {
       randomCode = Math.random()

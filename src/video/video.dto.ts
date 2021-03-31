@@ -15,6 +15,9 @@ export class UploadVideoInput {
   @ApiProperty({ required: false })
   readonly description: string;
 
+  @ApiProperty({ required: false })
+  readonly categoryId: string;
+
   @ApiProperty({ type: 'string', format: 'binary', required: false })
   readonly video: string;
 

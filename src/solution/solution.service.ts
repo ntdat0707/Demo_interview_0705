@@ -60,8 +60,10 @@ export class SolutionService {
         HttpStatus.BAD_REQUEST,
       );
     }
-    await isLanguageENValid(createSolutionList, this.languageRepository);
-    await isDuplicateLanguageValid(createSolutionList, this.languageRepository);
+    await Promise.all([
+      isLanguageENValid(createSolutionList, this.languageRepository),
+      isDuplicateLanguageValid(createSolutionList, this.languageRepository),
+    ]);
     const solutions = [];
     for (const item of createSolutionList) {
       const currSolutions = await this.solutionRepository.find({ where: { languageId: item.languageId } });
