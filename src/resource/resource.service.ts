@@ -415,6 +415,7 @@ export class ResourceService {
           this.logger.debug('Update resource have no id');
           const newResource = new ResourceEntity();
           newResource.setAttributes(resourceUpdate);
+          newResource.code = code;
           await transactionalEntityManager.save<ResourceEntity>(newResource);
           if (resourceUpdate.categoryIds && resourceUpdate.categoryIds.length > 0) {
             const resourceCateList = [];
