@@ -9,7 +9,6 @@ import { LanguageEntity } from '../entities/language.entity';
 import { CategoryEntity } from '../entities/category.entity';
 import { VideoCateEntity } from '../entities/videoCate.entity';
 import { v4 as uuidv4 } from 'uuid';
-
 @Injectable()
 export class VideoService {
   private readonly logger = new Logger(VideoService.name);
