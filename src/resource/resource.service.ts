@@ -163,21 +163,21 @@ export class ResourceService {
         'resource.authors',
         ResourceAuthorEntity,
         'resource_author',
-        '"resource_author"."resource_id"="resource".id',
+        '"resource_author"."resource_id"="resource".id and resource_author.deleted_at is null',
       )
       .leftJoinAndMapOne('author', AuthorEntity, 'author', '"author".id="resource_author"."author_id"')
       .leftJoinAndMapOne(
         'resource.labels',
         ResourceLabelEntity,
         'resource_label',
-        '"resource_label"."resource_id"="resource".id',
+        '"resource_label"."resource_id"="resource".id and resource_label.deleted_at is null',
       )
       .leftJoinAndMapMany('labels', LabelEntity, 'label', '"label".id = "resource_label"."label_id"')
       .leftJoinAndMapMany(
         'resource.categories',
         ResourceCateEntity,
         'resource_category',
-        '"resource_category"."resource_id"="resource".id',
+        '"resource_category"."resource_id"="resource".id and resource_category.deleted_at is null',
       )
       .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."category_id"')
       .limit(limit)
@@ -196,8 +196,9 @@ export class ResourceService {
     };
   }
 
-  async getResource(code: any) {
-    const resource: any = await this.resourceRepository
+  async getResources(code: any) {
+    await this.connection.queryResultCache.clear();
+    const resources: any = await this.resourceRepository
       .createQueryBuilder('resource')
       .where('"resource".code=:code', { code })
       .leftJoinAndMapOne(
@@ -222,10 +223,22 @@ export class ResourceService {
       )
       .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."category_id"')
       .getMany();
-    return { data: resource };
+
+    for (let i = 0; i < resources.length; i++) {
+      if (resources[i].labels.length > 0) {
+        for (let j = 0; j < resources[i].labels.length; j++) {
+          const label: any = await this.labelRepository.findOne({
+            where: { id: resources[i].labels[j].labelId },
+          });
+          Object.assign(resources[i].labels[j], { name: label.name });
+        }
+      }
+    }
+    return { data: resources };
   }
 
   async getResourceSEO(link: string, languageId: string) {
+    await this.connection.queryResultCache.clear();
     const resource: any = await this.resourceRepository
       .createQueryBuilder('resource')
       .where('"resource".link=:link and "resource".is_edit_seo is TRUE and "resource".language_id =:languageId', {

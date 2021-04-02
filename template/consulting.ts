@@ -1,9 +1,9 @@
 import { IBaseEmailTemplate } from './index';
 export interface IEmailConsultingTemplate extends IBaseEmailTemplate {
   name: string;
-  email: string;
+  country: string;
   phone: string;
   company: string;
-  position: string;
-  address: string;
+  city: string;
+  street: string;
 }

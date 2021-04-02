@@ -63,12 +63,12 @@ export class AgentService {
         const SEND_TO = 'nguyentandat.email07@gmail.com';
         const pathFile = path.join(__dirname, '../../template/consulting.ejs');
         const dataEmail = {
-          // name: string;
-          // email: string;
-          // phone: string;
-          // company: string;
-          // position: string;
-          // address: string;
+          name: agentInput.contactName,
+          country: agentInput.country,
+          phone: agentInput.contactPhone,
+          company: agentInput.companyName,
+          city: agentInput.city,
+          street: agentInput.street,
         };
         ejs.renderFile(pathFile, dataEmail, async (err, data) => {
           if (err) {
@@ -78,7 +78,7 @@ export class AgentService {
             await executeSendingEmail({
               receivers: SEND_TO,
               message: data,
-              subject: '[Test] Kích hoạt tài khoản',
+              subject: 'Partner Request',
               type: 'html',
             });
           }
