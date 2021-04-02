@@ -1,0 +1,193 @@
+<!-- saved from url=(0075)http://lms.myclass.vn/pluginfile.php/12538/mod_lesson/intro/bookTicket.html -->
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,400;1,500;1,700&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam:wght@100;300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <style>
+    #resetpw {
+      width: 40%;
+      min-width: 600px;
+      max-width: 700px;
+      margin: auto;
+      font-family: "Roboto", sans-serif;
+      font-size: 14px;
+      padding: 40px;
+      background: #E4E8EA;
+    }
+
+    div {
+      box-sizing: border-box;
+    }
+
+    header a {
+      float: right;
+      margin-top: 10px;
+      text-decoration: none;
+      color: #b5d3ed;
+      font-weight: 700;
+      font-family: "Roboto", sans-serif;
+    }
+
+    .main {
+      margin-top: 30px;
+      background: #FFFFFF;
+      box-shadow: 0px 4px 17px rgba(111, 125, 145, 0.1);
+      border-radius: 15px;
+    }
+
+    .main img {
+      width: 100%;
+    }
+
+    .main p {
+      font-family: Roboto;
+      font-style: normal;
+      font-size: 14px;
+      line-height: 21px;
+      color: #272B2F;
+    }
+
+    .main p span {
+      font-weight: bold;
+    }
+
+    .main .info {
+      padding: 20px 40px 30px;
+    }
+
+    .main .info h1 {
+      font-family: Be Vietnam;
+      font-style: normal;
+      font-weight: bold;
+      font-size: 32px;
+      line-height: 40px;
+      letter-spacing: -0.016em;
+      text-transform: capitalize;
+      color: #070D14;
+    }
+
+
+    footer p {
+      margin: 5px 0;
+    }
+
+    footer {
+      margin-top: 20px;
+      color: #727070;
+      text-align: center;
+      font-size: 12px;
+      line-height: 20px;
+
+    }
+
+    .circle {
+      border-radius: 50%;
+      height: 2.67px;
+      width:  2.67px;
+      background: #727070;
+    }
+
+    footer div {
+      display: flex;
+      margin: auto;
+      width: fit-content;
+    }
+
+    footer div a {
+      margin: 5px;
+      cursor: pointer;
+      color: #727070;
+    }
+
+
+    .info li {
+      font-family: Roboto;
+      font-style: normal;
+      font-weight: bold;
+      font-size: 14px;
+      line-height: 21px;
+      color: #272B2F;
+      margin: 8px 0;
+    }
+
+    .info li span {
+      font-weight: 400;
+    }
+
+    .none {
+      font-style: italic;
+      color: #727070;
+    }
+
+    ul {
+      margin: 0;
+      padding: 0 0 0 15px;
+
+    }
+
+    @media screen and (max-width: 575px) {
+      html {
+        font-size: 40%;
+      }
+
+      #resetpw {
+        width: 100%;
+        min-width: unset;
+        padding: 20px 0;
+      }
+
+      .resetpw {
+        padding: 0;
+      }
+
+      header {
+        padding: 0 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="resetpw">
+    <div class="resetpw">
+      <header>
+        <img style="width: 107px" src="../midom/logo.png" alt="logo" />
+        <a style="color: #6658F3" href="https://midomsamdua.com" target="blank"> > Visit website </a>
+      </header>
+      <div class="main">
+        <img src="../midom/img.png" />
+        <div class="info">
+          <h1>New request for demo </h1>
+          <p>You have received new request for demo from <span><%=name%></span></p>
+          <p>Please find the detail in below:</p>
+          <ul>
+            <li>Customer: <span><%=name%></span></li>
+            <li>Phone number: <span><%=phone%></span></li>
+            <li>Email: <span><%=email%></span></li>
+            <li>Business name: <span><%=company%></span></li>
+            <li>Address: <span class="none"><%=address%></span></li>
+          </ul>
+        </div>
+      </div>
+      <footer>
+        <p>Sent from Vico</p>
+        <p>Wisere, 268 Tran Hung Dao Street, Ward 11 , District 5, HCMC</p>
+        <div>
+          <a href="#" target="blank">Wisere for Business</a>
+          <div class="circle"></div>
+          <a href="#" target="blank">View in browser</a>
+          <div class="circle"></div>
+          <a href="#" target="blank">Unsubscribe</a>
+        </div>
+      </footer>
+    </div>
+  </div>
+</body>
+
+</html>

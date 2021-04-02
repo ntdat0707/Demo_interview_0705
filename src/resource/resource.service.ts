@@ -271,6 +271,7 @@ export class ResourceService {
       );
     }
     await this.connection.queryResultCache.clear();
+
     await getManager().transaction(async transactionalEntityManager => {
       for (const resourceUpdate of resourcesUpdate) {
         if (resourceUpdate.id) {
@@ -322,6 +323,16 @@ export class ResourceService {
           if (resourceLabels.length === 0) {
             const resourceLabelList = [];
             for (const item of resourceUpdate.labelIds) {
+              const label = await this.labelRepository.findOne({ where: { id: item } });
+              if (!label) {
+                throw new HttpException(
+                  {
+                    statusCode: HttpStatus.NOT_FOUND,
+                    message: `LABEL_${item}_NOT_FOUND`,
+                  },
+                  HttpStatus.NOT_FOUND,
+                );
+              }
               const resourceLabel = new ResourceLabelEntity();
               resourceLabel.resourceId = resourceUpdate.id;
               resourceLabel.labelId = item;
@@ -356,60 +367,60 @@ export class ResourceService {
               }
               await transactionalEntityManager.save<ResourceLabelEntity[]>(resourceLabelList);
             }
-            //update category
-            this.logger.debug('Update resource categories');
-            const resourceCates = await this.resourceCateRepository.find({
-              where: { resourceId: resourceUpdate.id },
-            });
-            if (resourceCates.length === 0) {
+          }
+          //update category
+          this.logger.debug('Update resource categories');
+          const resourceCates = await this.resourceCateRepository.find({
+            where: { resourceId: resourceUpdate.id },
+          });
+          if (resourceCates.length === 0) {
+            const resourceCateList = [];
+            for (const item of resourceUpdate.categoryIds) {
+              const resourceLabel = new ResourceCateEntity();
+              resourceLabel.resourceId = resourceUpdate.id;
+              resourceLabel.categoryId = item;
+              resourceCateList.push(resourceLabel);
+            }
+            await transactionalEntityManager.save<ResourceCateEntity[]>(resourceCateList);
+          } else {
+            const currResourceCateIds = resourceCates.map((item: any) => item.categoryId);
+            const diffCate = _.difference(currResourceCateIds, resourceUpdate.categoryIds);
+            if (diffCate.length > 0) {
+              const deleteCates = await this.resourceCateRepository.find({ where: { categoryId: In(diffCate) } });
+              await transactionalEntityManager.softRemove<ResourceCateEntity[]>(deleteCates);
+            }
+            const addCate = _.difference(resourceUpdate.categoryIds, currResourceCateIds);
+            if (addCate.length > 0) {
               const resourceCateList = [];
-              for (const item of resourceUpdate.categoryIds) {
+              for (const item of addCate) {
+                const category = await this.cateRepository.findOne({
+                  where: { id: item, languageId: resourceUpdate.languageId, type: ECategoryType.POST },
+                });
+                if (!category) {
+                  throw new HttpException(
+                    {
+                      statusCode: HttpStatus.BAD_REQUEST,
+                      message: `CATEGORY_${item}_NOT_VALID`,
+                    },
+                    HttpStatus.BAD_REQUEST,
+                  );
+                }
                 const resourceLabel = new ResourceCateEntity();
                 resourceLabel.resourceId = resourceUpdate.id;
                 resourceLabel.categoryId = item;
                 resourceCateList.push(resourceLabel);
               }
               await transactionalEntityManager.save<ResourceCateEntity[]>(resourceCateList);
-            } else {
-              const currResourceCateIds = resourceCates.map((item: any) => item.categoryId);
-              const diffCate = _.difference(currResourceCateIds, resourceUpdate.categoryIds);
-              if (diffCate.length > 0) {
-                const deleteCates = await this.resourceCateRepository.find({ where: { categoryId: In(diffCate) } });
-                await transactionalEntityManager.softRemove<ResourceCateEntity[]>(deleteCates);
-              }
-              const addCate = _.difference(resourceUpdate.categoryIds, currResourceCateIds);
-              if (addCate.length > 0) {
-                const resourceCateList = [];
-                for (const item of addCate) {
-                  const category = await this.cateRepository.findOne({
-                    where: { id: item, languageId: resourceUpdate.languageId, type: ECategoryType.POST },
-                  });
-                  if (!category) {
-                    throw new HttpException(
-                      {
-                        statusCode: HttpStatus.BAD_REQUEST,
-                        message: `CATEGORY_${item}_NOT_VALID`,
-                      },
-                      HttpStatus.BAD_REQUEST,
-                    );
-                  }
-                  const resourceLabel = new ResourceCateEntity();
-                  resourceLabel.resourceId = resourceUpdate.id;
-                  resourceLabel.categoryId = item;
-                  resourceCateList.push(resourceLabel);
-                }
-                await transactionalEntityManager.save<ResourceCateEntity[]>(resourceCateList);
-              }
             }
-            // update images
-            this.logger.debug('Update resource have id');
-            currResource.setAttributes(resourceUpdate);
-            await transactionalEntityManager.update<ResourceEntity>(
-              ResourceEntity,
-              { id: resourceUpdate.id },
-              currResource,
-            );
           }
+          // update images
+          this.logger.debug('Update resource have id');
+          currResource.setAttributes(resourceUpdate);
+          await transactionalEntityManager.update<ResourceEntity>(
+            ResourceEntity,
+            { id: resourceUpdate.id },
+            currResource,
+          );
         } else {
           // add new resource
           this.logger.debug('Update resource have no id');

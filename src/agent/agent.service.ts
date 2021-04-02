@@ -61,21 +61,14 @@ export class AgentService {
     if (agentInput.isSendMail === true) {
       try {
         const SEND_TO = 'nguyentandat.email07@gmail.com';
-        const pathFile = path.join(__dirname, '../../template/new_account.ejs');
+        const pathFile = path.join(__dirname, '../../template/consulting.ejs');
         const dataEmail = {
-          companyPhone: agentInput.companyPhone,
-          companyName: agentInput.companyName,
-          website: agentInput.website,
-          companyEmail: agentInput.companyEmail,
-          country: agentInput.country,
-          city: agentInput.city,
-          street: agentInput.street,
-          contactName: agentInput.contactName,
-          contactEmail: agentInput.contactEmail,
-          contactPhone: agentInput.contactPhone,
-          jobTitle: agentInput.jobTitle,
-          description: agentInput.description,
-          status: agentInput.status,
+          // name: string;
+          // email: string;
+          // phone: string;
+          // company: string;
+          // position: string;
+          // address: string;
         };
         ejs.renderFile(pathFile, dataEmail, async (err, data) => {
           if (err) {
