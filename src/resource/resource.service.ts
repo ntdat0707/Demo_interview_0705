@@ -207,33 +207,43 @@ export class ResourceService {
         'resource_author',
         '"resource_author"."resource_id"="resource".id and resource_author.deleted_at is null',
       )
-      .leftJoinAndMapOne('authors', AuthorEntity, 'author', '"author".id="resource_author"."author_id" ')
+      .leftJoinAndMapOne(
+        'resource_author.authorInf',
+        AuthorEntity,
+        'author',
+        '"author".id="resource_author"."author_id" ',
+      )
       .leftJoinAndMapMany(
         'resource.labels',
         ResourceLabelEntity,
         'resource_label',
         '"resource_label"."resource_id"="resource".id and resource_label.deleted_at is null',
       )
-      .leftJoinAndMapMany('labels', LabelEntity, 'label', '"label".id = "resource_label"."label_id"')
+      .leftJoinAndMapOne('resource_label.labelInf', LabelEntity, 'label', '"label".id = "resource_label"."label_id"')
       .leftJoinAndMapMany(
         'resource.categories',
         ResourceCateEntity,
         'resource_category',
         '"resource_category"."resource_id"="resource".id and resource_category.deleted_at is null',
       )
-      .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."category_id"')
+      .leftJoinAndMapOne(
+        'resource_label.categoryInf',
+        CategoryEntity,
+        'category',
+        '"category".id = "resource_category"."category_id"',
+      )
       .getMany();
 
-    for (let i = 0; i < resources.length; i++) {
-      if (resources[i].labels.length > 0) {
-        for (let j = 0; j < resources[i].labels.length; j++) {
-          const label: any = await this.labelRepository.findOne({
-            where: { id: resources[i].labels[j].labelId },
-          });
-          Object.assign(resources[i].labels[j], { name: label.name });
-        }
-      }
-    }
+    // for (let i = 0; i < resources.length; i++) {
+    //   if (resources[i].labels.length > 0) {
+    //     for (let j = 0; j < resources[i].labels.length; j++) {
+    //       const label: any = await this.labelRepository.findOne({
+    //         where: { id: resources[i].labels[j].labelId },
+    //       });
+    //       Object.assign(resources[i].labels[j], { name: label.name });
+    //     }
+    //   }
+    // }
     return { data: resources };
   }
 
