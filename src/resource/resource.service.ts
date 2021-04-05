@@ -233,17 +233,6 @@ export class ResourceService {
         '"category".id = "resource_category"."category_id"',
       )
       .getMany();
-
-    // for (let i = 0; i < resources.length; i++) {
-    //   if (resources[i].labels.length > 0) {
-    //     for (let j = 0; j < resources[i].labels.length; j++) {
-    //       const label: any = await this.labelRepository.findOne({
-    //         where: { id: resources[i].labels[j].labelId },
-    //       });
-    //       Object.assign(resources[i].labels[j], { name: label.name });
-    //     }
-    //   }
-    // }
     return { data: resources };
   }
 
