@@ -23,20 +23,20 @@ export class CreateResourcePipe implements PipeTransform<any> {
       if (value.categoryIds) {
         for (const item of value.categoryIds) {
           if (!checkUUID(item)) {
-            throw new BadRequestException('CATEGORY_UUID_INVALID');
+            throw new BadRequestException('CATEGORY_ID_INVALID');
           }
         }
       }
       if (value.authorId) {
         if (!checkUUID(value.authorId)) {
-          throw new BadRequestException('AUTHOR_UUID_INVALID');
+          throw new BadRequestException('AUTHOR_ID_INVALID');
         }
       }
 
       if (value.labelIds) {
         for (const item of value.labelIds) {
           if (!checkUUID(item)) {
-            throw new BadRequestException('LABEL_UUID_INVALID');
+            throw new BadRequestException('LABEL_ID_INVALID');
           }
         }
       }
@@ -44,7 +44,7 @@ export class CreateResourcePipe implements PipeTransform<any> {
         throw new BadRequestException('LANGUAGE_IS_REQUIRED');
       } else {
         if (!checkUUID(value.languageId)) {
-          throw new BadRequestException('LANGUAGE_UUID_INVALID');
+          throw new BadRequestException('LANGUAGE_ID_INVALID');
         }
       }
       if (value.isEditSEO === true) {
