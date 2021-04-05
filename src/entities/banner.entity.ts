@@ -70,7 +70,7 @@ export class BannerEntity {
     this.imageForResponsive = object.imageForResponsive ? object.imageForResponsive : null;
     this.imageAltForResponsive = object.imageAltForResponsive ? object.imageAltForResponsive : null;
     this.link = object.link ? object.link : null;
-    this.position = object.position ? object.position : null;
+    this.position = object.position ? object.position : 'homepage';
     this.status = object.status;
     this.validFrom = object.validFrom ? object.validFrom : null;
     this.validTo = object.validTo ? object.validTo : null;
