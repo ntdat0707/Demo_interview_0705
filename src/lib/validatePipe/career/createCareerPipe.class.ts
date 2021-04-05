@@ -1,4 +1,11 @@
-import { ArgumentMetadata, HttpException, HttpStatus, Injectable, PipeTransform } from '@nestjs/common';
+import {
+  ArgumentMetadata,
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  PipeTransform,
+} from '@nestjs/common';
 import { CreateCareerInput } from '../../../career/career.dto';
 import { ECareerStatus, EEducationLevelStatus } from '../../constant';
 import { checkDate } from '../../pipeUtils/dateValidate';
@@ -9,59 +16,24 @@ export class CreateCareerPipe implements PipeTransform<any> {
   transform(values: [CreateCareerInput], metadata: ArgumentMetadata) {
     for (const value of values) {
       if (!value.title) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'TITLE_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('TITLE_REQUIRED');
       }
       if (!value.country) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'COUNTRY_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('COUNTRY_REQUIRED');
       }
       if (!value.city) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'CITY_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('CITY_REQUIRED');
       }
       if (!value.currency) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'CURRENCY_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('CURRENCY_REQUIRED');
       }
       if (value.isEditSalary) {
         if (value.isEditSalary !== true && value.isEditSalary !== false)
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'SHOW_SALARY_RANGE_INVALID',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('SHOW_SALARY_RANGE_INVALID');
       }
+
       if (!value.jobDescription) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'JOB_DESCRIPTION_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('JOB_EDUCATION_REQUIRED');
       }
       if (value.status) {
         const status: any = value.status;

@@ -1,4 +1,4 @@
-import { PipeTransform, Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
 import { checkInteger } from '../pipeUtils/integerValidate';
 
 @Injectable()
@@ -7,23 +7,11 @@ export class CheckUnSignIntPipe implements PipeTransform<any> {
     let result: number;
     if (value !== undefined) {
       if (!checkInteger(value)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'MUST_BE_INTEGER',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('MUST_BE_INTEGER');
       } else {
-        result = parseInt(value);
+        result = parseInt(value, 10);
         if (result <= 0) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'VALUE_MUST_BE_LARGER_THAN_0',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('VALUE_MUST_BE_HIGHER_0');
         }
       }
     }

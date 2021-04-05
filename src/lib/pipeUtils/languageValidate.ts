@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { LanguageEntity } from '../../entities/language.entity';
 import _ = require('lodash');
@@ -8,26 +8,14 @@ export async function isLanguageENValid(value: any[], languageRepository: Reposi
   for (const item of value) {
     const language: any = await languageRepository.findOne({ where: { id: item.languageId } });
     if (!language) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'LANGUAGE_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('LANGUAGE_NOT_FOUND');
     }
     if (language.code === 'EN') {
       checkLanguageEN = true;
     }
   }
   if (checkLanguageEN === false) {
-    throw new HttpException(
-      {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: 'LANGUAGE_ENGLISH_MUST_BE_CREATED',
-      },
-      HttpStatus.BAD_REQUEST,
-    );
+    throw new BadRequestException('LANGUAGE_ENGLISH_MUST_BE_CREATED');
   }
 }
 
@@ -36,24 +24,12 @@ export async function isDuplicateLanguageValid(value: any[], languageRepository:
   for (const item of value) {
     const language = await languageRepository.findOne({ where: { id: item.languageId } });
     if (!language) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'LANGUAGE_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('LANGUAGE_NOT_FOUND');
     }
     languageIds.push(language.code);
   }
   if (hasDuplicates(languageIds)) {
-    throw new HttpException(
-      {
-        statusCode: HttpStatus.CONFLICT,
-        message: 'LANGUAGE_HAS_BEEN_DUPLICATE',
-      },
-      HttpStatus.CONFLICT,
-    );
+    throw new BadRequestException('DUPLICATE_LANGUAGE');
   }
 }
 function hasDuplicates(arr: any) {
@@ -65,12 +41,6 @@ export async function isThreeLanguageValid(values: any[], languageRepository: Re
   const languages = (await languageRepository.find({})).map((language: any) => language.id);
   const diff = _.difference(languages, languageIdsInput);
   if (diff.length > 0) {
-    throw new HttpException(
-      {
-        statusCode: HttpStatus.CONFLICT,
-        message: 'CATEGORY_MUST_HAVE_THREE_LANGUAGES',
-      },
-      HttpStatus.CONFLICT,
-    );
+    throw new BadRequestException('CATEGORY_MUST_HAVE_THREE_LANGUAGES');
   }
 }
