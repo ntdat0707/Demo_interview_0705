@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, getManager, Repository } from 'typeorm';
 import { CategoryEntity } from '../entities/category.entity';
@@ -40,13 +40,7 @@ export class CategoryService {
         ],
       });
       if (cateExisted) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.CONFLICT,
-            message: 'TITLE_OR_LINK_ALREADY_EXISTED',
-          },
-          HttpStatus.CONFLICT,
-        );
+        throw new ConflictException('TITLE_OR_LINK_ALREADY_EXISTED');
       }
       const newCategory = new CategoryEntity();
       newCategory.setAttributes(item);
@@ -107,13 +101,7 @@ export class CategoryService {
     await isThreeLanguageValid(categoriesInput, this.languageRepository);
     const currCategories = await this.categoryRepository.find({ where: { code: code } });
     if (currCategories.length === 0) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: `CODE_${code}_NOT_FOUND`,
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('CODE_NOT_FOUND');
     }
     await this.connection.queryResultCache.clear();
     await getManager().transaction(async transactionalEntityManager => {
@@ -121,13 +109,7 @@ export class CategoryService {
         if (item.id) {
           const index = currCategories.findIndex((x: any) => x.id === item.id);
           if (index < 0) {
-            throw new HttpException(
-              {
-                statusCode: HttpStatus.NOT_FOUND,
-                message: 'CATEGORY_NOT_EXISTED',
-              },
-              HttpStatus.NOT_FOUND,
-            );
+            throw new NotFoundException('CATEGORY_NOT_FOUND');
           }
           currCategories[index].setAttributes(item);
           if (status) {
@@ -139,13 +121,7 @@ export class CategoryService {
             where: { code: code, languageId: item.languageId },
           });
           if (cateExisted) {
-            throw new HttpException(
-              {
-                statusCode: HttpStatus.BAD_REQUEST,
-                message: `THIS_CATEGORY_${item.languageId}_EXISTED`,
-              },
-              HttpStatus.BAD_REQUEST,
-            );
+            throw new ConflictException(`THIS_CATEGORY_${item.languageId}_EXISTED`);
           }
           const newCategory = new CategoryEntity();
           newCategory.setAttributes(item);
@@ -163,13 +139,7 @@ export class CategoryService {
     this.logger.debug('Delete category');
     const delCate = await this.categoryRepository.find({ where: { code: code } });
     if (delCate.length === 0) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'CATEGORY_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('CATEGORY_NOT_FOUND');
     }
     await this.connection.queryResultCache.clear();
     await this.categoryRepository.softDelete({ code: code });

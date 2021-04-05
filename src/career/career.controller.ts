@@ -16,8 +16,8 @@ export class CareerController {
 
   @Get()
   @ApiQuery({ name: 'languageId', required: true })
-  @ApiQuery({ name: 'page', required: false })
-  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'page', required: true })
+  @ApiQuery({ name: 'limit', required: true })
   @ApiQuery({ name: 'status', required: false })
   @ApiQuery({ name: 'countries', type: String, isArray: true, required: false })
   @ApiQuery({ name: 'searchValue', required: false })

@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import path = require('path');
 import { Connection, Repository } from 'typeorm';
@@ -29,13 +29,7 @@ export class AgentService {
     agentUpdate.setAttributes(agentInput);
     let agent = await this.agentRepository.findOne({ where: { id: agentId } });
     if (!agent) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: `Agent id ${agentId} is not exist `,
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException(`Agent id ${agentId} is not exist`);
     }
     agent = agentUpdate;
     await this.connection.queryResultCache.clear();
@@ -97,13 +91,7 @@ export class AgentService {
     this.logger.debug('delete-agent-by-id');
     const agent = await this.agentRepository.findOne({ where: { id: agentId } });
     if (!agent) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: `Agent id ${agentId} is not exist `,
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException(`Agent id ${agentId} is not exist`);
     }
     await this.connection.queryResultCache.clear();
     await this.agentRepository.softRemove<AgentEntity>(agent);

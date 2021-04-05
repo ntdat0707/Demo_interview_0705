@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, getManager, Repository } from 'typeorm';
 import { DocumentEntity } from '../entities/document.entity';
@@ -73,13 +73,7 @@ export class DocumentService {
     this.logger.debug('update status document');
     let document = await this.documentRepository.findOne({ where: { id: id } });
     if (!document) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'DOCUMENT_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('DOCUMENT_NOT_FOUND');
     }
     document.status = documentUpdate.status;
     await this.connection.queryResultCache.clear();
@@ -93,13 +87,7 @@ export class DocumentService {
     this.logger.debug('delete document');
     const document = await this.documentRepository.findOne({ where: { id: id } });
     if (!document) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'DOCUMENT_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('DOCUMENT_NOT_FOUND');
     }
     await this.connection.queryResultCache.clear();
     await this.documentRepository.softDelete(document);
@@ -111,13 +99,7 @@ export class DocumentService {
     await this.connection.queryResultCache.clear();
     const document = await this.documentRepository.findOne({ where: { id: id } });
     if (!document) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'DOCUMENT_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('DOCUMENT_NOT_FOUND');
     }
     return {
       data: document,
