@@ -1,4 +1,4 @@
-import { ArgumentMetadata, HttpException, HttpStatus, PipeTransform } from '@nestjs/common';
+import { ArgumentMetadata, BadRequestException, PipeTransform } from '@nestjs/common';
 import { FocusedMarketInput } from '../../../focused-market/focused-market.dto';
 import { EResourceStatus } from '../../constant';
 import { checkDateTime } from '../../pipeUtils/dateValidate';
@@ -9,80 +9,32 @@ export class FocusedMarketPipe implements PipeTransform<any> {
     for (const item of value) {
       if (item.id) {
         if (!checkUUID(item.id)) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'ID_INVALID',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('ID_INVALID');
         }
       }
       if (!item.languageId) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'LANGUAGE_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('LANGUAGE_REQUIRED');
       }
       if (!checkUUID(item.languageId)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'LANGUAGE_INVALID',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('LANGUAGE_INVALID');
       }
       if (!item.title) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'TITLE_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('TITLE_REQUIRED');
       }
       if (!item.status) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'STATUS_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('STATUS_REQUIRED');
       } else {
         const status: any = item.status;
         if (!Object.values(EResourceStatus).includes(status)) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'STATUS_INVALID',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('STATUS_INVALID');
         }
       }
       if (!item.isPublish) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'IS_PUBLISH_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('IS_PUBLISH_REQUIRED');
       }
       if (item.publishDate) {
         if (!checkDateTime(item.publishDate)) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'PUBLISH_DATE_REQUIRED',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('PUBLISH_DATE_REQUIRED');
         }
       }
     }

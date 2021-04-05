@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { ConflictException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { LanguageEntity } from '../../../entities/language.entity';
 import { ResourceEntity } from '../../../entities/resource.entity';
@@ -20,26 +20,14 @@ export async function checkConditionInputCreate(
       .where(`title ilike :title`, { title: `%"${resource.title}"%` })
       .getOne();
     if (existPost) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.CONFLICT,
-          message: 'POST_ALREADY_EXIST',
-        },
-        HttpStatus.CONFLICT,
-      );
+      throw new ConflictException('POST_EXISTED');
     }
     if (resource.isEditSEO === true) {
       const url = await resourceRepository.findOne({
         where: { isEditSEO: true, link: resource.link, languageId: resource.languageId },
       });
       if (url) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.CONFLICT,
-            message: 'SEO_URL_IS_EXISTED',
-          },
-          HttpStatus.CONFLICT,
-        );
+        throw new ConflictException('SEO_URL_EXISTED');
       }
     }
   }
@@ -57,26 +45,14 @@ export async function checkConditionInputUpdate(
       .where(`title ilike :title`, { title: `%"${resource.title}"%` })
       .getOne();
     if (existPost) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.CONFLICT,
-          message: 'POST_ALREADY_EXIST',
-        },
-        HttpStatus.CONFLICT,
-      );
+      throw new ConflictException('POST_EXISTED');
     }
     if (resource.isEditSEO === true && !resource.id) {
       const url = await resourceRepository.findOne({
         where: { isEditSEO: true, link: resource.link, languageId: resource.languageId },
       });
       if (url) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.CONFLICT,
-            message: 'SEO_URL_IS_EXISTED',
-          },
-          HttpStatus.CONFLICT,
-        );
+        throw new ConflictException('SEO_URL_EXISTED');
       }
     }
   }

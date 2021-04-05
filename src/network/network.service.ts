@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import { CountryEntity } from '../entities/country.entity';
@@ -27,13 +27,7 @@ export class NetworkService {
     this.logger.debug('create country');
     const country = await this.countryRepository.findOne({ where: { name: countryInput.name } });
     if (country) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.CONFLICT,
-          message: 'COUNTRY_NAME_EXIST',
-        },
-        HttpStatus.CONFLICT,
-      );
+      throw new ConflictException('COUNTRY_NAME_EXISTED');
     }
     let newCountry = new CountryEntity();
     newCountry.setAttributes(countryInput);
@@ -51,24 +45,12 @@ export class NetworkService {
     this.logger.debug('update country');
     const country = await this.countryRepository.findOne({ where: { id: id } });
     if (!country) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'COUNTRY_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('COUNTRY_NOT_FOUND');
     }
     if (country.name !== countryInput.name) {
       const existCountry = await this.countryRepository.findOne({ where: { name: countryInput.name } });
       if (existCountry) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.CONFLICT,
-            message: 'COUNTRY_EXIST',
-          },
-          HttpStatus.CONFLICT,
-        );
+        throw new ConflictException('COUNTRY_EXISTED');
       }
     }
     let pathFile = '';
@@ -91,13 +73,7 @@ export class NetworkService {
     this.logger.debug('create branch');
     const existCountry = await this.countryRepository.findOne({ where: { id: branchInput.countryId } });
     if (!existCountry) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'COUNTRY_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('COUNTRY_NOT_FOUND');
     }
     let newBranch = new BranchEntity();
     newBranch.setAttributes(branchInput);
@@ -111,24 +87,12 @@ export class NetworkService {
     this.logger.debug('update branch');
     const branch = await this.branchRepository.findOne({ where: { id: id } });
     if (!branch) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'BRANCH_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('BRANCH_NOT_FOUND');
     }
     if (branch.countryId !== branchInput.countryId) {
       const country = await this.countryRepository.findOne({ where: { id: branchInput.countryId } });
       if (!country) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            message: 'COUNTRY_NOT_FOUND',
-          },
-          HttpStatus.NOT_FOUND,
-        );
+        throw new NotFoundException('COUNTRY_NOT_FOUND');
       }
     }
     branch.setAttributes(branchInput);
@@ -172,13 +136,7 @@ export class NetworkService {
     this.logger.debug('get branch');
     const branch = await this.branchRepository.findOne({ where: { id: id } });
     if (!branch) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'BRANCH_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('BRANCH_NOT_FOUND');
     }
     return {
       data: branch,
@@ -189,13 +147,7 @@ export class NetworkService {
     this.logger.debug('delete branch');
     const branch = await this.branchRepository.findOne({ where: { id: id } });
     if (!branch) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'BRANCH_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('BRANCH_NOT_FOUND');
     }
     await this.connection.queryResultCache.clear();
     await this.branchRepository.softDelete(branch);

@@ -1,25 +1,13 @@
-import { ArgumentMetadata, HttpException, HttpStatus, PipeTransform } from '@nestjs/common';
+import { ArgumentMetadata, BadRequestException, PipeTransform } from '@nestjs/common';
 import { EDocmentFlag } from '../../constant';
 
 export class CheckFlagPipe implements PipeTransform<any> {
   transform(flag: any, metadata: ArgumentMetadata) {
     if (!flag) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'FLAG_REQUIRED',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('FLAG_REQUIRED');
     }
     if (!Object.values(EDocmentFlag).includes(flag)) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'FLAG_INVALID',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('FLAG_INVALID');
     }
     return flag;
   }

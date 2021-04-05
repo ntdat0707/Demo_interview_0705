@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, getManager, In, Repository } from 'typeorm';
 import { VideoEntity } from '../entities/video.entity';
@@ -21,13 +21,7 @@ export class VideoService {
   async uploadVideoFile(video: any) {
     this.logger.debug('upload video file');
     if (!video) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'VIDEO_REQUIRED',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('VIDEO_REQUIRED');
     }
     return {
       data: video.filename,
@@ -60,13 +54,7 @@ export class VideoService {
         where: { title: item.title, flag: item.flag },
       });
       if (existVideo) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.CONFLICT,
-            message: 'TITLE_EXIST',
-          },
-          HttpStatus.CONFLICT,
-        );
+        throw new ConflictException('TITLE_EXISTED');
       }
       //check category
       if (item.categoryId && item.flag === EFlagUploadVideo.RESOURCE) {
@@ -74,13 +62,7 @@ export class VideoService {
           where: { id: item.categoryId, type: ECategoryType.VIDEO },
         });
         if (!category) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'CATEGORY_INVALID',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new NotFoundException(`CATEGORY_${item.categoryId}_NOT_FOUND`);
         }
       }
       if (item.status === EResourceStatus.PUBLISH && item.flag === EFlagUploadVideo.HOMEPAGE) {
@@ -88,13 +70,7 @@ export class VideoService {
           where: { status: EResourceStatus.PUBLISH, flag: EFlagUploadVideo.HOMEPAGE },
         });
         if (checkPublishVideo) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'CAN_NOT_PUBLISH_VIDEO',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('CAN_NOT_PUBLISH_VIDEO');
         }
       }
       const newVideo = new VideoEntity();
@@ -148,24 +124,12 @@ export class VideoService {
     if (!languageId) {
       video = await this.videoRepository.find({ where: { code: code } });
       if (video.length === 0) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            message: 'VIDEO_NOT_FOUND',
-          },
-          HttpStatus.NOT_FOUND,
-        );
+        throw new NotFoundException(`VIDEO_${code}_NOT_FOUND`);
       }
     } else {
       video = await this.videoRepository.find({ where: { code: code, languageId: languageId } });
       if (video.length === 0) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            message: 'VIDEO_NOT_FOUND',
-          },
-          HttpStatus.NOT_FOUND,
-        );
+        throw new NotFoundException(`VIDEO_LANGUAGE_${languageId}_NOT_FOUND`);
       }
     }
     return {
@@ -182,26 +146,14 @@ export class VideoService {
         if (updateVideoInput.id) {
           const checkVideo = await this.videoRepository.findOne({ where: { code: code } });
           if (!checkVideo) {
-            throw new HttpException(
-              {
-                statusCode: HttpStatus.NOT_FOUND,
-                message: 'VIDEO_NOT_FOUND',
-              },
-              HttpStatus.NOT_FOUND,
-            );
+            throw new NotFoundException(`VIDEO_${code}_NOT_FOUND`);
           }
           if (checkVideo.title !== updateVideoInput.title) {
             const existTitle = await this.videoRepository.findOne({
               where: { title: updateVideoInput.title, languageId: updateVideoInput.languageId },
             });
             if (existTitle) {
-              throw new HttpException(
-                {
-                  statusCode: HttpStatus.CONFLICT,
-                  message: `TITLE_HAS_BEEN_EXISTED `,
-                },
-                HttpStatus.CONFLICT,
-              );
+              throw new ConflictException('TITLE_EXISTED');
             }
           }
           if (
@@ -213,13 +165,7 @@ export class VideoService {
               where: { status: EResourceStatus.PUBLISH, flag: EFlagUploadVideo.HOMEPAGE },
             });
             if (checkPublishVideo) {
-              throw new HttpException(
-                {
-                  statusCode: HttpStatus.BAD_REQUEST,
-                  message: 'CAN_NOT_PUBLISH_VIDEO',
-                },
-                HttpStatus.BAD_REQUEST,
-              );
+              throw new BadRequestException('CAN_NOT_PUBLISH_VIDEO');
             }
           }
           checkVideo.setAttributes(updateVideoInput);
@@ -229,13 +175,7 @@ export class VideoService {
             where: { title: updateVideoInput.title, languageId: updateVideoInput.languageId },
           });
           if (existTitle) {
-            throw new HttpException(
-              {
-                statusCode: HttpStatus.CONFLICT,
-                message: `TITLE_HAS_BEEN_EXISTED `,
-              },
-              HttpStatus.CONFLICT,
-            );
+            throw new ConflictException('TITLE_EXISTED');
           }
           if (
             updateVideoInput.status === EResourceStatus.PUBLISH &&
@@ -245,13 +185,7 @@ export class VideoService {
               where: { code: updateVideoInput.code, status: EResourceStatus.PUBLISH, flag: EFlagUploadVideo.HOMEPAGE },
             });
             if (checkPublishVideo) {
-              throw new HttpException(
-                {
-                  statusCode: HttpStatus.BAD_REQUEST,
-                  message: 'CAN_NOT_PUBLISH_VIDEO',
-                },
-                HttpStatus.BAD_REQUEST,
-              );
+              throw new BadRequestException('CAN_NOT_PUBLISH_VIDEO');
             }
           }
           const newVideo: any = new VideoEntity();
@@ -270,13 +204,7 @@ export class VideoService {
 
     const checkVideo: any = await this.videoRepository.find({ where: { code: code } });
     if (checkVideo.length === 0) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'VIDEOS_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException(`VIDEO_${code}_NOT_FOUND`);
     }
     const videoIds = checkVideo.map((item: any) => item.id);
     await getManager().transaction(async transactionalEntityManager => {
@@ -285,13 +213,7 @@ export class VideoService {
           where: { id: categoryId, type: ECategoryType.VIDEO },
         });
         if (!category) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.NOT_FOUND,
-              message: 'CATEGORY_NOT_FOUND',
-            },
-            HttpStatus.NOT_FOUND,
-          );
+          throw new NotFoundException(`CATEGORY_${categoryId}_NOT_FOUND`);
         }
         await transactionalEntityManager.softDelete<VideoCateEntity[]>(VideoEntity, { videoId: In(videoIds) });
       }

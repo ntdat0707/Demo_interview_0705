@@ -1,4 +1,4 @@
-import { ArgumentMetadata, HttpException, HttpStatus, Injectable, PipeTransform } from '@nestjs/common';
+import { ArgumentMetadata, BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
 import { CreateResourceInput } from '../../../resource/resource.dto';
 import { EResourceStatus } from '../../constant';
 import { checkDateTime } from '../../pipeUtils/dateValidate';
@@ -9,101 +9,47 @@ export class CreateResourcePipe implements PipeTransform<any> {
   transform(values: [CreateResourceInput], metadata: ArgumentMetadata) {
     for (const value of values) {
       if (!value.title) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'TITLE_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('TITLE_REQUIRED');
       }
       if (value.status) {
         const status: any = value.status;
         if (!Object.values(EResourceStatus).includes(status)) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'STATUS_INVALID',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('STATUS_INVALID');
         }
       }
       if (value.publishDate && !checkDateTime(value.publishDate)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'PUBLISHDATE_INVALID',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('PUBLISH_DATE_INVALID');
       }
       if (value.categoryIds) {
         for (const item of value.categoryIds) {
           if (!checkUUID(item)) {
-            throw new HttpException(
-              {
-                statusCode: HttpStatus.BAD_REQUEST,
-                message: 'CATEGORY_UUID_INVALID',
-              },
-              HttpStatus.BAD_REQUEST,
-            );
+            throw new BadRequestException('CATEGORY_UUID_INVALID');
           }
         }
       }
       if (value.authorId) {
         if (!checkUUID(value.authorId)) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'AUTHOR_UUID_INVALID',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('AUTHOR_UUID_INVALID');
         }
       }
 
       if (value.labelIds) {
         for (const item of value.labelIds) {
           if (!checkUUID(item)) {
-            throw new HttpException(
-              {
-                statusCode: HttpStatus.BAD_REQUEST,
-                message: 'LABEL_UUID_INVALID',
-              },
-              HttpStatus.BAD_REQUEST,
-            );
+            throw new BadRequestException('LABEL_UUID_INVALID');
           }
         }
       }
       if (!value.languageId) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'LANGUAGE_IS_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('LANGUAGE_IS_REQUIRED');
       } else {
         if (!checkUUID(value.languageId)) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'LANGUAGE_ID_INVALID',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('LANGUAGE_UUID_INVALID');
         }
       }
       if (value.isEditSEO === true) {
         if (!value.link) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'SEO_URL_IS_REQUIRED',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('SEO_URL_REQUIRED');
         }
       }
     }
