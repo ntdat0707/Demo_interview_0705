@@ -22,8 +22,8 @@ export async function isSolutionAvailable(data: [UpdateSolutionInput], languageR
   for (const item of data) {
     if (!item.id) {
       const language = await languageRepository.findOne({ where: { id: item.languageId } });
-      if (language.code !== 'EN') {
-        throw new BadRequestException('LANGUAGE_ENGLISH_MUST_BE_CREATED');
+      if (language.code === 'EN') {
+        throw new BadRequestException('SOLUTION_ENGLISH_DUPLICATE');
       }
     }
     solutions.push(item.languageId);
