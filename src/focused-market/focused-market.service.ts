@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import _ = require('lodash');
 import { Connection, getManager, Repository } from 'typeorm';
@@ -19,13 +19,7 @@ export class FocusedMarketService {
   async uploadImage(image: any) {
     this.logger.debug('upload image focused ');
     if (!image) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'IMAGE_REQUIRED',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('IMAGE_REQUIRED');
     }
     return {
       data: {
@@ -41,25 +35,13 @@ export class FocusedMarketService {
       .select('DISTINCT focused_market."code"')
       .getRawMany();
     if (countFocusedMarket.length >= 10) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'CAN_NOT_CREATE_FOCUSED_MARKET',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('CAN_NOT_CREATE_FOCUSED_MARKET');
     }
     const checkLanguage = focusedMarketList.map((value: any) => {
       return value.languageId;
     });
     if (_.uniq(checkLanguage).length !== checkLanguage.length) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'DUPLICATE_LANGUAGE',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('DUPLICATE_LANGUAGE');
     }
     let randomCode = '';
     while (true) {
@@ -77,13 +59,7 @@ export class FocusedMarketService {
     for (const item of focusedMarketList) {
       const language = await this.languageRepository.findOne({ where: { id: item.languageId } });
       if (!language) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            message: 'LANGUAGE_NOT_FOUND',
-          },
-          HttpStatus.NOT_FOUND,
-        );
+        throw new NotFoundException('LANGUAGE_NOT_FOUND');
       }
       if (language.code === 'EN') {
         isLanguageEN = true;
@@ -92,13 +68,7 @@ export class FocusedMarketService {
         where: { languageId: item.languageId, title: item.title },
       });
       if (checkTitle) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.CONFLICT,
-            message: 'FOCUSED_MARKET_TITLE_ALREADY_EXIST',
-          },
-          HttpStatus.CONFLICT,
-        );
+        throw new ConflictException('TITLE_EXISTED');
       }
       const focusedMarket = new FocusedEntity();
       focusedMarket.setAttributes(item);
@@ -112,13 +82,7 @@ export class FocusedMarketService {
         await transactionalEntityManager.save<FocusedEntity>(dataForcusedMarket);
       });
     } else {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'FOCUSED_MARKET_MUST_BE_HAD_ENGLISH',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('FOCUSED_MARKET_MUST_BE_HAD_ENGLISH');
     }
     return {};
   }
@@ -145,13 +109,7 @@ export class FocusedMarketService {
     }
     const focusedMarket = await queryExc.getMany();
     if (focusedMarket.length === 0) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'FOCUSED_MARKET_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('FOCUSED_MARKET_NOT_FOUND');
     }
     return {
       data: focusedMarket,
@@ -162,38 +120,20 @@ export class FocusedMarketService {
     this.logger.debug('update focused market');
     const oldFocusedMarket = await this.focusedMarketRepository.find({ where: { code: code } });
     if (oldFocusedMarket.length === 0) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'FOCUSED_MARKET_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('FOCUSED_MARKET_NOT_FOUND');
     }
     const checkLanguage = focusedMarketList.map((value: any) => {
       return value.languageId;
     });
     if (_.uniq(checkLanguage).length !== checkLanguage.length) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'DUPLICATE_LANGUAGE',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('DUPLICATE_LANGUAGE');
     }
     let isLanguageEN: boolean = false;
     let languageEnId: string;
     for (const item of focusedMarketList) {
       const language = await this.languageRepository.findOne({ where: { id: item.languageId } });
       if (!language) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            message: 'LANGUAGE_NOT_FOUND',
-          },
-          HttpStatus.NOT_FOUND,
-        );
+        throw new NotFoundException('LANGUAGE_NOT_FOUND');
       }
       if (language.code === 'EN') {
         languageEnId = language.id;
@@ -202,13 +142,7 @@ export class FocusedMarketService {
     }
 
     if (isLanguageEN === false) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'FOCUSED_MARKET_MUST_BE_HAD_ENGLISH',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('FOCUSED_MARKET_MUST_BE_HAD_ENGLISH');
     }
 
     await this.connection.queryResultCache.clear();
@@ -217,51 +151,27 @@ export class FocusedMarketService {
         if (focusedMarket.id) {
           const index = oldFocusedMarket.findIndex((x: any) => x.id === focusedMarket.id);
           if (index === -1) {
-            throw new HttpException(
-              {
-                statusCode: HttpStatus.NOT_FOUND,
-                message: 'FOCUSED_MARKET_NOT_FOUND',
-              },
-              HttpStatus.NOT_FOUND,
-            );
+            throw new NotFoundException('FOCUSED_MARKET_NOT_FOUND');
           }
           if (focusedMarket.title !== oldFocusedMarket[index].title) {
             const checkTitle = await this.focusedMarketRepository.findOne({
               where: { languageId: focusedMarket.languageId, title: focusedMarket.title },
             });
             if (checkTitle) {
-              throw new HttpException(
-                {
-                  statusCode: HttpStatus.CONFLICT,
-                  message: 'FOCUSED_MARKET_TITLE_ALREADY_EXIST',
-                },
-                HttpStatus.CONFLICT,
-              );
+              throw new ConflictException('TITLE_EXISTED');
             }
           }
           oldFocusedMarket[index].setAttributes(focusedMarket);
           await transactionalEntityManager.save<FocusedEntity>(oldFocusedMarket[index]);
         } else {
           if (focusedMarket.languageId === languageEnId) {
-            throw new HttpException(
-              {
-                statusCode: HttpStatus.BAD_REQUEST,
-                message: 'CAN NOT CREATE ENGLISH LANGUAGE FOR FOCUSED MARKET',
-              },
-              HttpStatus.BAD_REQUEST,
-            );
+            throw new BadRequestException('CAN NOT CREATE ENGLISH LANGUAGE FOR FOCUSED MARKET');
           }
           const checkTitle = await this.focusedMarketRepository.findOne({
             where: { languageId: focusedMarket.languageId, title: focusedMarket.title },
           });
           if (checkTitle) {
-            throw new HttpException(
-              {
-                statusCode: HttpStatus.CONFLICT,
-                message: 'FOCUSED_MARKET_TITLE_ALREADY_EXIST',
-              },
-              HttpStatus.CONFLICT,
-            );
+            throw new ConflictException('TITLE_EXISTED');
           }
           const newFocusedMarket = new FocusedEntity();
           newFocusedMarket.setAttributes(focusedMarket);
@@ -277,13 +187,7 @@ export class FocusedMarketService {
   async deleteFocusedMarket(code: string) {
     const focusedMarkets = await this.focusedMarketRepository.find({ where: { code: code } });
     if (focusedMarkets.length === 0) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'FOCUSED_MARKET_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('FOCUSED_MARKET_NOT_FOUND');
     }
     await this.connection.queryResultCache.clear();
     await getManager().transaction(async transactionalEntityManager => {

@@ -116,6 +116,7 @@ export class SolutionService {
         },
         HttpStatus.NOT_FOUND,
       );
+      // throw new NotFoundException('SOLUTION_NOT_FOUND');
     }
     return {
       data: solution,

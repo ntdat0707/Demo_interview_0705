@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import moment = require('moment');
 import { Brackets, Connection, getManager, Repository } from 'typeorm';
@@ -38,13 +38,7 @@ export class CareerService {
     for (const item of careerInput) {
       const existTitle = await this.careerRepository.findOne({ where: { title: item.title } });
       if (existTitle) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.CONFLICT,
-            message: `TITLE_HAS_BEEN_EXISTED `,
-          },
-          HttpStatus.CONFLICT,
-        );
+        throw new ConflictException('TITLE_EXISTED');
       }
       let career = new CareerEntity();
       career.setAttributes(item);
@@ -66,7 +60,7 @@ export class CareerService {
     await this.connection.queryResultCache.clear();
     const careerQuery = this.careerRepository
       .createQueryBuilder('career')
-      .where(`career."language_id"=${languageId}`)
+      .where('career."language_id"=:languageId', { languageId })
       .limit(limit)
       .offset((page - 1) * limit)
       .orderBy('created_at', 'DESC');
@@ -91,7 +85,7 @@ export class CareerService {
     if (status) {
       cacheKey += `searchValue${status}`;
       const bracket = new Brackets(qb => {
-        qb.andWhere(`"career"."status" = '${status}'`);
+        qb.andWhere('"career"."status" = :status', { status });
       });
       careerQuery.andWhere(bracket);
       countQuery.andWhere(bracket);
@@ -110,7 +104,6 @@ export class CareerService {
 
     let count: any = 0;
     count = await countQuery.cache(`${cacheKey}_count_page${page}_limit${limit}`).getCount();
-
     const careers = await careerQuery.cache(`${cacheKey}_page${page}_limit${limit}`).getMany();
     const pages = Math.ceil(Number(count) / limit);
     return {
@@ -143,13 +136,7 @@ export class CareerService {
     await isDuplicateLanguageValid(careerInput, this.languageRepository);
     const curCareers: any = await this.careerRepository.find({ where: { code: code } });
     if (curCareers.length === 0) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: `CAREERS_NOT_EXIST `,
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('CAREER_NOT_FOUND');
     }
     await this.connection.queryResultCache.clear();
     await getManager().transaction(async transactionalEntityManager => {
@@ -157,26 +144,14 @@ export class CareerService {
         if (career.id) {
           const index: any = curCareers.findIndex((item: any) => item.id === career.id);
           if (index === -1) {
-            throw new HttpException(
-              {
-                statusCode: HttpStatus.NOT_FOUND,
-                message: `CAREER_${career.id}_NOT_EXIST `,
-              },
-              HttpStatus.NOT_FOUND,
-            );
+            throw new NotFoundException(`CAREER_${career.id}_NOT_EXIST `);
           }
           if (curCareers[index].title !== career.title) {
             const existTitle = await this.careerRepository.findOne({
               where: { title: career.title, languageId: career.languageId },
             });
             if (existTitle) {
-              throw new HttpException(
-                {
-                  statusCode: HttpStatus.CONFLICT,
-                  message: `TITLE_HAS_BEEN_EXISTED `,
-                },
-                HttpStatus.CONFLICT,
-              );
+              throw new ConflictException('TITLE_EXISTED');
             }
           }
           curCareers[index].setAttributes(career);
@@ -189,13 +164,7 @@ export class CareerService {
             where: { title: career.title, languageId: career.languageId },
           });
           if (existTitle) {
-            throw new HttpException(
-              {
-                statusCode: HttpStatus.CONFLICT,
-                message: `TITLE_HAS_BEEN_EXISTED `,
-              },
-              HttpStatus.CONFLICT,
-            );
+            throw new ConflictException('TITLE_EXISTED');
           }
           const newCar = new CareerEntity();
           newCar.setAttributes(career);
@@ -214,13 +183,7 @@ export class CareerService {
     this.logger.debug('delete career');
     const curCareers: any = await this.careerRepository.find({ where: { code: code } });
     if (curCareers.length === 0) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: `CAREERS_NOT_EXIST`,
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('CAREER_NOT_FOUND');
     }
     await this.connection.queryResultCache.clear();
     await this.careerRepository.softDelete(curCareers);

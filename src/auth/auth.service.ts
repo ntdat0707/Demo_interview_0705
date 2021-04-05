@@ -1,4 +1,12 @@
-import { Injectable, HttpException, HttpStatus, UseFilters } from '@nestjs/common';
+import {
+  Injectable,
+  HttpException,
+  UseFilters,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Connection } from 'typeorm';
@@ -40,34 +48,16 @@ export class AuthService {
     const refreshTokenExpireIn = process.env.REFRESH_TOKEN_EXPIRE_IN || '7d';
     const customer = await this.customerRepository.findOne({ where: { email: loginUserInput.email } });
     if (!customer) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'CUSTOMER_NOT_EXIST',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('CUSTOMER_NOT_EXIST');
     }
 
     if (!customer.password || !customer.isActive) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'CUSTOMER_NOT_ACTIVATED',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('CUSTOMER_NOT_EXIST');
     }
 
     const passwordIsValid = bcrypt.compareSync(loginUserInput.password, customer.password);
     if (!passwordIsValid) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'INCORRECT_PASSWORD',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('INVALID_PASSWORD');
     }
 
     const payloadToken = { id: customer.id, email: customer.email, code: customer.code };
@@ -94,13 +84,7 @@ export class AuthService {
     });
 
     if (existCustomer) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.CONFLICT,
-          message: 'EMAIL_EXISTED',
-        },
-        HttpStatus.CONFLICT,
-      );
+      throw new ConflictException('EMAIL_EXISTED');
     }
 
     existCustomer = await this.customerRepository.findOne({
@@ -110,13 +94,7 @@ export class AuthService {
     });
 
     if (existCustomer) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.CONFLICT,
-          message: 'PHONE_EXISTED',
-        },
-        HttpStatus.CONFLICT,
-      );
+      throw new ConflictException('PHONE_EXISTED');
     }
 
     let newCustomer = new Customer();
@@ -186,13 +164,7 @@ export class AuthService {
 
       return { customerId: existCustomer.id, token: token, refreshToken: refreshToken };
     } catch (error) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.UNAUTHORIZED,
-          message: 'INVALID_TOKEN',
-        },
-        HttpStatus.UNAUTHORIZED,
-      );
+      throw new UnauthorizedException('INVALID_TOKEN');
     }
   }
 
@@ -200,24 +172,12 @@ export class AuthService {
     const refreshTokenExpireIn = process.env.REFRESH_TOKEN_EXPIRE_IN || '7d';
     const employee = await this.employeeRepository.findOne({ where: { email: loginManagerInput.email } });
     if (!employee) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'EMPLOYEE_NOT_EXIST',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('EMPLOYEE_NOT_FOUND');
     }
 
     const passwordIsValid = bcrypt.compareSync(loginManagerInput.password, employee.password);
     if (!passwordIsValid) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'INCORRECT_PASSWORD',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('INVALID_PASSWORD');
     }
 
     const payloadToken = { id: employee.id, email: employee.email, roleId: employee.roleId };
@@ -268,13 +228,7 @@ export class AuthService {
 
       return { employeeId: existEmployee.id, token: token, refreshToken: refreshToken };
     } catch (error) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.UNAUTHORIZED,
-          message: 'INVALID_TOKEN',
-        },
-        HttpStatus.UNAUTHORIZED,
-      );
+      throw new UnauthorizedException('INVALID_TOKEN');
     }
   }
 
@@ -286,13 +240,7 @@ export class AuthService {
     });
 
     if (!existCustomer) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'CUSTOMER_NOT_EXIST',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new NotFoundException('CUSTOMER_NOT_EXIST');
     }
 
     return {
@@ -308,13 +256,7 @@ export class AuthService {
     });
 
     if (!existEmployee) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'EMPLOYEE_NOT_EXIST',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new NotFoundException('EMPLOYEE_NOT_FOUND');
     }
     return {
       data: existEmployee,
