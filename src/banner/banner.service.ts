@@ -91,9 +91,7 @@ export class BannerService {
       throw new BadRequestException('DUPLICATE_LANGUAGE');
     }
     if (isLanguageEN === false) {
-      if (isLanguageEN === false) {
-        throw new BadRequestException('BANNER_MUST_HAVE_ENGLISH');
-      }
+      throw new BadRequestException('BANNER_MUST_HAVE_ENGLISH');
     }
 
     for (const item of bannerInputs) {
