@@ -1,4 +1,4 @@
-import { ArgumentMetadata, HttpException, HttpStatus, Injectable, PipeTransform } from '@nestjs/common';
+import { ArgumentMetadata, BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
 import { UpdateCareerInput } from '../../../career/career.dto';
 import { ECareerStatus, EEducationLevelStatus } from '../../constant';
 import { checkDateTime } from '../../pipeUtils/dateValidate';
@@ -9,121 +9,49 @@ export class UpdateCareerPipe implements PipeTransform<any> {
   transform(values: [UpdateCareerInput], metadata: ArgumentMetadata) {
     for (const value of values) {
       if (!value.title) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'TITLE_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('TITLE_REQUIRED');
       }
       if (!value.country) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'COUNTRY_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('COUNTRY_REQUIRED');
       }
       if (!value.city) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'CITY_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('CITY_REQUIRED');
       }
       if (!value.currency) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'CURRENCY_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('CURRENCY_REQUIRED');
       }
       if (value.isEditSalary) {
         if (value.isEditSalary !== true && value.isEditSalary !== false)
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'SHOW_SALARY_RANGE_INVALID',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('SHOW_SALARY_RANGE_INVALID');
       }
       if (value.minSalary && value.maxSalary) {
         if (value.minSalary > value.maxSalary) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'MIN_SALARY_IS_HIGHER_THAN_MAX_SALARY',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('MIN_SALARY_IS_HIGHER_THAN_MAX_SALARY');
         }
       }
       if (!value.jobDescription) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'JOB_DESCRIPTION_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('JOB_DESCRIPTION_REQUIRED');
       }
       if (value.status) {
         const status: any = value.status;
         if (!Object.values(ECareerStatus).includes(status)) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'STATUS_INVALID',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('STATUS_INVALID');
         }
       }
       if (value.educationLevel) {
         const educationLevel: any = value.educationLevel;
         if (!Object.values(EEducationLevelStatus).includes(educationLevel)) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'EDUCATION_LEVEL_INVALID',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('EDUCATION_LEVEL_INVALID');
         }
       }
       if (value.closingDate && !checkDateTime(value.closingDate)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'CLOSING_DATE_INVALID',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('CLOSING_DATE_INVALID');
       }
       if (!value.languageId) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'LANGUAGE_IS_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('LANGUAGE_REQUIRED');
       } else {
         if (!checkUUID(value.languageId)) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'LANGUAGE_ID_INVALID',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('LANGUAGE_ID_INVALID');
         }
       }
     }

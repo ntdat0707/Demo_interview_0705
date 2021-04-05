@@ -1,4 +1,4 @@
-import { ArgumentMetadata, HttpException, HttpStatus, PipeTransform } from '@nestjs/common';
+import { ArgumentMetadata, BadRequestException, PipeTransform } from '@nestjs/common';
 import { CreateCategoryInput } from '../../../category/category.dto';
 import { ECategoryType, EResourceStatus } from '../../constant';
 import { checkUUID } from '../../pipeUtils/uuidValidate';
@@ -7,59 +7,23 @@ export class CreateCatePipe implements PipeTransform<any> {
   transform(values: [CreateCategoryInput], metadata: ArgumentMetadata) {
     for (const value of values) {
       if (!value.title) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'TITLE_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('TITLE_REQUIRED');
       }
       if (!value.languageId) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'LANGUAGE_IS_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('LANGUAGE_REQUIRED');
       } else {
         if (!checkUUID(value.languageId)) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'LANGUAGE_ID_INVALID',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('LANGUAGE_ID_INVALID');
         }
       }
       if (!value.link) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'URL_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('URL_REQUIRED');
       }
       if (!value.type) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: 'TYPE_REQUIRED',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('TYPE_REQUIRED');
       } else {
         if (!(Object.values(ECategoryType) as any[]).includes(value.type)) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.BAD_REQUEST,
-              message: 'TYPE__INVALID',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new BadRequestException('TYPE_INVALID');
         }
       }
     }
@@ -70,22 +34,10 @@ export class CreateCatePipe implements PipeTransform<any> {
 export class StatusCatePipe implements PipeTransform<string, string> {
   transform(value: string, metadata: ArgumentMetadata) {
     if (!value) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'STATUS_REQUIRED',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('STATUS_REQUIRED');
     }
     if (!(Object.values(EResourceStatus) as any[]).includes(value)) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'STATUS_INVALID',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('STATUS_INVALID');
     }
     return value;
   }

@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import _ = require('lodash');
 import { Connection, getManager, In, Repository } from 'typeorm';
@@ -42,13 +42,7 @@ export class ResourceService {
   async uploadImage(image: any) {
     this.logger.debug('upload image resource');
     if (!image) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'IMAGE_REQUIRED',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('IMAGE_REQUIRED');
     }
     return {
       data: image.filename,
@@ -86,13 +80,7 @@ export class ResourceService {
               where: { id: item, languageId: createResource.languageId, type: ECategoryType.POST },
             });
             if (!category) {
-              throw new HttpException(
-                {
-                  statusCode: HttpStatus.BAD_REQUEST,
-                  message: `CATEGORY_${item}_NOT_VALID`,
-                },
-                HttpStatus.BAD_REQUEST,
-              );
+              throw new BadRequestException('CATEGORY_NOT_VALID');
             }
             const resourceCate = new ResourceCateEntity();
             resourceCate.resourceId = newResource.id;
@@ -106,13 +94,7 @@ export class ResourceService {
           //check author
           const author = await this.authorRepository.findOne({ where: { id: createResource.authorId } });
           if (!author) {
-            throw new HttpException(
-              {
-                statusCode: HttpStatus.NOT_FOUND,
-                message: `AUTHOR_${createResource.authorId}_NOT_FOUND`,
-              },
-              HttpStatus.NOT_FOUND,
-            );
+            throw new NotFoundException('AUTHOR_NOT_FOUND');
           }
           const resourceAuthor = new ResourceAuthorEntity();
           resourceAuthor.resourceId = newResource.id;
@@ -127,13 +109,7 @@ export class ResourceService {
           for (const item of createResource.labelIds) {
             const label = await this.labelRepository.findOne({ where: { id: item } });
             if (!label) {
-              throw new HttpException(
-                {
-                  statusCode: HttpStatus.NOT_FOUND,
-                  message: `LABEL_${item}_NOT_FOUND`,
-                },
-                HttpStatus.NOT_FOUND,
-              );
+              throw new NotFoundException(`LABEL_${item}_NOT_FOUND`);
             }
             const resourceLabel = new ResourceLabelEntity();
             resourceLabel.resourceId = newResource.id;
@@ -274,13 +250,7 @@ export class ResourceService {
     await checkConditionInputUpdate(this.resourceRepository, resourcesUpdate, this.languageRepository);
     const currResources = await this.resourceRepository.find({ where: { code: code } });
     if (currResources.length === 0) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: `CODE_${code}_NOT_FOUND`,
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException(`CODE_${code}_NOT_FOUND`);
     }
     await this.connection.queryResultCache.clear();
 
@@ -302,13 +272,7 @@ export class ResourceService {
           } else {
             const author = await this.authorRepository.findOne({ where: { id: resourceUpdate.authorId } });
             if (!author) {
-              throw new HttpException(
-                {
-                  statusCode: HttpStatus.NOT_FOUND,
-                  message: `AUTHOR_${resourceUpdate.authorId}_NOT_FOUND`,
-                },
-                HttpStatus.NOT_FOUND,
-              );
+              throw new NotFoundException(`AUTHOR_${resourceUpdate.authorId}_NOT_FOUND`);
             }
             const resourceAuthor = await this.resourceAuthorRepository.findOne({
               where: { resourceId: currResource.id },
@@ -337,13 +301,7 @@ export class ResourceService {
             for (const item of resourceUpdate.labelIds) {
               const label = await this.labelRepository.findOne({ where: { id: item } });
               if (!label) {
-                throw new HttpException(
-                  {
-                    statusCode: HttpStatus.NOT_FOUND,
-                    message: `LABEL_${item}_NOT_FOUND`,
-                  },
-                  HttpStatus.NOT_FOUND,
-                );
+                throw new NotFoundException(`LABEL_${item}_NOT_FOUND`);
               }
               const resourceLabel = new ResourceLabelEntity();
               resourceLabel.resourceId = resourceUpdate.id;
@@ -364,13 +322,7 @@ export class ResourceService {
               for (const item of add) {
                 const label = await this.labelRepository.findOne({ where: { id: item } });
                 if (!label) {
-                  throw new HttpException(
-                    {
-                      statusCode: HttpStatus.NOT_FOUND,
-                      message: `LABEL_${item}_NOT_FOUND`,
-                    },
-                    HttpStatus.NOT_FOUND,
-                  );
+                  throw new NotFoundException(`LABEL_${item}_NOT_FOUND`);
                 }
                 const resourceLabel = new ResourceLabelEntity();
                 resourceLabel.resourceId = resourceUpdate.id;
@@ -409,13 +361,7 @@ export class ResourceService {
                   where: { id: item, languageId: resourceUpdate.languageId, type: ECategoryType.POST },
                 });
                 if (!category) {
-                  throw new HttpException(
-                    {
-                      statusCode: HttpStatus.BAD_REQUEST,
-                      message: `CATEGORY_${item}_NOT_VALID`,
-                    },
-                    HttpStatus.BAD_REQUEST,
-                  );
+                  throw new NotFoundException(`CATEGORY_${item}_NOT_VALID`);
                 }
                 const resourceLabel = new ResourceCateEntity();
                 resourceLabel.resourceId = resourceUpdate.id;
@@ -446,13 +392,7 @@ export class ResourceService {
               //check category
               const category: any = await this.cateRepository.findOne({ where: { id: item } });
               if (!category) {
-                throw new HttpException(
-                  {
-                    statusCode: HttpStatus.NOT_FOUND,
-                    message: `CATEGORY_${item}_NOT_FOUND`,
-                  },
-                  HttpStatus.NOT_FOUND,
-                );
+                throw new NotFoundException(`CATEGORY_${item}_NOT_FOUND`);
               }
               const resourceCate = new ResourceCateEntity();
               resourceCate.resourceId = newResource.id;
@@ -466,13 +406,7 @@ export class ResourceService {
             //check author
             const author = await this.authorRepository.findOne({ where: { id: resourceUpdate.authorId } });
             if (!author) {
-              throw new HttpException(
-                {
-                  statusCode: HttpStatus.NOT_FOUND,
-                  message: `AUTHOR_${resourceUpdate.authorId}_NOT_FOUND`,
-                },
-                HttpStatus.NOT_FOUND,
-              );
+              throw new NotFoundException(`AUTHOR_${resourceUpdate.authorId}_NOT_FOUND`);
             }
             const resourceAuthor = new ResourceAuthorEntity();
             resourceAuthor.resourceId = newResource.id;
@@ -487,13 +421,7 @@ export class ResourceService {
             for (const item of resourceUpdate.labelIds) {
               const label = await this.labelRepository.findOne({ where: { id: item } });
               if (!label) {
-                throw new HttpException(
-                  {
-                    statusCode: HttpStatus.NOT_FOUND,
-                    message: `LABEL_${item}_NOT_FOUND`,
-                  },
-                  HttpStatus.NOT_FOUND,
-                );
+                throw new NotFoundException(`LABEL_${item}_NOT_FOUND`);
               }
               const resourceLabel = new ResourceLabelEntity();
               resourceLabel.resourceId = newResource.id;
@@ -512,13 +440,7 @@ export class ResourceService {
     this.logger.debug('Delete resource');
     const resources = await this.resourceRepository.find({ where: { code: code } });
     if (resources.length === 0) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'RESOURCE_NOT_FOUND',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('RESOURCE_NOT_FOUND');
     }
     for (const resource of resources) {
       const resourceAuthor: any = await this.resourceAuthorRepository.findOne({ where: { resourceId: resource.id } });

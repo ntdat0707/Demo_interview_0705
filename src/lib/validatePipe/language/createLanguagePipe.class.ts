@@ -1,35 +1,17 @@
-import { ArgumentMetadata, HttpException, HttpStatus, Injectable, PipeTransform } from '@nestjs/common';
+import { ArgumentMetadata, BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
 import { LanguageInput } from '../../../language/language.dto';
 
 @Injectable()
 export class CreateLanguagePipe implements PipeTransform<any> {
   transform(value: LanguageInput, metadata: ArgumentMetadata) {
     if (!value.name) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'NAME_REQUIRED',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('NAME_REQUIRED');
     }
     if (!value.code) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'CODE_REQUIRED',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('CODE_REQUIRED');
     }
     if (!value.image) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'IMAGE_REQUIRED',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('IMAGE_REQUIRED');
     }
     return value;
   }
