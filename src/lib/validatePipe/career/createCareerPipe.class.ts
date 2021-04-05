@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { CreateCareerInput } from '../../../career/career.dto';
 import { ECareerStatus, EEducationLevelStatus } from '../../constant';
-import { checkDate } from '../../pipeUtils/dateValidate';
+import { checkDateTime } from '../../pipeUtils/dateValidate';
 import { checkUUID } from '../../pipeUtils/uuidValidate';
 
 @Injectable()
@@ -70,7 +70,7 @@ export class CreateCareerPipe implements PipeTransform<any> {
           );
         }
       }
-      if (value.closingDate && !checkDate(value.closingDate)) {
+      if (value.closingDate && !checkDateTime(value.closingDate)) {
         throw new HttpException(
           {
             statusCode: HttpStatus.BAD_REQUEST,
