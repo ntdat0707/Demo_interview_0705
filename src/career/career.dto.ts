@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EEducationLevelStatus } from '../lib/constant';
+import { EEducationLevelStatus, EResourceStatus } from '../lib/constant';
 
 export class CreateCareerInput {
   @ApiProperty({ required: true })
@@ -44,7 +44,7 @@ export class CreateCareerInput {
   @ApiProperty({ required: false })
   readonly contactInformation: string;
 
-  @ApiProperty({ enum: ['active', 'closed'], required: false })
+  @ApiProperty({ required: true, enum: Object.values(EResourceStatus) })
   readonly status: string;
 
   @ApiProperty({ type: Date, required: false })
