@@ -51,6 +51,9 @@ export class ResourceEntity {
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true, select: false })
   deletedAt: Date;
 
+  @Column('integer', { default: 0, nullable: false })
+  views: number;
+
   setAttributes(object: any) {
     this.title = object.title;
     this.status = object.status;

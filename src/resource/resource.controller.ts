@@ -14,7 +14,10 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
+import { CheckFilterValuePipe } from '../lib/validatePipe/checkFilterValuePipe.class';
 import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
+import { CheckStatusPipe } from '../lib/validatePipe/checkStatusPipe.class';
+import { CheckLanguagePipe } from '../lib/validatePipe/focused-market/checkLanguagePipe.class';
 import { CreateResourcePipe } from '../lib/validatePipe/resource/createResourcePipe.class';
 import { UpdateResourcePipe } from '../lib/validatePipe/resource/updateResourcePipe.class';
 import { CreateResourceInput, ResourcePictureInput, UpdateResourceInput } from './resource.dto';
@@ -54,17 +57,24 @@ export class ResourceController {
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'languageId', required: true })
+  @ApiQuery({ name: 'status', required: false })
+  @ApiQuery({ name: 'searchValue', required: false })
+  @ApiQuery({ name: 'filterValue', required: false })
   async getAllResources(
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
-    @Query('languageId') languageId: string,
+    @Query('languageId', new CheckLanguagePipe()) languageId: string,
+    @Query('status', new CheckStatusPipe()) status: string,
+    @Query('searchValue') searchValue: string,
+    @Query('filterValue', new CheckFilterValuePipe()) filterValue: string,
   ) {
-    return await this.resourceService.getAllResource(page, limit, languageId);
+    return await this.resourceService.getAllResource(page, limit, languageId, status, searchValue, filterValue);
   }
 
   @Get('/:code')
-  async getResource(@Param('code') code: string) {
-    return await this.resourceService.getResources(code);
+  @ApiQuery({ name: 'languageId', required: false })
+  async getResource(@Param('code') code: string, @Query('languageId') languageId: string) {
+    return await this.resourceService.getResources(code, languageId);
   }
 
   @Get('/SEO/:link')

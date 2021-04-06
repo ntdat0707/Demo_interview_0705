@@ -2,13 +2,14 @@ import { BadRequestException, ConflictException, Injectable, Logger, NotFoundExc
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, getManager, In, Repository } from 'typeorm';
 import { VideoEntity } from '../entities/video.entity';
-import { ECategoryType, EFlagUploadVideo, EResourceStatus } from '../lib/constant';
+import { ECategoryType, EFilterValue, EFlagUploadVideo, EResourceStatus } from '../lib/constant';
 import { UpdateVideoInput, UploadVideoInput } from './video.dto';
 import { isDuplicateLanguageValid, isLanguageENValid } from '../lib/pipeUtils/languageValidate';
 import { LanguageEntity } from '../entities/language.entity';
 import { CategoryEntity } from '../entities/category.entity';
 import { VideoCateEntity } from '../entities/videoCate.entity';
 import { v4 as uuidv4 } from 'uuid';
+import { convertTv } from '../lib/utils';
 @Injectable()
 export class VideoService {
   private readonly logger = new Logger(VideoService.name);
@@ -98,14 +99,30 @@ export class VideoService {
     page = 1,
     limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
     languageId: string,
+    status?: string,
+    searchValue?: string,
+    filterValue?: string,
   ) {
     this.logger.debug('get all video');
     const queryExc = this.videoRepository
       .createQueryBuilder('video')
       .where({ flag: flag, languageId: languageId })
-      .orderBy('created_at', 'DESC')
       .limit(limit)
       .offset((page - 1) * limit);
+    if (status) {
+      queryExc.andWhere('status = :status', { status });
+    }
+    if (searchValue) {
+      searchValue = convertTv(searchValue.replace(/  +/g, '').trim());
+      queryExc.andWhere(`lower(video."title") like :value`, {
+        value: `%${searchValue}%`,
+      });
+    }
+    if (filterValue && filterValue === EFilterValue.BY_VIEW) {
+      queryExc.orderBy('views', 'DESC');
+    } else {
+      queryExc.orderBy('created_at', 'DESC');
+    }
     const countResult = await queryExc.cache(`videos_count_page${page}_limit${limit}`).getCount();
     const result = await queryExc.cache(`videos__page${page}_limit${limit}`).getMany();
     const pages = Math.ceil(Number(countResult) / limit);
@@ -131,6 +148,8 @@ export class VideoService {
       if (video.length === 0) {
         throw new NotFoundException(`VIDEO_LANGUAGE_${languageId}_NOT_FOUND`);
       }
+      video[0].views++;
+      await this.videoRepository.save(video[0]);
     }
     return {
       data: video,

@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import _ = require('lodash');
-import { Connection, getManager, In, Repository } from 'typeorm';
+import { Brackets, Connection, getManager, In, Repository } from 'typeorm';
 import { AuthorEntity } from '../entities/author.entity';
 import { CategoryEntity } from '../entities/category.entity';
 import { LabelEntity } from '../entities/label.entity';
@@ -10,7 +10,8 @@ import { ResourceEntity } from '../entities/resource.entity';
 import { ResourceAuthorEntity } from '../entities/resourceAuthor.entity';
 import { ResourceCateEntity } from '../entities/resourceCate.entity';
 import { ResourceLabelEntity } from '../entities/resourceLabel.entity';
-import { ECategoryType } from '../lib/constant';
+import { ECategoryType, EFilterValue } from '../lib/constant';
+import { convertTv } from '../lib/utils';
 import { checkConditionInputCreate, checkConditionInputUpdate } from '../lib/validatePipe/resource/checkCondition';
 
 import { CreateResourceInput, UpdateResourceInput } from './resource.dto';
@@ -129,52 +130,86 @@ export class ResourceService {
     page = 1,
     limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
     languageId: string,
+    status: string,
+    searchValue: string,
+    filterValue: string,
   ) {
+    await this.connection.queryResultCache.clear();
     const resourceQuery = this.resourceRepository
       .createQueryBuilder('resource')
-      .where('resource."deleted_at" is null AND resource."language_id" =:languageId', { languageId });
-    const resourceCount = await resourceQuery.cache(`resources_count_page${page}_limit${limit}`).getCount();
-    const resources: any = await resourceQuery
-      .leftJoinAndMapMany(
-        'resource.authors',
+      .where('resource."language_id" =:languageId ', {
+        languageId,
+      });
+    let cacheKey = 'filter_resource';
+    const resources: any = resourceQuery
+      .leftJoinAndMapOne(
+        'resource.author',
         ResourceAuthorEntity,
         'resource_author',
         '"resource_author"."resource_id"="resource".id and resource_author.deleted_at is null',
       )
-      .leftJoinAndMapOne('author', AuthorEntity, 'author', '"author".id="resource_author"."author_id"')
+      .leftJoinAndMapOne(
+        'resource_author.authorInf',
+        AuthorEntity,
+        'author',
+        '"author".id="resource_author"."author_id"  ',
+      )
       .leftJoinAndMapOne(
         'resource.labels',
         ResourceLabelEntity,
         'resource_label',
         '"resource_label"."resource_id"="resource".id and resource_label.deleted_at is null',
       )
-      .leftJoinAndMapMany('labels', LabelEntity, 'label', '"label".id = "resource_label"."label_id"')
+      .leftJoinAndMapMany('resource_label.labelInf', LabelEntity, 'label', '"label".id = "resource_label"."label_id"')
       .leftJoinAndMapMany(
         'resource.categories',
         ResourceCateEntity,
         'resource_category',
         '"resource_category"."resource_id"="resource".id and resource_category.deleted_at is null',
       )
-      .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."category_id"')
+      .leftJoinAndMapOne(
+        'resource_label.categoryInf',
+        CategoryEntity,
+        'category',
+        '"category".id = "resource_category"."category_id"',
+      )
       .limit(limit)
-      .offset((page - 1) * limit)
-      .orderBy('resource."created_at"', 'DESC')
-      .cache(`resources_page${page}_limit${limit}`)
-      .getMany();
+      .offset((page - 1) * limit);
+    if (status) {
+      resources.andWhere('resource."status"=:status', { status });
+    }
+    if (searchValue) {
+      searchValue = searchValue.replace(/  +/g, '');
+      const titleConvert = convertTv(searchValue.trim());
+      const searchTitle = `%${titleConvert}%`;
+      cacheKey += `searchValue${searchTitle}`;
+      const bracket = new Brackets(qb => {
+        qb.andWhere(`LOWER(convertTVkdau("resource"."title")) like '${searchTitle}'`);
+      });
+      resources.andWhere(bracket);
+    }
+    if (filterValue && filterValue === EFilterValue.BY_VIEW) {
+      resources.orderBy('resource."views"', 'DESC');
+    } else {
+      resources.orderBy('resource."created_at"', 'DESC');
+    }
+    let count: any = 0;
+    count = await resources.cache(`${cacheKey}_count_page${page}_limit${limit}`).getCount();
+    const resourcesOutput = await resources.cache(`${cacheKey}_page${page}_limit${limit}`).getMany();
 
-    const pages = Math.ceil(Number(resourceCount) / limit);
+    const pages = Math.ceil(Number(count) / limit);
     return {
       page: Number(page),
       totalPages: pages,
       limit: Number(limit),
-      totalRecords: resourceCount,
-      data: resources,
+      totalRecords: count,
+      data: resourcesOutput,
     };
   }
 
-  async getResources(code: any) {
+  async getResources(code: any, languageId?: string) {
     await this.connection.queryResultCache.clear();
-    const resources: any = await this.resourceRepository
+    const resources: any = this.resourceRepository
       .createQueryBuilder('resource')
       .where('"resource".code=:code', { code })
       .leftJoinAndMapOne(
@@ -187,7 +222,7 @@ export class ResourceService {
         'resource_author.authorInf',
         AuthorEntity,
         'author',
-        '"author".id="resource_author"."author_id" ',
+        '"author".id="resource_author"."author_id"  ',
       )
       .leftJoinAndMapMany(
         'resource.labels',
@@ -207,9 +242,17 @@ export class ResourceService {
         CategoryEntity,
         'category',
         '"category".id = "resource_category"."category_id"',
-      )
-      .getMany();
-    return { data: resources };
+      );
+    if (languageId) {
+      resources.andWhere('resource.language_id=:languageId', { languageId });
+      const resourceList = await resources.getMany();
+      if (resourceList.length > 0) {
+        const resource = await this.resourceRepository.findOne({ where: { code: code, languageId: languageId } });
+        resource.views += 1;
+        await this.resourceRepository.update({ code: code, languageId: languageId }, { views: resource.views });
+      }
+    }
+    return { data: await resources.getMany() };
   }
 
   async getResourceSEO(link: string, languageId: string) {

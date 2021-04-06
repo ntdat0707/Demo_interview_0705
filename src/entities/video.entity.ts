@@ -29,6 +29,9 @@ export class VideoEntity {
   @Column('varchar')
   status: string;
 
+  @Column('integer', { default: 0 })
+  views: number;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })
   createdAt: Date;
 

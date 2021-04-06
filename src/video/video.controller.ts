@@ -15,7 +15,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { EFlagUploadVideo } from '../lib/constant';
+import { CheckFilterValuePipe } from '../lib/validatePipe/checkFilterValuePipe.class';
 import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
+import { CheckStatusPipe } from '../lib/validatePipe/checkStatusPipe.class';
+import { CheckLanguagePipe } from '../lib/validatePipe/focused-market/checkLanguagePipe.class';
 import { CheckFlagPipe } from '../lib/validatePipe/video/checkQueryStringPipe.class';
 import { UpdateVideoPipe } from '../lib/validatePipe/video/updateVideoPipe.class';
 import { UploadVideoPipe } from '../lib/validatePipe/video/uploadVideoPipe.class';
@@ -31,13 +34,19 @@ export class VideoController {
   @Get('')
   @ApiQuery({ name: 'flag', type: String, required: true, enum: Object.values(EFlagUploadVideo) })
   @ApiQuery({ name: 'languageId', type: String, required: true })
+  @ApiQuery({ name: 'status', type: String, required: false })
+  @ApiQuery({ name: 'searchValue', required: false, type: String })
+  @ApiQuery({ name: 'filterValue', required: false, type: String })
   async getAllVideo(
     @Query('flag', new CheckFlagPipe()) flag: string,
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
-    @Query('languageId') languageId: string,
+    @Query('languageId', new CheckLanguagePipe()) languageId: string,
+    @Query('status', new CheckStatusPipe()) status: string,
+    @Query('searchValue') searchValue: string,
+    @Query('filterValue', new CheckFilterValuePipe()) filterValue: string,
   ) {
-    return await this.videoService.getAllVideo(flag, page, limit, languageId);
+    return await this.videoService.getAllVideo(flag, page, limit, languageId, status, searchValue, filterValue);
   }
 
   @Get('/:code')

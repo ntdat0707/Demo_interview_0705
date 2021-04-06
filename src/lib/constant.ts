@@ -40,6 +40,11 @@ enum EDocmentFlag {
   EXPORT = 'export',
 }
 
+enum EFilterValue {
+  BY_DATE = 'by_date',
+  BY_VIEW = 'by_view',
+}
+
 export {
   EBannerStatus,
   EResourceStatus,
@@ -48,4 +53,5 @@ export {
   EFlagUploadVideo,
   EDocmentFlag,
   ECategoryType,
+  EFilterValue,
 };
