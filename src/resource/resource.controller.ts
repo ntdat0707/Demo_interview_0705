@@ -54,12 +54,14 @@ export class ResourceController {
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'languageId', required: true })
+  @ApiQuery({ name: 'status', required: true })
   async getAllResources(
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
     @Query('languageId') languageId: string,
+    @Query('status') status: string,
   ) {
-    return await this.resourceService.getAllResource(page, limit, languageId);
+    return await this.resourceService.getAllResource(page, limit, languageId, status);
   }
 
   @Get('/:code')

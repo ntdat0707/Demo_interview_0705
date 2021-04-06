@@ -129,10 +129,14 @@ export class ResourceService {
     page = 1,
     limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
     languageId: string,
+    status: string,
   ) {
     const resourceQuery = this.resourceRepository
       .createQueryBuilder('resource')
-      .where('resource."deleted_at" is null AND resource."language_id" =:languageId', { languageId });
+      .where('resource."deleted_at" is null AND resource."language_id" =:languageId AND resource."status"=:status', {
+        languageId,
+        status,
+      });
     const resourceCount = await resourceQuery.cache(`resources_count_page${page}_limit${limit}`).getCount();
     const resources: any = await resourceQuery
       .leftJoinAndMapOne(
