@@ -48,7 +48,12 @@ export class DocumentService {
     };
   }
 
-  async getAllDocument(flag: string, page = 1, limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10)) {
+  async getAllDocument(
+    flag: string,
+    page = 1,
+    limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
+    status?: string,
+  ) {
     this.logger.debug('get all document');
     const queryExc = this.documentRepository
       .createQueryBuilder('document')
@@ -56,6 +61,9 @@ export class DocumentService {
       .where(`flag =  :value`, { value: `${flag}` })
       .limit(limit)
       .offset((page - 1) * limit);
+    if (status) {
+      queryExc.andWhere('status = :status', { status });
+    }
     await this.connection.queryResultCache.clear();
     const countResult = await queryExc.cache(`documents_count_page${page}_limit${limit}`).getCount();
     const result = await queryExc.cache(`documents__page${page}_limit${limit}`).getMany();

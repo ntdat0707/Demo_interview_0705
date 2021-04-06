@@ -68,14 +68,17 @@ export class SolutionService {
     return {};
   }
 
-  async getAllSolution(languageId: string) {
+  async getAllSolution(languageId: string, status?: string) {
     this.logger.debug('Get all solution');
     await this.connection.queryResultCache.clear();
-    const solutions = await this.solutionRepository
+    const queryExc = this.solutionRepository
       .createQueryBuilder('solution')
-      .andWhere('solution."language_id"=:languageId', { languageId })
-      .orderBy('solution."created_at"', 'DESC')
-      .getMany();
+      .where('solution."language_id"=:languageId', { languageId })
+      .orderBy('solution."created_at"', 'DESC');
+    if (status) {
+      queryExc.andWhere('status = :status', { status });
+    }
+    const solutions = await queryExc.getMany();
     return {
       data: solutions,
     };

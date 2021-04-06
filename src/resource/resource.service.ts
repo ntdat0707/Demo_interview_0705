@@ -142,7 +142,7 @@ export class ResourceService {
       });
     let cacheKey = 'filter_resource';
     const resources: any = resourceQuery
-      .leftJoinAndMapOne(
+      .leftJoinAndMapMany(
         'resource.author',
         ResourceAuthorEntity,
         'resource_author',
