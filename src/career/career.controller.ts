@@ -33,7 +33,7 @@ export class CareerController {
   }
 
   @Get('/:code')
-  @ApiQuery({ name: 'languageId', required: true })
+  @ApiQuery({ name: 'languageId', required: false })
   async getCareer(@Param('code') code: string, @Query('languageId') languageId: string) {
     return await this.careerService.getCareer(code, languageId);
   }

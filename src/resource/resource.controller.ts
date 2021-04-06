@@ -54,17 +54,24 @@ export class ResourceController {
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'languageId', required: true })
+  @ApiQuery({ name: 'status', required: false })
+  @ApiQuery({ name: 'searchValue', required: false })
+  @ApiQuery({ name: 'filterValue', required: false })
   async getAllResources(
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
     @Query('languageId') languageId: string,
+    @Query('status') status: string,
+    @Query('searchValue') searchValue: string,
+    @Query('filterValue') filterValue: string,
   ) {
-    return await this.resourceService.getAllResource(page, limit, languageId);
+    return await this.resourceService.getAllResource(page, limit, languageId, status, searchValue, filterValue);
   }
 
   @Get('/:code')
-  async getResource(@Param('code') code: string) {
-    return await this.resourceService.getResources(code);
+  @ApiQuery({ name: 'languageId', required: false })
+  async getResource(@Param('code') code: string, @Query('languageId') languageId: string) {
+    return await this.resourceService.getResources(code, languageId);
   }
 
   @Get('/SEO/:link')

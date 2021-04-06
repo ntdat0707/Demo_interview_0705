@@ -1,6 +1,6 @@
 import { ArgumentMetadata, BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
 import { CreateCareerInput } from '../../../career/career.dto';
-import { ECareerStatus, EEducationLevelStatus } from '../../constant';
+import { EEducationLevelStatus, EResourceStatus } from '../../constant';
 import { checkDateTime } from '../../pipeUtils/dateValidate';
 import { checkUUID } from '../../pipeUtils/uuidValidate';
 
@@ -30,7 +30,7 @@ export class CreateCareerPipe implements PipeTransform<any> {
       }
       if (value.status) {
         const status: any = value.status;
-        if (!Object.values(ECareerStatus).includes(status)) {
+        if (!Object.values(EResourceStatus).includes(status)) {
           throw new BadRequestException('STATUS_INVALID');
         }
       }
