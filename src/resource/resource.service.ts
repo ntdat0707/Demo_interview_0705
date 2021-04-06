@@ -143,7 +143,7 @@ export class ResourceService {
     let cacheKey = 'filter_resource';
     const resources: any = resourceQuery
       .leftJoinAndMapMany(
-        'resource.author',
+        'resource.authors',
         ResourceAuthorEntity,
         'resource_author',
         '"resource_author"."resource_id"="resource".id and resource_author.deleted_at is null',
