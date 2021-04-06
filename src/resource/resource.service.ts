@@ -10,7 +10,7 @@ import { ResourceEntity } from '../entities/resource.entity';
 import { ResourceAuthorEntity } from '../entities/resourceAuthor.entity';
 import { ResourceCateEntity } from '../entities/resourceCate.entity';
 import { ResourceLabelEntity } from '../entities/resourceLabel.entity';
-import { ECategoryType } from '../lib/constant';
+import { ECategoryType, EFilterValue } from '../lib/constant';
 import { convertTv } from '../lib/utils';
 import { checkConditionInputCreate, checkConditionInputUpdate } from '../lib/validatePipe/resource/checkCondition';
 
@@ -140,7 +140,6 @@ export class ResourceService {
       .where('resource."language_id" =:languageId ', {
         languageId,
       });
-    const resourceCount = this.resourceRepository.createQueryBuilder('resource');
     let cacheKey = 'filter_resource';
     const resources: any = resourceQuery
       .leftJoinAndMapOne(
@@ -175,8 +174,7 @@ export class ResourceService {
         '"category".id = "resource_category"."category_id"',
       )
       .limit(limit)
-      .offset((page - 1) * limit)
-      .orderBy('resource."created_at"', 'DESC');
+      .offset((page - 1) * limit);
     if (status) {
       resources.andWhere('resource."status"=:status', { status });
     }
@@ -189,19 +187,17 @@ export class ResourceService {
         qb.andWhere(`LOWER(convertTVkdau("resource"."title")) like '${searchTitle}'`);
       });
       resources.andWhere(bracket);
-      resourceCount.andWhere(bracket);
     }
-    if (filterValue === 'by_view') {
-      resources.addOrderBy('resource."views"', 'DESC');
-      resourceCount.addOrderBy('resource."views"', 'DESC');
+    if (filterValue && filterValue === EFilterValue.BY_VIEW) {
+      resources.orderBy('resource."views"', 'DESC');
+    } else {
+      resources.orderBy('resource."created_at"', 'DESC');
     }
     let count: any = 0;
-    count = await resourceCount.cache(`${cacheKey}_count_page${page}_limit${limit}`).getCount();
+    count = await resources.cache(`${cacheKey}_count_page${page}_limit${limit}`).getCount();
     const resourcesOutput = await resources.cache(`${cacheKey}_page${page}_limit${limit}`).getMany();
-    // .cache(`resources_page${page}_limit${limit}`)
-    //.getMany();
 
-    const pages = Math.ceil(Number(resourceCount) / limit);
+    const pages = Math.ceil(Number(count) / limit);
     return {
       page: Number(page),
       totalPages: pages,

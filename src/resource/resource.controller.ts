@@ -14,7 +14,10 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
+import { CheckFilterValuePipe } from '../lib/validatePipe/checkFilterValuePipe.class';
 import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
+import { CheckStatusPipe } from '../lib/validatePipe/checkStatusPipe.class';
+import { CheckLanguagePipe } from '../lib/validatePipe/focused-market/checkLanguagePipe.class';
 import { CreateResourcePipe } from '../lib/validatePipe/resource/createResourcePipe.class';
 import { UpdateResourcePipe } from '../lib/validatePipe/resource/updateResourcePipe.class';
 import { CreateResourceInput, ResourcePictureInput, UpdateResourceInput } from './resource.dto';
@@ -60,10 +63,10 @@ export class ResourceController {
   async getAllResources(
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
-    @Query('languageId') languageId: string,
-    @Query('status') status: string,
+    @Query('languageId', new CheckLanguagePipe()) languageId: string,
+    @Query('status', new CheckStatusPipe()) status: string,
     @Query('searchValue') searchValue: string,
-    @Query('filterValue') filterValue: string,
+    @Query('filterValue', new CheckFilterValuePipe()) filterValue: string,
   ) {
     return await this.resourceService.getAllResource(page, limit, languageId, status, searchValue, filterValue);
   }
