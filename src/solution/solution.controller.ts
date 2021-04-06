@@ -19,6 +19,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateSolutionInput, SolutionPictureInput, UpdateSolutionInput } from './solution.dto';
 import { CreateSolutionPipe } from '../lib/validatePipe/solution/createSolutionPipe.class';
 import { CheckLanguagePipe } from '../lib/validatePipe/focused-market/checkLanguagePipe.class';
+import { CheckStatusPipe } from '../lib/validatePipe/checkStatusPipe.class';
 
 @Controller('solution')
 @ApiTags('Solution')
@@ -46,8 +47,12 @@ export class SolutionController {
 
   @Get()
   @ApiQuery({ name: 'languageId', required: true })
-  async getAllSolution(@Query('languageId') languageId: string) {
-    return await this.solutionService.getAllSolution(languageId);
+  @ApiQuery({ name: 'status', required: false })
+  async getAllSolution(
+    @Query('languageId') languageId: string,
+    @Query('status', new CheckStatusPipe()) status: string,
+  ) {
+    return await this.solutionService.getAllSolution(languageId, status);
   }
 
   @Get('/:code')
