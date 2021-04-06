@@ -135,27 +135,37 @@ export class ResourceService {
       .where('resource."deleted_at" is null AND resource."language_id" =:languageId', { languageId });
     const resourceCount = await resourceQuery.cache(`resources_count_page${page}_limit${limit}`).getCount();
     const resources: any = await resourceQuery
-      .leftJoinAndMapMany(
-        'resource.authors',
+      .leftJoinAndMapOne(
+        'resource.author',
         ResourceAuthorEntity,
         'resource_author',
         '"resource_author"."resource_id"="resource".id and resource_author.deleted_at is null',
       )
-      .leftJoinAndMapOne('author', AuthorEntity, 'author', '"author".id="resource_author"."author_id"')
+      .leftJoinAndMapOne(
+        'resource_author.authorInf',
+        AuthorEntity,
+        'author',
+        '"author".id="resource_author"."author_id"  ',
+      )
       .leftJoinAndMapOne(
         'resource.labels',
         ResourceLabelEntity,
         'resource_label',
         '"resource_label"."resource_id"="resource".id and resource_label.deleted_at is null',
       )
-      .leftJoinAndMapMany('labels', LabelEntity, 'label', '"label".id = "resource_label"."label_id"')
+      .leftJoinAndMapMany('resource_label.labelInf', LabelEntity, 'label', '"label".id = "resource_label"."label_id"')
       .leftJoinAndMapMany(
         'resource.categories',
         ResourceCateEntity,
         'resource_category',
         '"resource_category"."resource_id"="resource".id and resource_category.deleted_at is null',
       )
-      .leftJoinAndMapMany('categories', CategoryEntity, 'category', '"category".id = "resource_category"."category_id"')
+      .leftJoinAndMapOne(
+        'resource_label.categoryInf',
+        CategoryEntity,
+        'category',
+        '"category".id = "resource_category"."category_id"',
+      )
       .limit(limit)
       .offset((page - 1) * limit)
       .orderBy('resource."created_at"', 'DESC')
@@ -187,7 +197,7 @@ export class ResourceService {
         'resource_author.authorInf',
         AuthorEntity,
         'author',
-        '"author".id="resource_author"."author_id" ',
+        '"author".id="resource_author"."author_id"  ',
       )
       .leftJoinAndMapMany(
         'resource.labels',
