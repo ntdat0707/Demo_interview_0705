@@ -4,7 +4,7 @@ import moment = require('moment');
 import { Brackets, Connection, getManager, Repository } from 'typeorm';
 import { CareerEntity } from '../entities/career.entity';
 import { LanguageEntity } from '../entities/language.entity';
-import { ECareerStatus } from '../lib/constant';
+import { EResourceStatus } from '../lib/constant';
 import { isDuplicateLanguageValid, isLanguageENValid } from '../lib/pipeUtils/languageValidate';
 import { convertTv } from '../lib/utils';
 import { CreateCareerInput, UpdateCareerInput } from './career.dto';
@@ -155,7 +155,7 @@ export class CareerService {
             }
           }
           curCareers[index].setAttributes(career);
-          if (career.status === ECareerStatus.CLOSED) {
+          if (career.status === EResourceStatus.UNPUBLISH) {
             curCareers[index].closingDate = moment().format('YYYY-MM-DD h:mm');
           }
           await transactionalEntityManager.update<CareerEntity>(CareerEntity, { id: career.id }, curCareers[index]);
@@ -169,7 +169,7 @@ export class CareerService {
           const newCar = new CareerEntity();
           newCar.setAttributes(career);
           newCar.code = career.code;
-          if (career.status === ECareerStatus.CLOSED) {
+          if (career.status === EResourceStatus.UNPUBLISH) {
             newCar.closingDate = new Date(moment().format('YYYY-MM-DD h:mm'));
           }
           await transactionalEntityManager.save<CareerEntity>(newCar);
