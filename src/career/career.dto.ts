@@ -108,7 +108,7 @@ export class UpdateCareerInput {
   @ApiProperty({ required: false })
   readonly contactInformation: string;
 
-  @ApiProperty({ enum: ['active', 'closed'], required: false })
+  @ApiProperty({ required: true, enum: Object.values(EResourceStatus) })
   readonly status: string;
 
   @ApiProperty({ type: Date, required: false })
