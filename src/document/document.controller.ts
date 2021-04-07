@@ -33,6 +33,8 @@ export class DocumentController {
   @Get('')
   @ApiQuery({ name: 'flag', required: true, type: String, enum: Object.values(EDocmentFlag) })
   @ApiQuery({ name: 'status', type: String, required: false })
+  @ApiQuery({ name: 'page', type: String, required: false })
+  @ApiQuery({ name: 'limit', type: String, required: false })
   async getAllDocument(
     @Query('flag', new CheckFlagPipe()) flag: string,
     @Query('page', new CheckUnSignIntPipe()) page: number,

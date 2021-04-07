@@ -30,6 +30,8 @@ export class BannerController {
 
   @Get('')
   @ApiQuery({ name: 'languageId', required: true, type: String })
+  @ApiQuery({ name: 'page', type: String, required: false })
+  @ApiQuery({ name: 'limit', type: String, required: false })
   async getAllBanner(
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,

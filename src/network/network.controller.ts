@@ -12,7 +12,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
 import { BranchPipe } from '../lib/validatePipe/network/branchPipe.class';
@@ -29,6 +29,8 @@ export class NetworkController {
 
   @Get('/branch')
   // @ApiQuery({ name: 'searchValue', required: false, type: String })
+  @ApiQuery({ name: 'page', type: String, required: false })
+  @ApiQuery({ name: 'limit', type: String, required: false })
   async getAllBranch(
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
