@@ -259,7 +259,7 @@ export class ResourceService {
         '"resource_category"."resource_id"="resource".id and resource_category.deleted_at is null',
       )
       .leftJoinAndMapOne(
-        'resource_label.categoryInformation',
+        'resource_category.categoryInformation',
         CategoryEntity,
         'category',
         '"category".id = "resource_category"."category_id"',
