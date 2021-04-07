@@ -29,7 +29,7 @@ export class CategoryController {
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'type', required: true })
-  @ApiQuery({ name: 'languageId', required: true })
+  @ApiQuery({ name: 'languageId', required: false })
   async getAllCategory(
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
@@ -40,8 +40,9 @@ export class CategoryController {
   }
 
   @Get('/:code')
-  async getCategory(@Param('code') code: string) {
-    return await this.categoryService.getCategory(code);
+  @ApiQuery({ name: 'languageId', required: false })
+  async getCategory(@Param('code') code: string, @Query('languageId') languageId: string) {
+    return await this.categoryService.getCategory(code, languageId);
   }
 
   @Put('/:code')

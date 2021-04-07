@@ -163,10 +163,10 @@ export class CareerService {
           await transactionalEntityManager.update<CareerEntity>(CareerEntity, { id: career.id }, curCareers[index]);
         } else {
           const existTitle = await this.careerRepository.findOne({
-            where: { title: career.title, languageId: career.languageId },
+            where: [{ title: career.title }, { languageId: career.languageId }],
           });
           if (existTitle) {
-            throw new ConflictException('TITLE_EXISTED');
+            throw new ConflictException('TITLE_EXISTED_OR_LANGUAGE_EXISTED');
           }
           const newCar = new CareerEntity();
           newCar.setAttributes(career);

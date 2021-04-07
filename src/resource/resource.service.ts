@@ -149,7 +149,7 @@ export class ResourceService {
         '"resource_author"."resource_id"="resource".id and resource_author.deleted_at is null',
       )
       .leftJoinAndMapOne(
-        'resource_author.authorInf',
+        'resource_author.authorInformation',
         AuthorEntity,
         'author',
         '"author".id="resource_author"."author_id"  ',
@@ -160,7 +160,12 @@ export class ResourceService {
         'resource_label',
         '"resource_label"."resource_id"="resource".id and resource_label.deleted_at is null',
       )
-      .leftJoinAndMapMany('resource_label.labelInf', LabelEntity, 'label', '"label".id = "resource_label"."label_id"')
+      .leftJoinAndMapMany(
+        'resource_label.labelInformation',
+        LabelEntity,
+        'label',
+        '"label".id = "resource_label"."label_id"',
+      )
       .leftJoinAndMapMany(
         'resource.categories',
         ResourceCateEntity,
@@ -168,7 +173,7 @@ export class ResourceService {
         '"resource_category"."resource_id"="resource".id and resource_category.deleted_at is null',
       )
       .leftJoinAndMapOne(
-        'resource_label.categoryInf',
+        'resource_label.categoryInformation',
         CategoryEntity,
         'category',
         '"category".id = "resource_category"."category_id"',
@@ -209,7 +214,7 @@ export class ResourceService {
 
   async getResources(code: any, languageId?: string) {
     await this.connection.queryResultCache.clear();
-    const resources: any = this.resourceRepository
+    const query: any = this.resourceRepository
       .createQueryBuilder('resource')
       .where('"resource".code=:code', { code })
       .leftJoinAndMapOne(
@@ -219,7 +224,7 @@ export class ResourceService {
         '"resource_author"."resource_id"="resource".id and resource_author.deleted_at is null',
       )
       .leftJoinAndMapOne(
-        'resource_author.authorInf',
+        'resource_author.authorInformation',
         AuthorEntity,
         'author',
         '"author".id="resource_author"."author_id"  ',
@@ -230,7 +235,12 @@ export class ResourceService {
         'resource_label',
         '"resource_label"."resource_id"="resource".id and resource_label.deleted_at is null',
       )
-      .leftJoinAndMapOne('resource_label.labelInf', LabelEntity, 'label', '"label".id = "resource_label"."label_id"')
+      .leftJoinAndMapOne(
+        'resource_label.labelInformation',
+        LabelEntity,
+        'label',
+        '"label".id = "resource_label"."label_id"',
+      )
       .leftJoinAndMapMany(
         'resource.categories',
         ResourceCateEntity,
@@ -238,21 +248,22 @@ export class ResourceService {
         '"resource_category"."resource_id"="resource".id and resource_category.deleted_at is null',
       )
       .leftJoinAndMapOne(
-        'resource_label.categoryInf',
+        'resource_label.categoryInformation',
         CategoryEntity,
         'category',
         '"category".id = "resource_category"."category_id"',
       );
     if (languageId) {
-      resources.andWhere('resource.language_id=:languageId', { languageId });
-      const resourceList = await resources.getMany();
+      query.andWhere('resource.language_id=:languageId', { languageId });
+      const resourceList = await query.getMany();
       if (resourceList.length > 0) {
         const resource = await this.resourceRepository.findOne({ where: { code: code, languageId: languageId } });
         resource.views += 1;
         await this.resourceRepository.update({ code: code, languageId: languageId }, { views: resource.views });
       }
     }
-    return { data: await resources.getMany() };
+    const resources = await query.getMany();
+    return { data: resources };
   }
 
   async getResourceSEO(link: string, languageId: string) {
