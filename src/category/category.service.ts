@@ -35,8 +35,8 @@ export class CategoryService {
     for (const item of categoriesInput) {
       const cateExisted = await this.categoryRepository.findOne({
         where: [
-          { languageId: item.languageId, title: item.title },
-          { languageId: item.languageId, link: item.link },
+          { languageId: item.languageId, title: item.title, type: item.type },
+          { languageId: item.languageId, link: item.link, type: item.type },
         ],
       });
       if (cateExisted) {
