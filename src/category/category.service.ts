@@ -103,9 +103,9 @@ export class CategoryService {
       }
       query.andWhere('category."language_id" =:languageId', { languageId });
     }
-
+    const categories = await query.getMany();
     return {
-      data: await query.getMany(),
+      data: categories,
     };
   }
 
