@@ -62,10 +62,16 @@ export class CategoryService {
     await this.connection.queryResultCache.clear();
     const query = this.categoryRepository
       .createQueryBuilder('category')
-      .where('category."deleted_at" is null AND category."language_id" =:languageId AND category."type"=:type', {
-        languageId,
+      .where('category."deleted_at" is null AND category."type"=:type', {
         type,
       });
+    if (languageId) {
+      const language = await this.languageRepository.findOne({ where: { id: languageId } });
+      if (!language) {
+        throw new NotFoundException('LANGUAGE_NOT_FOUND');
+      }
+      query.andWhere('category."language_id" =:languageId', { languageId });
+    }
     const cateCount = await query.cache(`category_count_page${page}_limit${limit}`).getCount();
     const categories: any = await query
       .limit(limit)
@@ -83,16 +89,23 @@ export class CategoryService {
     };
   }
 
-  async getCategory(code: string) {
+  async getCategory(code: string, languageId?: string) {
     this.logger.debug('get category by coded');
     await this.connection.queryResultCache.clear();
-    const categories = this.categoryRepository
+    const query = this.categoryRepository
       .createQueryBuilder('category')
       .where('category."deleted_at" is null AND category."code" =:code', { code })
-      .orderBy('category."created_at"', 'DESC')
-      .getMany();
+      .orderBy('category."created_at"', 'DESC');
+    if (languageId) {
+      const language = await this.languageRepository.findOne({ where: { id: languageId } });
+      if (!language) {
+        throw new NotFoundException('LANGUAGE_NOT_FOUND');
+      }
+      query.andWhere('category."language_id" =:languageId', { languageId });
+    }
+
     return {
-      data: categories,
+      data: await query.getMany(),
     };
   }
 
