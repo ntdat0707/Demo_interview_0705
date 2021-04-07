@@ -224,7 +224,7 @@ export class VideoService {
             updateVideoInput.flag === EFlagUploadVideo.HOMEPAGE
           ) {
             const checkPublishVideo = await this.videoRepository.findOne({
-              where: { code: updateVideoInput.code, status: EResourceStatus.PUBLISH, flag: EFlagUploadVideo.HOMEPAGE },
+              where: { code: code, status: EResourceStatus.PUBLISH, flag: EFlagUploadVideo.HOMEPAGE },
             });
             if (checkPublishVideo) {
               throw new BadRequestException('CAN_NOT_PUBLISH_VIDEO');
@@ -232,7 +232,7 @@ export class VideoService {
           }
           const newVideo: any = new VideoEntity();
           newVideo.setAttributes(updateVideoInput);
-          newVideo.code = updateVideoInput.code;
+          newVideo.code = code;
           await transactionalEntityManager.save<VideoEntity>(newVideo);
         }
       }
