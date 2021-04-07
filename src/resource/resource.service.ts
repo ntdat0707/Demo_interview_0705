@@ -143,8 +143,8 @@ export class ResourceService {
       });
     let cacheKey = 'filter_resource';
     const query: any = resourceQuery
-      .leftJoinAndMapMany(
-        'resource.authors',
+      .leftJoinAndMapOne(
+        'resource.author',
         ResourceAuthorEntity,
         'resource_author',
         '"resource_author"."resource_id"="resource".id and resource_author.deleted_at is null',
