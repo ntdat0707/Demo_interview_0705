@@ -228,8 +228,8 @@ export class ResourceService {
     const query: any = this.resourceRepository
       .createQueryBuilder('resource')
       .where('"resource".code=:code', { code })
-      .leftJoinAndMapOne(
-        'resource.author',
+      .leftJoinAndMapMany(
+        'resource.authors',
         ResourceAuthorEntity,
         'resource_author',
         '"resource_author"."resource_id"="resource".id and resource_author.deleted_at is null',
@@ -289,8 +289,8 @@ export class ResourceService {
         link,
         languageId,
       })
-      .leftJoinAndMapOne(
-        'resource.author',
+      .leftJoinAndMapMany(
+        'resource.authors',
         ResourceAuthorEntity,
         'resource_author',
         '"resource_author"."resource_id"="resource".id and resource_author.deleted_at is null',
