@@ -37,6 +37,7 @@ export class VideoController {
   @ApiQuery({ name: 'status', type: String, required: false })
   @ApiQuery({ name: 'searchValue', required: false, type: String })
   @ApiQuery({ name: 'filterValue', required: false, type: String })
+  @ApiQuery({ name: 'categoryId', required: false, type: String })
   async getAllVideo(
     @Query('flag', new CheckFlagPipe()) flag: string,
     @Query('page', new CheckUnSignIntPipe()) page: number,
@@ -45,8 +46,18 @@ export class VideoController {
     @Query('status', new CheckStatusPipe()) status: string,
     @Query('searchValue') searchValue: string,
     @Query('filterValue', new CheckFilterValuePipe()) filterValue: string,
+    @Query('categoryId') categoryId: string,
   ) {
-    return await this.videoService.getAllVideo(flag, page, limit, languageId, status, searchValue, filterValue);
+    return await this.videoService.getAllVideo(
+      flag,
+      page,
+      limit,
+      languageId,
+      status,
+      searchValue,
+      filterValue,
+      categoryId,
+    );
   }
 
   @Get('/:code')

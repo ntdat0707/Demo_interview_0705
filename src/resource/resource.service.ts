@@ -131,8 +131,9 @@ export class ResourceService {
     limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
     languageId: string,
     status: string,
-    searchValue: string,
-    filterValue: string,
+    searchValue?: string,
+    filterValue?: string,
+    categoryId?: string,
   ) {
     await this.connection.queryResultCache.clear();
     const resourceQuery = this.resourceRepository
@@ -141,7 +142,7 @@ export class ResourceService {
         languageId,
       });
     let cacheKey = 'filter_resource';
-    const resources: any = resourceQuery
+    const query: any = resourceQuery
       .leftJoinAndMapMany(
         'resource.authors',
         ResourceAuthorEntity,
@@ -173,7 +174,7 @@ export class ResourceService {
         '"resource_category"."resource_id"="resource".id and resource_category.deleted_at is null',
       )
       .leftJoinAndMapOne(
-        'resource_label.categoryInformation',
+        'resource_category.categoryInformation',
         CategoryEntity,
         'category',
         '"category".id = "resource_category"."category_id"',
@@ -181,7 +182,7 @@ export class ResourceService {
       .limit(limit)
       .offset((page - 1) * limit);
     if (status) {
-      resources.andWhere('resource."status"=:status', { status });
+      query.andWhere('resource."status"=:status', { status });
     }
     if (searchValue) {
       searchValue = searchValue.replace(/  +/g, '');
@@ -191,16 +192,26 @@ export class ResourceService {
       const bracket = new Brackets(qb => {
         qb.andWhere(`LOWER(convertTVkdau("resource"."title")) like '${searchTitle}'`);
       });
-      resources.andWhere(bracket);
+      query.andWhere(bracket);
     }
     if (filterValue && filterValue === EFilterValue.BY_VIEW) {
-      resources.orderBy('resource."views"', 'DESC');
+      query.orderBy('resource."views"', 'DESC');
     } else {
-      resources.orderBy('resource."created_at"', 'DESC');
+      query.orderBy('resource."created_at"', 'DESC');
+    }
+    if (categoryId) {
+      const category = await this.cateRepository.findOne({ where: { id: categoryId, type: ECategoryType.POST } });
+      if (!category) {
+        throw new NotFoundException(`CATEGORY_${categoryId}_NOT_FOUND`);
+      }
+      query.andWhere('"category".id=:categoryId and "category"."type"=:type', {
+        categoryId: categoryId,
+        type: ECategoryType.POST,
+      });
     }
     let count: any = 0;
-    count = await resources.cache(`${cacheKey}_count_page${page}_limit${limit}`).getCount();
-    const resourcesOutput = await resources.cache(`${cacheKey}_page${page}_limit${limit}`).getMany();
+    count = await query.cache(`${cacheKey}_count_page${page}_limit${limit}`).getCount();
+    const resourcesOutput = await query.cache(`${cacheKey}_page${page}_limit${limit}`).getMany();
 
     const pages = Math.ceil(Number(count) / limit);
     return {
@@ -254,6 +265,10 @@ export class ResourceService {
         '"category".id = "resource_category"."category_id"',
       );
     if (languageId) {
+      const language = await this.languageRepository.findOne({ where: { id: languageId } });
+      if (!language) {
+        throw new NotFoundException('LANGUAGE_NOT_FOUND');
+      }
       query.andWhere('resource.language_id=:languageId', { languageId });
       const resourceList = await query.getMany();
       if (resourceList.length > 0) {

@@ -17,6 +17,7 @@ export class VideoService {
     @InjectRepository(VideoEntity) private videoRepository: Repository<VideoEntity>,
     @InjectRepository(LanguageEntity) private languageRepository: Repository<LanguageEntity>,
     @InjectRepository(CategoryEntity) private categoryRepository: Repository<CategoryEntity>,
+    //@InjectRepository(VideoCateEntity) private videoCategoryRepository: Repository<VideoCateEntity>,
     private connection: Connection,
   ) {}
   async uploadVideoFile(video: any) {
@@ -71,7 +72,7 @@ export class VideoService {
           where: { status: EResourceStatus.PUBLISH, flag: EFlagUploadVideo.HOMEPAGE },
         });
         if (checkPublishVideo) {
-          throw new BadRequestException('CAN_NOT_PUBLISH_VIDEO');
+          throw new BadRequestException('CAN_NOT_PUBLISH_VIDEO_HOMEPAGE');
         }
       }
       const newVideo = new VideoEntity();
@@ -102,6 +103,7 @@ export class VideoService {
     status?: string,
     searchValue?: string,
     filterValue?: string,
+    categoryId?: string,
   ) {
     this.logger.debug('get all video');
     const queryExc = this.videoRepository
@@ -118,10 +120,31 @@ export class VideoService {
         value: `%${searchValue}%`,
       });
     }
+    if (categoryId && flag === EFlagUploadVideo.RESOURCE) {
+      const category = await this.categoryRepository.findOne({ where: { id: categoryId, type: ECategoryType.VIDEO } });
+      if (!category) {
+        throw new NotFoundException(`CATEGORY_${categoryId}_NOT_FOUND`);
+      }
+      queryExc
+        .leftJoinAndMapMany(
+          'video.categories',
+          VideoCateEntity,
+          'video_category',
+          '"video_category"."video_id"="video".id and video_category.deleted_at is null',
+        )
+        .leftJoinAndMapOne(
+          'video_category.categoryInformation',
+          CategoryEntity,
+          'category',
+          '"category".id = "video_category"."category_id"',
+          { categoryId, type: ECategoryType.VIDEO },
+        )
+        .andWhere('"category".id=:categoryId and "category"."type"=:type', { categoryId, type: ECategoryType.VIDEO });
+    }
     if (filterValue && filterValue === EFilterValue.BY_VIEW) {
       queryExc.orderBy('views', 'DESC');
     } else {
-      queryExc.orderBy('created_at', 'DESC');
+      queryExc.orderBy('"video"."created_at"', 'DESC');
     }
     const countResult = await queryExc.cache(`videos_count_page${page}_limit${limit}`).getCount();
     const result = await queryExc.cache(`videos__page${page}_limit${limit}`).getMany();

@@ -60,6 +60,7 @@ export class ResourceController {
   @ApiQuery({ name: 'status', required: false })
   @ApiQuery({ name: 'searchValue', required: false })
   @ApiQuery({ name: 'filterValue', required: false })
+  @ApiQuery({ name: 'categoryId', required: false })
   async getAllResources(
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
@@ -67,8 +68,17 @@ export class ResourceController {
     @Query('status', new CheckStatusPipe()) status: string,
     @Query('searchValue') searchValue: string,
     @Query('filterValue', new CheckFilterValuePipe()) filterValue: string,
+    @Query('categoryId') categoryId: string,
   ) {
-    return await this.resourceService.getAllResource(page, limit, languageId, status, searchValue, filterValue);
+    return await this.resourceService.getAllResource(
+      page,
+      limit,
+      languageId,
+      status,
+      searchValue,
+      filterValue,
+      categoryId,
+    );
   }
 
   @Get('/:code')
