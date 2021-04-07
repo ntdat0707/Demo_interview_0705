@@ -35,17 +35,19 @@ export class CareerService {
         break;
       }
     }
+    const newCareers = [];
     for (const item of careerInput) {
       const existTitle = await this.careerRepository.findOne({ where: { title: item.title } });
       if (existTitle) {
         throw new ConflictException('TITLE_EXISTED');
       }
-      let career = new CareerEntity();
+      const career = new CareerEntity();
       career.setAttributes(item);
       career.code = randomCode;
-      career = await this.careerRepository.save(career);
-      return {};
+      newCareers.push(career);
     }
+    await this.careerRepository.save(newCareers);
+    return {};
   }
   async getAllCareer(
     languageId: string,
@@ -168,7 +170,7 @@ export class CareerService {
           }
           const newCar = new CareerEntity();
           newCar.setAttributes(career);
-          newCar.code = career.code;
+          newCar.code = code;
           if (career.status === EResourceStatus.UNPUBLISH) {
             newCar.closingDate = new Date(moment().format('YYYY-MM-DD h:mm'));
           }
