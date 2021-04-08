@@ -139,9 +139,7 @@ export class CategoryService {
           const newCategory = new CategoryEntity();
           newCategory.setAttributes(item);
           newCategory.code = code;
-          if (status) {
-            newCategory.status = status;
-          }
+          newCategory.status = status;
           await transactionalEntityManager.save(CategoryEntity, newCategory);
         }
       }

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ECategoryType, EResourceStatus } from '../lib/constant';
+import { ECategoryType } from '../lib/constant';
 
 export class CreateCategoryInput {
   @ApiProperty({ required: true })
@@ -26,7 +26,4 @@ export class UpdateCategoryInput {
 
   @ApiProperty({ required: true })
   readonly link: string;
-
-  @ApiProperty({ required: true, enum: Object.values(EResourceStatus) })
-  readonly status: string;
 }

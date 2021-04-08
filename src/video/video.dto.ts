@@ -39,9 +39,6 @@ export class UpdateVideoInput {
   readonly languageId: string;
 
   @ApiProperty({ required: true })
-  readonly code: string;
-
-  @ApiProperty({ required: true })
   readonly title: string;
 
   @ApiProperty({ required: false })

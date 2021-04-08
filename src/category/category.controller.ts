@@ -49,7 +49,7 @@ export class CategoryController {
   @ApiBody({
     type: [UpdateCategoryInput],
   })
-  @ApiQuery({ name: 'status', required: false })
+  @ApiQuery({ name: 'status', required: true })
   async updateCate(
     @Param('code') code: string,
     @Body(new UpdateCatePipe()) cateInput: [UpdateCategoryInput],
