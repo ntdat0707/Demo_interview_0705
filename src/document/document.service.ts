@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, getManager, Repository } from 'typeorm';
 import { DocumentEntity } from '../entities/document.entity';
-import { EDocmentFlag } from '../lib/constant';
+import { EDocumentFlag } from '../lib/constant';
 import { DocumentInput, DocumentUpdateStatus } from './document.dto';
 import fs = require('fs');
 
@@ -20,7 +20,7 @@ export class DocumentService {
     let newDocument = new DocumentEntity();
     await this.connection.queryResultCache.clear();
     await getManager().transaction(async transactionalEntityManager => {
-      if (documentInput.flag === EDocmentFlag.ABOUT_US || documentInput.flag === EDocmentFlag.RESOURCE) {
+      if (documentInput.flag === EDocumentFlag.ABOUT_US || documentInput.flag === EDocumentFlag.RESOURCE) {
         const document = await this.documentRepository.findOne({ where: { flag: documentInput.flag } });
         if (document) {
           await transactionalEntityManager.softRemove<DocumentEntity>(document);

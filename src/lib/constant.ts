@@ -33,7 +33,7 @@ enum ECareerStatus {
   CLOSED = 'closed',
 }
 
-enum EDocmentFlag {
+enum EDocumentFlag {
   ABOUT_US = 'about_us',
   RESOURCE = 'resource',
   IMPORT = 'import',
@@ -51,7 +51,7 @@ export {
   EEducationLevelStatus,
   ECareerStatus,
   EFlagUploadVideo,
-  EDocmentFlag,
+  EDocumentFlag,
   ECategoryType,
   EFilterValue,
 };

@@ -1,6 +1,6 @@
 import { ArgumentMetadata, BadRequestException, PipeTransform } from '@nestjs/common';
 import { DocumentInput } from '../../../document/document.dto';
-import { EDocmentFlag, EResourceStatus } from '../../constant';
+import { EDocumentFlag, EResourceStatus } from '../../constant';
 
 export class DocumentPipe implements PipeTransform<any> {
   transform(value: DocumentInput, metadata: ArgumentMetadata) {
@@ -16,7 +16,7 @@ export class DocumentPipe implements PipeTransform<any> {
       throw new BadRequestException('FLAG_REQUIRED');
     } else {
       const flag: any = value.flag;
-      if (!Object.values(EDocmentFlag).includes(flag)) {
+      if (!Object.values(EDocumentFlag).includes(flag)) {
         throw new BadRequestException('FLAG_INVALID');
       }
     }

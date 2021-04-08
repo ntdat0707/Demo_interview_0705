@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import _ = require('lodash');
-import { Connection, getManager, LessThan, Repository } from 'typeorm';
+import { Connection, getManager, Not, Repository } from 'typeorm';
 import { BannerEntity } from '../entities/banner.entity';
 import { LanguageEntity } from '../entities/language.entity';
 import { BannerIndexInput, BannerInput } from './banner.dto';
@@ -171,7 +171,7 @@ export class BannerService {
 
   async updateIndexBanner(listBanner: [BannerIndexInput]) {
     this.logger.debug('update index banner');
-    const banners = await this.bannerRepository.find({ where: { index: LessThan(0) } });
+    const banners = await this.bannerRepository.find({ where: { index: Not(0) } });
     await getManager().transaction(async transactionalEntityManager => {
       await this.connection.queryResultCache.clear();
       for (const banner of banners) {
