@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import moment = require('moment');
 import { Brackets, Connection, getManager, Repository } from 'typeorm';
@@ -17,6 +17,16 @@ export class CareerService {
     @InjectRepository(LanguageEntity) private languageRepository: Repository<LanguageEntity>,
     private connection: Connection,
   ) {}
+
+  async uploadImage(image: any) {
+    this.logger.debug('upload image career');
+    if (!image) {
+      throw new BadRequestException('IMAGE_REQUIRED');
+    }
+    return {
+      data: image.filename,
+    };
+  }
 
   async createCareer(careerInput: [CreateCareerInput]) {
     this.logger.debug('create career');

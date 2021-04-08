@@ -1,6 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { EEducationLevelStatus, EResourceStatus } from '../lib/constant';
 
+export class CareerPictureInput {
+  @ApiProperty({ type: 'string', format: 'binary' })
+  readonly image: string;
+}
 export class CreateCareerInput {
   @ApiProperty({ required: true })
   readonly languageId: string;
@@ -49,6 +53,9 @@ export class CreateCareerInput {
 
   @ApiProperty({ type: Date, required: false })
   readonly closingDate: Date;
+
+  @ApiProperty({ required: false })
+  readonly avatar: string;
 }
 
 export class UpdateCareerInput {
@@ -110,4 +117,7 @@ export class UpdateCareerInput {
 
   @ApiProperty({ type: Date, required: false })
   readonly closingDate: Date;
+
+  @ApiProperty({ required: false })
+  readonly avatar: string;
 }

@@ -1,18 +1,41 @@
 import { CreateCareerPipe } from './../lib/validatePipe/career/createCareerPipe.class';
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseFilters } from '@nestjs/common';
-import { ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UploadedFile,
+  UseFilters,
+  UseInterceptors,
+} from '@nestjs/common';
+import { ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { CareerService } from './career.service';
-import { CreateCareerInput, UpdateCareerInput } from './career.dto';
+import { CareerPictureInput, CreateCareerInput, UpdateCareerInput } from './career.dto';
 import { UpdateCareerPipe } from '../lib/validatePipe/career/updateCareerPipe.class';
 import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
 import { ConvertArray } from '../lib/validatePipe/convertArrayPipe.class';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('career')
 @ApiTags('Career')
 @UseFilters(new HttpExceptionFilter())
 export class CareerController {
   constructor(private careerService: CareerService) {}
+
+  @Post('/upload-image-career')
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    type: CareerPictureInput,
+  })
+  async uploadImageBlog(@UploadedFile() image: CareerPictureInput) {
+    return await this.careerService.uploadImage(image);
+  }
 
   @Get()
   @ApiQuery({ name: 'languageId', required: true })
