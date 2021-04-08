@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Connection, getManager, In, Repository } from 'typeorm';
+import { Connection, getManager, In, Not, Repository } from 'typeorm';
 import { VideoEntity } from '../entities/video.entity';
 import { ECategoryType, EFilterValue, EFlagUploadVideo, EResourceStatus } from '../lib/constant';
 import { UpdateVideoInput, UploadVideoInput } from './video.dto';
@@ -17,7 +17,6 @@ export class VideoService {
     @InjectRepository(VideoEntity) private videoRepository: Repository<VideoEntity>,
     @InjectRepository(LanguageEntity) private languageRepository: Repository<LanguageEntity>,
     @InjectRepository(CategoryEntity) private categoryRepository: Repository<CategoryEntity>,
-    //@InjectRepository(VideoCateEntity) private videoCategoryRepository: Repository<VideoCateEntity>,
     private connection: Connection,
   ) {}
   async uploadVideoFile(video: any) {
@@ -68,11 +67,13 @@ export class VideoService {
         }
       }
       if (item.status === EResourceStatus.PUBLISH && item.flag === EFlagUploadVideo.HOMEPAGE) {
-        const checkPublishVideo = await this.videoRepository.findOne({
+        const checkPublishVideo = await this.videoRepository.find({
           where: { status: EResourceStatus.PUBLISH, flag: EFlagUploadVideo.HOMEPAGE },
         });
-        if (checkPublishVideo) {
-          throw new BadRequestException('CAN_NOT_PUBLISH_VIDEO_HOMEPAGE');
+        if (checkPublishVideo.length > 0) {
+          for (let i = 0; i < checkPublishVideo.length; i++) {
+            await this.videoRepository.update({ id: checkPublishVideo[i].id }, { status: EResourceStatus.UNPUBLISH });
+          }
         }
       }
       const newVideo = new VideoEntity();
@@ -80,7 +81,7 @@ export class VideoService {
       newVideo.id = uuidv4();
       newVideo.code = randomCode;
       newVideo.flag = item.flag;
-      if (item.flag === EFlagUploadVideo.RESOURCE) {
+      if (item.flag === EFlagUploadVideo.RESOURCE && item.categoryId) {
         const newVideoCate = new VideoCateEntity();
         newVideoCate.categoryId = item.categoryId;
         newVideoCate.videoId = newVideo.id;
@@ -203,11 +204,21 @@ export class VideoService {
             updateVideoInput.status !== checkVideo.status &&
             updateVideoInput.status === EResourceStatus.PUBLISH
           ) {
-            const checkPublishVideo = await this.videoRepository.findOne({
-              where: { status: EResourceStatus.PUBLISH, flag: EFlagUploadVideo.HOMEPAGE },
+            const checkPublishVideo = await this.videoRepository.find({
+              where: {
+                status: EResourceStatus.PUBLISH,
+                flag: EFlagUploadVideo.HOMEPAGE,
+                code: Not(code),
+              },
             });
-            if (checkPublishVideo) {
-              throw new BadRequestException('CAN_NOT_PUBLISH_VIDEO');
+            if (checkPublishVideo.length > 0) {
+              for (let i = 0; i < checkPublishVideo.length; i++) {
+                await transactionalEntityManager.update(
+                  VideoEntity,
+                  { id: checkPublishVideo[i].id },
+                  { status: EResourceStatus.UNPUBLISH },
+                );
+              }
             }
           }
           checkVideo.setAttributes(updateVideoInput);
@@ -223,11 +234,21 @@ export class VideoService {
             updateVideoInput.status === EResourceStatus.PUBLISH &&
             updateVideoInput.flag === EFlagUploadVideo.HOMEPAGE
           ) {
-            const checkPublishVideo = await this.videoRepository.findOne({
-              where: { code: code, status: EResourceStatus.PUBLISH, flag: EFlagUploadVideo.HOMEPAGE },
+            const checkPublishVideo = await this.videoRepository.find({
+              where: {
+                status: EResourceStatus.PUBLISH,
+                flag: EFlagUploadVideo.HOMEPAGE,
+                code: Not(code),
+              },
             });
-            if (checkPublishVideo) {
-              throw new BadRequestException('CAN_NOT_PUBLISH_VIDEO');
+            if (checkPublishVideo.length > 0) {
+              for (let i = 0; i < checkPublishVideo.length; i++) {
+                await transactionalEntityManager.update(
+                  VideoEntity,
+                  { id: checkPublishVideo[i].id },
+                  { status: EResourceStatus.UNPUBLISH },
+                );
+              }
             }
           }
           const newVideo: any = new VideoEntity();
