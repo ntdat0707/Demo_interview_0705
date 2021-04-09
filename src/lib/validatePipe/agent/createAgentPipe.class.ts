@@ -1,6 +1,6 @@
 import { ArgumentMetadata, BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
 import { AgentInput } from '../../../agent/agent.dto';
-import { EBannerStatus } from '../../constant';
+import { EResourceStatus } from '../../constant';
 import { checkEmail } from '../../pipeUtils/emailValidate';
 import { checkPhoneNumber } from '../../pipeUtils/phoneNumberValidate';
 
@@ -48,7 +48,7 @@ export class CreateAgentPipe implements PipeTransform<any> {
     }
     if (value.status) {
       const status: any = value.status;
-      if (!Object.values(EBannerStatus).includes(status)) {
+      if (!Object.values(EResourceStatus).includes(status)) {
         throw new BadRequestException('STATUS_INVALID');
       }
     }
