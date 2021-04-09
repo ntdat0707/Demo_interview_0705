@@ -5,7 +5,7 @@ export class CheckStatusPipe implements PipeTransform<any> {
   transform(value: any, metadata: ArgumentMetadata) {
     if (value) {
       if (value !== EResourceStatus.PUBLISH) {
-        throw new BadRequestException('STATUS_INVALID');
+        throw new BadRequestException('ONLY_ALLOW_STATUS_PUBLISH');
       }
     }
     return value;

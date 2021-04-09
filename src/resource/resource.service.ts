@@ -182,7 +182,7 @@ export class ResourceService {
       .limit(limit)
       .offset((page - 1) * limit);
     if (status) {
-      query.andWhere('resource."status"=:status', { status });
+      query.andWhere('resource.status=:status', { status });
     }
     if (searchValue) {
       searchValue = searchValue.replace(/  +/g, '');
