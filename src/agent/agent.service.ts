@@ -55,7 +55,7 @@ export class AgentService {
     if (agentInput.isSendMail === true) {
       try {
         const SEND_TO = 'nguyentandat.email07@gmail.com';
-        const pathFile = path.join(__dirname, '../../template/consulting.ejs');
+        const pathFile = path.join(__dirname, '../../template/vicoEmail.ejs');
         const dataEmail = {
           name: agentInput.contactName,
           country: agentInput.country,
@@ -66,7 +66,7 @@ export class AgentService {
         };
         ejs.renderFile(pathFile, dataEmail, async (err, data) => {
           if (err) {
-            //   console.log(err);
+            //console.log(err);
           } else {
             // console.log('OK Send mail::');
             await executeSendingEmail({
