@@ -77,11 +77,12 @@ export class CareerService {
         }
       }
       cacheKey += `searchValue${newSearchCountry}`;
-      const bracket = new Brackets(qb => {
-        qb.andWhere(`LOWER(convertTVkdau("career"."country")) In (:...countries)`, { countries: newSearchCountry });
+      careerQuery.andWhere(`lower("career"."country") like :value`, {
+        value: `%${newSearchCountry}%`,
       });
-      careerQuery.andWhere(bracket);
-      countQuery.andWhere(bracket);
+      countQuery.andWhere(`lower("career"."country") like :value`, {
+        value: `%${newSearchCountry}%`,
+      });
     }
 
     if (status) {
@@ -93,15 +94,14 @@ export class CareerService {
       countQuery.andWhere(bracket);
     }
     if (searchValue) {
-      searchValue = searchValue.replace(/  +/g, '');
-      const titleConvert = convertTv(searchValue.trim());
-      const searchTitle = `%${titleConvert}%`;
-      cacheKey += `searchValue${searchTitle}`;
-      const bracket = new Brackets(qb => {
-        qb.andWhere(`LOWER(convertTVkdau("career"."title")) like '${searchTitle}'`);
+      searchValue = convertTv(searchValue.replace(/  +/g, '').trim());
+      cacheKey += `searchValue${searchValue}`;
+      careerQuery.andWhere(`lower("career"."title") like :value`, {
+        value: `%${searchValue}%`,
       });
-      careerQuery.andWhere(bracket);
-      countQuery.andWhere(bracket);
+      countQuery.andWhere(`lower("career"."title") like :value`, {
+        value: `%${searchValue}%`,
+      });
     }
 
     let count: any = 0;

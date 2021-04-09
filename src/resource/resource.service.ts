@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import _ = require('lodash');
-import { Brackets, Connection, getManager, In, Repository } from 'typeorm';
+import { Connection, getManager, In, Repository } from 'typeorm';
 import { AuthorEntity } from '../entities/author.entity';
 import { CategoryEntity } from '../entities/category.entity';
 import { LabelEntity } from '../entities/label.entity';
@@ -185,14 +185,11 @@ export class ResourceService {
       query.andWhere('resource.status=:status', { status });
     }
     if (searchValue) {
-      searchValue = searchValue.replace(/  +/g, '');
-      const titleConvert = convertTv(searchValue.trim());
-      const searchTitle = `%${titleConvert}%`;
-      cacheKey += `searchValue${searchTitle}`;
-      const bracket = new Brackets(qb => {
-        qb.andWhere(`LOWER(convertTVkdau("resource"."title")) like '${searchTitle}'`);
+      searchValue = convertTv(searchValue.replace(/  +/g, '').trim());
+      cacheKey += `searchValue${searchValue}`;
+      query.andWhere(`lower("resource"."title") like :value`, {
+        value: `%${searchValue}%`,
       });
-      query.andWhere(bracket);
     }
     if (filterValue && filterValue === EFilterValue.BY_VIEW) {
       query.orderBy('resource."views"', 'DESC');
