@@ -38,6 +38,8 @@ export class VideoController {
   @ApiQuery({ name: 'searchValue', required: false, type: String })
   @ApiQuery({ name: 'filterValue', required: false, type: String })
   @ApiQuery({ name: 'categoryId', required: false, type: String })
+  @ApiQuery({ name: 'page', type: String, required: false })
+  @ApiQuery({ name: 'limit', type: String, required: false })
   async getAllVideo(
     @Query('flag', new CheckFlagPipe()) flag: string,
     @Query('page', new CheckUnSignIntPipe()) page: number,
