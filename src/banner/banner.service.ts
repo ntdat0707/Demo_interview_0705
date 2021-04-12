@@ -189,14 +189,14 @@ export class BannerService {
     this.logger.debug('get all banner web');
     const currentDate = new Date();
     const status = EBannerStatus.ACTIVE;
-    const banners = this.bannerRepository
+    await this.connection.queryResultCache.clear();
+    const banners = await this.bannerRepository
       .createQueryBuilder('banner')
-      .where(`language_id = :value`, { value: `${languageId}` })
+      .where('language_id = :languageId', { languageId })
       .andWhere('valid_to >= :currentDate', { currentDate })
       .andWhere('status = :status', { status })
       .orderBy('index', 'DESC')
       .getMany();
-    await this.connection.queryResultCache.clear();
     return {
       data: banners,
     };

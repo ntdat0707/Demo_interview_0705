@@ -135,6 +135,7 @@ export class ResourceService {
     filterValue?: string,
     categoryId?: string,
   ) {
+    this.logger.debug('get all resource');
     await this.connection.queryResultCache.clear();
     let cacheKey = 'filter_resource';
     const resourceQuery = this.resourceRepository
