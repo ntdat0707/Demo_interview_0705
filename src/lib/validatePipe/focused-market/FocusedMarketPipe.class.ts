@@ -29,9 +29,6 @@ export class FocusedMarketPipe implements PipeTransform<any> {
           throw new BadRequestException('STATUS_INVALID');
         }
       }
-      if (!item.isPublish) {
-        throw new BadRequestException('IS_PUBLISH_REQUIRED');
-      }
       if (item.publishDate) {
         if (!checkDateTime(item.publishDate)) {
           throw new BadRequestException('PUBLISH_DATE_REQUIRED');
