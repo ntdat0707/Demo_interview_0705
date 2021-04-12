@@ -42,14 +42,8 @@ export class BannerController {
 
   @Get('/web/all')
   @ApiQuery({ name: 'languageId', required: true, type: String })
-  @ApiQuery({ name: 'page', type: String, required: false })
-  @ApiQuery({ name: 'limit', type: String, required: false })
-  async getAllBannerWeb(
-    @Query('page', new CheckUnSignIntPipe()) page: number,
-    @Query('limit', new CheckUnSignIntPipe()) limit: number,
-    @Query('languageId', new CheckUUID()) languageId: string,
-  ) {
-    return await this.bannerService.getAllBannerWeb(languageId, page, limit);
+  async getAllBannerWeb(@Query('languageId', new CheckUUID()) languageId: string) {
+    return await this.bannerService.getAllBannerWeb(languageId);
   }
 
   @Get('/:code')

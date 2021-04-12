@@ -154,7 +154,7 @@ export class BannerService {
     const queryExc = this.bannerRepository
       .createQueryBuilder('banner')
       .where(`language_id = :value`, { value: `${languageId}` })
-      .orderBy('banner_valid_to', 'DESC')
+      .orderBy('created_at', 'DESC')
       .limit(limit)
       .offset((page - 1) * limit);
     await this.connection.queryResultCache.clear();
@@ -185,32 +185,20 @@ export class BannerService {
     return {};
   }
 
-  async getAllBannerWeb(
-    languageId: string,
-    page = 1,
-    limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
-  ) {
+  async getAllBannerWeb(languageId: string) {
     this.logger.debug('get all banner web');
     const currentDate = new Date();
     const status = EBannerStatus.ACTIVE;
-    const queryExc = this.bannerRepository
+    const banners = this.bannerRepository
       .createQueryBuilder('banner')
       .where(`language_id = :value`, { value: `${languageId}` })
       .andWhere('valid_to >= :currentDate', { currentDate })
       .andWhere('status = :status', { status })
-      .orderBy('banner_valid_to', 'DESC')
-      .limit(limit)
-      .offset((page - 1) * limit);
+      .orderBy('index', 'DESC')
+      .getMany();
     await this.connection.queryResultCache.clear();
-    const countResult = await queryExc.cache(`banners_count_page${page}_limit${limit}`).getCount();
-    const result = await queryExc.cache(`banners__page${page}_limit${limit}`).getMany();
-    const pages = Math.ceil(Number(countResult) / limit);
     return {
-      page: Number(page),
-      totalPages: pages,
-      limit: Number(limit),
-      totalRecords: countResult,
-      data: result,
+      data: banners,
     };
   }
 }
