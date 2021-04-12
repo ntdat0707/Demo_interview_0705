@@ -255,6 +255,7 @@ export class VideoService {
           const newVideo: any = new VideoEntity();
           newVideo.setAttributes(updateVideoInput);
           newVideo.code = code;
+          newVideo.flag = updateVideoInput.flag;
           await transactionalEntityManager.save<VideoEntity>(newVideo);
         }
       }
