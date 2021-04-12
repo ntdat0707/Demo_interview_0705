@@ -112,6 +112,7 @@ export class VideoService {
       .where({ flag: flag, languageId: languageId })
       .limit(limit)
       .offset((page - 1) * limit);
+
     if (status) {
       queryExc.andWhere('status = :status', { status });
     }
@@ -187,9 +188,9 @@ export class VideoService {
     await getManager().transaction(async transactionalEntityManager => {
       for (const updateVideoInput of updatesVideoInput) {
         if (updateVideoInput.id) {
-          const checkVideo = await this.videoRepository.findOne({ where: { code: code } });
+          const checkVideo = await this.videoRepository.findOne({ where: { id: updateVideoInput.id, code: code } });
           if (!checkVideo) {
-            throw new NotFoundException(`VIDEO_${code}_NOT_FOUND`);
+            throw new NotFoundException(`VIDEO_${updateVideoInput.id}_NOT_FOUND`);
           }
           if (checkVideo.title !== updateVideoInput.title) {
             const existTitle = await this.videoRepository.findOne({
