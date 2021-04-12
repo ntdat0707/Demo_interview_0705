@@ -136,12 +136,18 @@ export class ResourceService {
     categoryId?: string,
   ) {
     await this.connection.queryResultCache.clear();
+    let cacheKey = 'filter_resource';
     const resourceQuery = this.resourceRepository
       .createQueryBuilder('resource')
       .where('resource."language_id" =:languageId ', {
         languageId,
       });
-    let cacheKey = 'filter_resource';
+    const queryCount = this.resourceRepository
+      .createQueryBuilder('resource')
+      .where('resource."language_id" =:languageId ', {
+        languageId,
+      });
+
     const query: any = resourceQuery
       .leftJoinAndMapMany(
         'resource.authors',
@@ -153,19 +159,19 @@ export class ResourceService {
         'resource_author.authorInformation',
         AuthorEntity,
         'author',
-        '"author".id="resource_author"."author_id"  ',
+        '"author".id="resource_author"."author_id" and "author".deleted_at is null',
       )
-      .leftJoinAndMapOne(
+      .leftJoinAndMapMany(
         'resource.labels',
         ResourceLabelEntity,
         'resource_label',
         '"resource_label"."resource_id"="resource".id and resource_label.deleted_at is null',
       )
-      .leftJoinAndMapMany(
+      .leftJoinAndMapOne(
         'resource_label.labelInformation',
         LabelEntity,
         'label',
-        '"label".id = "resource_label"."label_id"',
+        '"label".id = "resource_label"."label_id" and "label".deleted_at is null',
       )
       .leftJoinAndMapMany(
         'resource.categories',
@@ -177,7 +183,7 @@ export class ResourceService {
         'resource_category.categoryInformation',
         CategoryEntity,
         'category',
-        '"category".id = "resource_category"."category_id"',
+        '"category".id = "resource_category"."category_id" and "category".deleted_at is null',
       )
       .limit(limit)
       .offset((page - 1) * limit);
@@ -205,9 +211,10 @@ export class ResourceService {
         categoryId: categoryId,
         type: ECategoryType.POST,
       });
+      cacheKey += `filterCategory${categoryId}`;
     }
     let count: any = 0;
-    count = await query.cache(`${cacheKey}_count_page${page}_limit${limit}`).getCount();
+    count = await queryCount.cache(`${cacheKey}_count_page${page}_limit${limit}`).getCount();
     const resourcesOutput = await query.cache(`${cacheKey}_page${page}_limit${limit}`).getMany();
 
     const pages = Math.ceil(Number(count) / limit);
