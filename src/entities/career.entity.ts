@@ -36,6 +36,9 @@ export class CareerEntity {
   @Column('varchar')
   currency: string;
 
+  @Column('text', { name: 'avatar', nullable: true })
+  avatar: string;
+
   @Column('boolean', { name: 'is_edit_salary', default: false })
   isEditSalary: boolean;
 
@@ -79,5 +82,6 @@ export class CareerEntity {
     this.contactInformation = object.contactInformation ? object.contactInformation : null;
     this.status = object.status;
     this.closingDate = object.closingDate ? object.closingDate : null;
+    this.avatar = object.avatar ? object.avatar : null;
   }
 }
