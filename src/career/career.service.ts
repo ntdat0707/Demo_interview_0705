@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import moment = require('moment');
-import { Brackets, Connection, getManager, Repository } from 'typeorm';
+import { Connection, getManager, Repository } from 'typeorm';
 import { CareerEntity } from '../entities/career.entity';
 import { LanguageEntity } from '../entities/language.entity';
 import { EResourceStatus } from '../lib/constant';
@@ -66,7 +66,6 @@ export class CareerService {
       .limit(limit)
       .offset((page - 1) * limit)
       .orderBy('created_at', 'DESC');
-    const countQuery: any = this.careerRepository.createQueryBuilder('career');
 
     if (countries?.length > 0) {
       const newSearchCountry = [];
@@ -80,18 +79,11 @@ export class CareerService {
       careerQuery.andWhere(`lower("career"."country") like :value`, {
         value: `%${newSearchCountry}%`,
       });
-      countQuery.andWhere(`lower("career"."country") like :value`, {
-        value: `%${newSearchCountry}%`,
-      });
     }
 
     if (status) {
       cacheKey += `searchValue${status}`;
-      const bracket = new Brackets(qb => {
-        qb.andWhere('"career"."status" = :status', { status });
-      });
-      careerQuery.andWhere(bracket);
-      countQuery.andWhere(bracket);
+      careerQuery.andWhere('"career"."status" = :status', { status });
     }
     if (searchValue) {
       searchValue = convertTv(searchValue.replace(/  +/g, '').trim());
@@ -99,13 +91,10 @@ export class CareerService {
       careerQuery.andWhere(`lower("career"."title") like :value`, {
         value: `%${searchValue}%`,
       });
-      countQuery.andWhere(`lower("career"."title") like :value`, {
-        value: `%${searchValue}%`,
-      });
     }
 
     let count: any = 0;
-    count = await countQuery.cache(`${cacheKey}_count_page${page}_limit${limit}`).getCount();
+    count = await careerQuery.cache(`${cacheKey}_count_page${page}_limit${limit}`).getCount();
     const careers = await careerQuery.cache(`${cacheKey}_page${page}_limit${limit}`).getMany();
     const pages = Math.ceil(Number(count) / limit);
     return {
