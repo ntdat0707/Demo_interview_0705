@@ -8,22 +8,18 @@ import { ResourceEntity } from '../entities/resource.entity';
 import { ResourceController } from './resource.controller';
 import { ResourceService } from './resource.service';
 import * as shortid from 'shortid';
-import { ResourceAuthorEntity } from '../entities/resourceAuthor.entity';
 import { ResourceCateEntity } from '../entities/resourceCate.entity';
 import { ResourceLabelEntity } from '../entities/resourceLabel.entity';
 import { CategoryEntity } from '../entities/category.entity';
-import { AuthorEntity } from '../entities/author.entity';
 import { LanguageEntity } from '../entities/language.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       ResourceEntity,
-      ResourceAuthorEntity,
       ResourceCateEntity,
       ResourceLabelEntity,
       CategoryEntity,
       LabelEntity,
-      AuthorEntity,
       LanguageEntity,
     ]),
     MulterModule.registerAsync({

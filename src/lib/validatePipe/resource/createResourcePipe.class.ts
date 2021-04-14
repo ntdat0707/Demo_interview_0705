@@ -27,11 +27,6 @@ export class CreateResourcePipe implements PipeTransform<any> {
           }
         }
       }
-      if (value.authorId) {
-        if (!checkUUID(value.authorId)) {
-          throw new BadRequestException('AUTHOR_ID_INVALID');
-        }
-      }
 
       if (value.labelIds) {
         for (const item of value.labelIds) {

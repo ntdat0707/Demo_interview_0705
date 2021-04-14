@@ -9,6 +9,9 @@ export class ResourceEntity {
   @Column('varchar')
   title: string;
 
+  @Column('varchar', { nullable: true })
+  author: string;
+
   @Column('varchar', { default: EResourceStatus.UNPUBLISH })
   status: string;
 
@@ -20,6 +23,9 @@ export class ResourceEntity {
 
   @Column('text', { name: 'avatar', nullable: true })
   avatar: string;
+
+  @Column('varchar', { name: 'short_description', nullable: true })
+  shortDescription: string;
 
   @Column('varchar', { nullable: true })
   description: string;
@@ -56,9 +62,11 @@ export class ResourceEntity {
 
   setAttributes(object: any) {
     this.title = object.title;
+    this.author = object.author ? object.author : null;
     this.status = object.status;
     this.isPublish = object.isPublish ? object.isPublish : false;
     this.publishDate = object.publishDate ? object.publishDate : null;
+    this.shortDescription = object.shortDescription ? object.shortDescription : null;
     this.description = object.description ? object.description : null;
     this.isEditSEO = object.isEditSEO ? object.isEditSEO : false;
     this.titleSEO = object.titleSEO ? object.titleSEO : null;

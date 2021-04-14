@@ -8,6 +8,9 @@ export class CreateResourceInput {
   @ApiProperty({ required: true })
   readonly title: string;
 
+  @ApiProperty({ required: false })
+  readonly author: string;
+
   @ApiProperty({ enum: ['publish', 'unpublish'] })
   readonly status: string;
 
@@ -18,7 +21,10 @@ export class CreateResourceInput {
   readonly publishDate: string;
 
   @ApiProperty({ required: false })
-  readonly description?: string;
+  readonly shortDescription: string;
+
+  @ApiProperty({ required: false })
+  readonly description: string;
 
   @ApiProperty({ type: Boolean, required: false })
   readonly isEditSEO: boolean;
@@ -34,9 +40,6 @@ export class CreateResourceInput {
 
   @ApiProperty({ type: [String], required: false })
   readonly categoryIds?: string[];
-
-  @ApiProperty({ required: false })
-  readonly authorId: string;
 
   @ApiProperty({ type: [String], required: false })
   readonly labelIds?: string[];
@@ -58,6 +61,9 @@ export class UpdateResourceInput {
   @ApiProperty({ required: false })
   readonly title: string;
 
+  @ApiProperty({ required: false })
+  readonly author: string;
+
   @ApiProperty({ enum: ['publish', 'unpublish'] })
   readonly status: string;
 
@@ -68,7 +74,10 @@ export class UpdateResourceInput {
   readonly publishDate: string;
 
   @ApiProperty({ required: false })
-  readonly description?: string;
+  readonly shortDescription: string;
+
+  @ApiProperty({ required: false })
+  readonly description: string;
 
   @ApiProperty({ type: Boolean, required: false })
   readonly isEditSEO: boolean;
@@ -84,9 +93,6 @@ export class UpdateResourceInput {
 
   @ApiProperty({ type: [String], required: false })
   readonly categoryIds?: string[];
-
-  @ApiProperty({ required: false })
-  readonly authorId: string;
 
   @ApiProperty({ type: [String], required: false })
   readonly labelIds?: string[];

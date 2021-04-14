@@ -2,12 +2,10 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { InjectRepository } from '@nestjs/typeorm';
 import _ = require('lodash');
 import { Connection, getManager, In, Repository } from 'typeorm';
-import { AuthorEntity } from '../entities/author.entity';
 import { CategoryEntity } from '../entities/category.entity';
 import { LabelEntity } from '../entities/label.entity';
 import { LanguageEntity } from '../entities/language.entity';
 import { ResourceEntity } from '../entities/resource.entity';
-import { ResourceAuthorEntity } from '../entities/resourceAuthor.entity';
 import { ResourceCateEntity } from '../entities/resourceCate.entity';
 import { ResourceLabelEntity } from '../entities/resourceLabel.entity';
 import { ECategoryType, EFilterValue } from '../lib/constant';
@@ -22,17 +20,12 @@ export class ResourceService {
   constructor(
     @InjectRepository(ResourceEntity)
     private resourceRepository: Repository<ResourceEntity>,
-    @InjectRepository(ResourceAuthorEntity)
-    private resourceAuthorRepository: Repository<ResourceAuthorEntity>,
     @InjectRepository(ResourceCateEntity)
     private resourceCateRepository: Repository<ResourceCateEntity>,
     @InjectRepository(ResourceLabelEntity)
     private resourceLabelEntityRepository: Repository<ResourceLabelEntity>,
-
     @InjectRepository(CategoryEntity)
     private cateRepository: Repository<CategoryEntity>,
-    @InjectRepository(AuthorEntity)
-    private authorRepository: Repository<AuthorEntity>,
     @InjectRepository(LabelEntity)
     private labelRepository: Repository<LabelEntity>,
     @InjectRepository(LanguageEntity)
@@ -90,19 +83,6 @@ export class ResourceService {
           }
           await transactionalEntityManager.save<ResourceCateEntity[]>(resourceCateList);
         }
-        this.logger.debug('Create resource author');
-        if (createResource.authorId) {
-          //check author
-          const author = await this.authorRepository.findOne({ where: { id: createResource.authorId } });
-          if (!author) {
-            throw new NotFoundException('AUTHOR_NOT_FOUND');
-          }
-          const resourceAuthor = new ResourceAuthorEntity();
-          resourceAuthor.resourceId = newResource.id;
-          resourceAuthor.authorId = createResource.authorId;
-          await this.connection.queryResultCache.clear();
-          await transactionalEntityManager.save<ResourceAuthorEntity>(resourceAuthor);
-        }
         this.logger.debug('Create resource labels');
         if (createResource.labelIds && createResource.labelIds.length > 0) {
           //check label
@@ -150,18 +130,6 @@ export class ResourceService {
       });
 
     const query: any = resourceQuery
-      .leftJoinAndMapMany(
-        'resource.authors',
-        ResourceAuthorEntity,
-        'resource_author',
-        '"resource_author"."resource_id"="resource".id and resource_author.deleted_at is null',
-      )
-      .leftJoinAndMapOne(
-        'resource_author.authorInformation',
-        AuthorEntity,
-        'author',
-        '"author".id="resource_author"."author_id" and "author".deleted_at is null',
-      )
       .leftJoinAndMapMany(
         'resource.labels',
         ResourceLabelEntity,
@@ -218,6 +186,9 @@ export class ResourceService {
     count = await queryCount.cache(`${cacheKey}_count_page${page}_limit${limit}`).getCount();
     const resourcesOutput = await query.cache(`${cacheKey}_page${page}_limit${limit}`).getMany();
 
+    resourcesOutput.map((item: any) => {
+      delete item.description;
+    });
     const pages = Math.ceil(Number(count) / limit);
     return {
       page: Number(page),
@@ -229,22 +200,11 @@ export class ResourceService {
   }
 
   async getResources(code: any, languageId?: string) {
+    this.logger.debug('get resource');
     await this.connection.queryResultCache.clear();
     const query: any = this.resourceRepository
       .createQueryBuilder('resource')
       .where('"resource".code=:code', { code })
-      .leftJoinAndMapMany(
-        'resource.authors',
-        ResourceAuthorEntity,
-        'resource_author',
-        '"resource_author"."resource_id"="resource".id and resource_author.deleted_at is null',
-      )
-      .leftJoinAndMapOne(
-        'resource_author.authorInformation',
-        AuthorEntity,
-        'author',
-        '"author".id="resource_author"."author_id"  ',
-      )
       .leftJoinAndMapMany(
         'resource.labels',
         ResourceLabelEntity,
@@ -287,6 +247,7 @@ export class ResourceService {
   }
 
   async getResourceSEO(link: string, languageId: string) {
+    this.logger.debug('get resource SEO');
     await this.connection.queryResultCache.clear();
     const resource: any = await this.resourceRepository
       .createQueryBuilder('resource')
@@ -294,13 +255,6 @@ export class ResourceService {
         link,
         languageId,
       })
-      .leftJoinAndMapMany(
-        'resource.authors',
-        ResourceAuthorEntity,
-        'resource_author',
-        '"resource_author"."resource_id"="resource".id and resource_author.deleted_at is null',
-      )
-      .leftJoinAndMapOne('authors', AuthorEntity, 'author', '"author".id="resource_author"."author_id" ')
       .leftJoinAndMapMany(
         'resource.labels',
         ResourceLabelEntity,
@@ -336,64 +290,15 @@ export class ResourceService {
           if (index > -1) {
             currResource = currResources[index];
           }
-          //update Author
-          this.logger.debug('Update resource author');
-          if (!resourceUpdate.authorId) {
-            const resourceAuthor = await this.resourceAuthorRepository.findOne({
-              where: { resourceId: currResource.id },
-            });
-            await transactionalEntityManager.softRemove<ResourceAuthorEntity>(resourceAuthor);
-          } else {
-            const author = await this.authorRepository.findOne({ where: { id: resourceUpdate.authorId } });
-            if (!author) {
-              throw new NotFoundException(`AUTHOR_${resourceUpdate.authorId}_NOT_FOUND`);
-            }
-            const resourceAuthor = await this.resourceAuthorRepository.findOne({
-              where: { resourceId: currResource.id },
-            });
-            if (resourceAuthor) {
-              resourceAuthor.authorId = resourceUpdate.authorId;
-              await transactionalEntityManager.update(
-                ResourceAuthorEntity,
-                { resourceId: currResource.id },
-                { authorId: resourceUpdate.authorId },
-              );
-            } else {
-              const resourceAuthorData = new ResourceAuthorEntity();
-              resourceAuthorData.resourceId = currResource.id;
-              resourceAuthorData.authorId = resourceUpdate.authorId;
-              await transactionalEntityManager.save<ResourceAuthorEntity>(resourceAuthorData);
-            }
-          }
           //update label
           this.logger.debug('Update resource labels');
           const resourceLabels = await this.resourceLabelEntityRepository.find({
             where: { resourceId: resourceUpdate.id },
           });
-          if (resourceLabels.length === 0) {
-            const resourceLabelList = [];
-            for (const item of resourceUpdate.labelIds) {
-              const label = await this.labelRepository.findOne({ where: { id: item } });
-              if (!label) {
-                throw new NotFoundException(`LABEL_${item}_NOT_FOUND`);
-              }
-              const resourceLabel = new ResourceLabelEntity();
-              resourceLabel.resourceId = resourceUpdate.id;
-              resourceLabel.labelId = item;
-              resourceLabelList.push(resourceLabel);
-            }
-            await transactionalEntityManager.save<ResourceLabelEntity[]>(resourceLabelList);
-          } else {
-            const currResourceLabelIds = resourceLabels.map((item: any) => item.labelId);
-            const diff = _.difference(currResourceLabelIds, resourceUpdate.labelIds);
-            if (diff.length > 0) {
-              const deleteResources = await this.resourceLabelEntityRepository.find({ where: { labelId: In(diff) } });
-              await transactionalEntityManager.softRemove<ResourceLabelEntity[]>(deleteResources);
-            }
-            const add = _.difference(resourceUpdate.labelIds, currResourceLabelIds);
-            if (add.length > 0) {
+          if (resourceUpdate.labelIds && resourceUpdate.labelIds.length) {
+            if (resourceLabels.length === 0) {
               const resourceLabelList = [];
-              for (const item of add) {
+              for (const item of resourceUpdate.labelIds) {
                 const label = await this.labelRepository.findOne({ where: { id: item } });
                 if (!label) {
                   throw new NotFoundException(`LABEL_${item}_NOT_FOUND`);
@@ -404,8 +309,35 @@ export class ResourceService {
                 resourceLabelList.push(resourceLabel);
               }
               await transactionalEntityManager.save<ResourceLabelEntity[]>(resourceLabelList);
+            } else {
+              const currResourceLabelIds = resourceLabels.map((item: any) => item.labelId);
+              const diff = _.difference(currResourceLabelIds, resourceUpdate.labelIds);
+              if (diff.length > 0) {
+                const deleteResources = await this.resourceLabelEntityRepository.find({ where: { labelId: In(diff) } });
+                await transactionalEntityManager.softRemove<ResourceLabelEntity[]>(deleteResources);
+              }
+              const add = _.difference(resourceUpdate.labelIds, currResourceLabelIds);
+              if (add.length > 0) {
+                const resourceLabelList = [];
+                for (const item of add) {
+                  const label = await this.labelRepository.findOne({ where: { id: item } });
+                  if (!label) {
+                    throw new NotFoundException(`LABEL_${item}_NOT_FOUND`);
+                  }
+                  const resourceLabel = new ResourceLabelEntity();
+                  resourceLabel.resourceId = resourceUpdate.id;
+                  resourceLabel.labelId = item;
+                  resourceLabelList.push(resourceLabel);
+                }
+                await transactionalEntityManager.save<ResourceLabelEntity[]>(resourceLabelList);
+              }
+            }
+          } else {
+            if (resourceLabels.length) {
+              await transactionalEntityManager.softRemove<ResourceLabelEntity[]>(resourceLabels);
             }
           }
+
           //update category
           this.logger.debug('Update resource categories');
           const resourceCates = await this.resourceCateRepository.find({
@@ -475,19 +407,6 @@ export class ResourceService {
             }
             await transactionalEntityManager.save<ResourceCateEntity[]>(resourceCateList);
           }
-          this.logger.debug('Create resource author');
-          if (resourceUpdate.authorId) {
-            //check author
-            const author = await this.authorRepository.findOne({ where: { id: resourceUpdate.authorId } });
-            if (!author) {
-              throw new NotFoundException(`AUTHOR_${resourceUpdate.authorId}_NOT_FOUND`);
-            }
-            const resourceAuthor = new ResourceAuthorEntity();
-            resourceAuthor.resourceId = newResource.id;
-            resourceAuthor.authorId = resourceUpdate.authorId;
-            await this.connection.queryResultCache.clear();
-            await transactionalEntityManager.save<ResourceAuthorEntity>(resourceAuthor);
-          }
           this.logger.debug('Create resource labels');
           if (resourceUpdate.labelIds && resourceUpdate.labelIds.length > 0) {
             //check label
@@ -517,15 +436,11 @@ export class ResourceService {
       throw new NotFoundException('RESOURCE_NOT_FOUND');
     }
     for (const resource of resources) {
-      const resourceAuthor: any = await this.resourceAuthorRepository.findOne({ where: { resourceId: resource.id } });
       const resourceCateList: any = await this.resourceCateRepository.find({ where: { resourceId: resource.id } });
       const resourceLabel: any = await this.resourceLabelEntityRepository.find({ where: { resourceId: resource.id } });
       await this.connection.queryResultCache.clear();
       await getManager().transaction(async transactionalEntityManager => {
         await transactionalEntityManager.softDelete(ResourceEntity, resource);
-        if (resourceAuthor) {
-          await transactionalEntityManager.softRemove(ResourceAuthorEntity, resourceAuthor);
-        }
         if (resourceCateList.length > 0) {
           await transactionalEntityManager.softRemove(ResourceCateEntity, resourceCateList);
         }
