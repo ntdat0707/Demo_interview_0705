@@ -27,7 +27,7 @@ export class ResourceEntity {
   @Column('varchar', { name: 'short_description', nullable: true })
   shortDescription: string;
 
-  @Column('varchar', { nullable: true })
+  @Column('text', { nullable: true })
   description: string;
 
   @Column('boolean', { name: 'is_edit_seo', default: false })
