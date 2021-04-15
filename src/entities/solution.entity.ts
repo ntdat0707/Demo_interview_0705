@@ -27,7 +27,7 @@ export class SolutionEntity {
   @Column('timestamptz', { name: 'publish_date', nullable: true })
   publishDate: Date;
 
-  @Column('varchar', { name: 'description', nullable: true })
+  @Column('text', { name: 'description', nullable: true })
   description: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', select: false })

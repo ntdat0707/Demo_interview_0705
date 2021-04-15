@@ -18,9 +18,6 @@ export class BannerEntity {
   @Column({ default: 0, nullable: true })
   index: number;
 
-  @Column('varchar', { nullable: true })
-  description: string;
-
   @Column('text', { name: 'text_color', nullable: true })
   textColor: string;
 
@@ -63,7 +60,6 @@ export class BannerEntity {
   setAttributes(object: any) {
     this.languageId = object.languageId;
     this.title = object.title;
-    this.description = object.description ? object.description : null;
     this.textColor = object.textColor ? object.textColor : null;
     this.image = object.image ? object.image : null;
     this.imageAlt = object.imageAlt ? object.imageAlt : null;

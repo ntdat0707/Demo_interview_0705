@@ -11,9 +11,6 @@ export class BannerInput {
   readonly title: string;
 
   @ApiProperty({ required: false })
-  readonly description: string;
-
-  @ApiProperty({ required: false })
   readonly textColor: string;
 
   @ApiProperty({ required: false })
