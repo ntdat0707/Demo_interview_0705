@@ -14,6 +14,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
+import { CheckStatusPipe } from '../lib/validatePipe/checkStatusPipe.class';
 import { CheckLanguagePipe } from '../lib/validatePipe/focused-market/checkLanguagePipe.class';
 import { FocusedMarketPipe } from '../lib/validatePipe/focused-market/FocusedMarketPipe.class';
 import { CheckUUID } from '../lib/validatePipe/uuidPipe.class';
@@ -38,8 +39,12 @@ export class FocusedMarketController {
 
   @Get('')
   @ApiQuery({ name: 'languageId', required: true, type: String })
-  async getAllFocusedMarket(@Query('languageId', new CheckUUID()) languageId: string) {
-    return await this.focusedMarketService.getAllFocusedMarket(languageId);
+  @ApiQuery({ name: 'status', type: String, required: false })
+  async getAllFocusedMarket(
+    @Query('languageId', new CheckUUID()) languageId: string,
+    @Query('status', new CheckStatusPipe()) status: string,
+  ) {
+    return await this.focusedMarketService.getAllFocusedMarket(languageId, status);
   }
 
   @Get('/:code')
