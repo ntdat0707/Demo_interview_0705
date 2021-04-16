@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EBannerStatus } from '../lib/constant';
+import { EResourceStatus } from '../lib/constant';
 
 export class AgentInput {
   @ApiProperty({ required: true })
@@ -42,7 +42,7 @@ export class AgentInput {
   readonly description: string;
 
   @ApiProperty({
-    enum: [...Object.values(EBannerStatus)],
+    enum: [...Object.values(EResourceStatus)],
   })
   readonly status: string;
 }
