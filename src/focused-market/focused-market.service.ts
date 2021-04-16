@@ -87,13 +87,16 @@ export class FocusedMarketService {
     return {};
   }
 
-  async getAllFocusedMarket(languageId: string) {
+  async getAllFocusedMarket(languageId: string, status?: string) {
     this.logger.debug('get all focused market');
-    const focusedMarket = await this.focusedMarketRepository
+    const queryExc = this.focusedMarketRepository
       .createQueryBuilder('focused_market')
       .where(`language_id = :value`, { value: `${languageId}` })
-      .orderBy('created_at', 'DESC')
-      .getMany();
+      .orderBy('created_at', 'DESC');
+    if (status) {
+      queryExc.andWhere('status = :status', { status });
+    }
+    const focusedMarket = await queryExc.getMany();
     return {
       data: focusedMarket,
     };

@@ -64,7 +64,7 @@ export class CareerService {
     page = 1,
     limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
     searchValue: string,
-    status: string,
+    status: string[],
     countries?: string[],
   ) {
     this.logger.debug('get-all-career');
@@ -91,9 +91,9 @@ export class CareerService {
       });
     }
 
-    if (status) {
+    if (status?.length > 0) {
       cacheKey += `searchValue${status}`;
-      careerQuery.andWhere('"career"."status" = :status', { status });
+      careerQuery.andWhere(`status in (:...status)`, { status: status });
     }
     if (searchValue) {
       searchValue = convertTv(searchValue.replace(/  +/g, '').trim());

@@ -20,6 +20,7 @@ import { UpdateCareerPipe } from '../lib/validatePipe/career/updateCareerPipe.cl
 import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
 import { ConvertArray } from '../lib/validatePipe/convertArrayPipe.class';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { CheckStatusFilterPipe } from '../lib/validatePipe/agent/statusFilterPipe.class';
 
 @Controller('career')
 @ApiTags('Career')
@@ -41,14 +42,14 @@ export class CareerController {
   @ApiQuery({ name: 'languageId', required: true })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
-  @ApiQuery({ name: 'status', required: false })
+  @ApiQuery({ name: 'status', required: false, type: String, isArray: true })
   @ApiQuery({ name: 'countries', type: String, isArray: true, required: false })
   @ApiQuery({ name: 'searchValue', required: false })
   async getAllCareer(
     @Query('languageId') languageId: string,
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
-    @Query('status') status: string,
+    @Query('status', new ConvertArray(), new CheckStatusFilterPipe()) status: string[],
     @Query('countries', new ConvertArray()) countries: string[],
     @Query('searchValue') searchValue: string,
   ) {
