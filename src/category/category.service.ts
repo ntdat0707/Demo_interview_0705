@@ -57,6 +57,7 @@ export class CategoryService {
     limit: number = parseInt(process.env.DEFAULT_MAX_ITEMS_PER_PAGE, 10),
     type: string,
     languageId: string,
+    status?: string,
   ) {
     this.logger.debug('get all category');
     await this.connection.queryResultCache.clear();
@@ -71,6 +72,9 @@ export class CategoryService {
         throw new NotFoundException('LANGUAGE_NOT_FOUND');
       }
       query.andWhere('category."language_id" =:languageId', { languageId });
+    }
+    if (status) {
+      query.andWhere('status = :status', { status });
     }
     const cateCount = await query.cache(`category_count_page${page}_limit${limit}`).getCount();
     const categories: any = await query

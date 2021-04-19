@@ -4,6 +4,7 @@ import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { CreateCatePipe, StatusCatePipe } from '../lib/validatePipe/category/createCatePipe.class';
 import { UpdateCatePipe } from '../lib/validatePipe/category/updateCatePipe.class';
 import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
+import { CheckStatusPipe } from '../lib/validatePipe/checkStatusPipe.class';
 import { CreateCategoryInput, UpdateCategoryInput } from './category.dto';
 import { CategoryService } from './category.service';
 
@@ -30,13 +31,15 @@ export class CategoryController {
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'type', required: true })
   @ApiQuery({ name: 'languageId', required: false })
+  @ApiQuery({ name: 'status', type: String, required: false })
   async getAllCategory(
     @Query('page', new CheckUnSignIntPipe()) page: number,
     @Query('limit', new CheckUnSignIntPipe()) limit: number,
     @Query('type') type: string,
     @Query('languageId') languageId: string,
+    @Query('status', new CheckStatusPipe()) status: string,
   ) {
-    return await this.categoryService.getAllCategory(page, limit, type, languageId);
+    return await this.categoryService.getAllCategory(page, limit, type, languageId, status);
   }
 
   @Get('/:code')
