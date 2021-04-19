@@ -24,9 +24,7 @@ export class SolutionService {
       throw new BadRequestException('IMAGE_REQUIRED');
     }
     return {
-      data: {
-        image: image.filename,
-      },
+      data: image.filename,
     };
   }
 

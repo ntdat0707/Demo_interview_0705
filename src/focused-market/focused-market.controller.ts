@@ -33,7 +33,7 @@ export class FocusedMarketController {
   @ApiBody({
     type: UploadFocusedMarketInput,
   })
-  async uploadImageBlog(@UploadedFile() image: UploadFocusedMarketInput) {
+  async uploadImage(@UploadedFile() image: UploadFocusedMarketInput) {
     return await this.focusedMarketService.uploadImage(image);
   }
 

@@ -33,7 +33,7 @@ export class SolutionController {
   @ApiBody({
     type: SolutionPictureInput,
   })
-  async uploadImageBlog(@UploadedFile() image: SolutionPictureInput) {
+  async uploadImage(@UploadedFile() image: SolutionPictureInput) {
     return await this.solutionService.uploadImage(image);
   }
 

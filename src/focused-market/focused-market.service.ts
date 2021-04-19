@@ -22,9 +22,7 @@ export class FocusedMarketService {
       throw new BadRequestException('IMAGE_REQUIRED');
     }
     return {
-      data: {
-        image: image.filename,
-      },
+      data: image.filename,
     };
   }
 
