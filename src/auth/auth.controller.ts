@@ -1,7 +1,12 @@
-import { Controller, UseFilters } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseFilters, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
+import { LoginPipe } from '../lib/validatePipe/customer/loginPipe.class';
+import { LoginCustomerInput, RefreshTokenInput, RegisterAccountInput } from './auth.dto';
+import { RegisterPipe } from '../lib/validatePipe/customer/registerPipe.class';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { GetUser } from './get-user.decorator';
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -9,47 +14,28 @@ import { HttpExceptionFilter } from '../exception/httpException.filter';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  // @Post('login')
-  // login(@Body(new LoginPipe()) loginUserInput: LoginCustomerInput) {
-  //   return this.authService.login(loginUserInput);
-  // }
+  @Post('login')
+  async login(@Body(new LoginPipe()) loginUserInput: LoginCustomerInput) {
+    return await this.authService.login(loginUserInput);
+  }
 
-  // @Post('register')
-  // @UseInterceptors(FileInterceptor('avatar'))
-  // @ApiConsumes('multipart/form-data')
-  // @ApiBody({
-  //   type: RegisterAccountInput,
-  // })
-  // async createUser(@UploadedFile() avatar: any, @Body(new RegisterPipe()) registerAccountInput: RegisterAccountInput) {
-  //   return this.authService.register(avatar, registerAccountInput);
-  // }
+  @Post('register')
+  @ApiBody({
+    type: RegisterAccountInput,
+  })
+  async createUser(@Body(new RegisterPipe()) registerAccountInput: RegisterAccountInput) {
+    return await this.authService.register(registerAccountInput);
+  }
 
-  // @Post('refresh-token')
-  // async refreshToken(@Body() refreshTokenInput: RefreshTokenInput) {
-  //   return await this.authService.refreshToken(refreshTokenInput);
-  // }
+  @Post('refresh-token')
+  async refreshToken(@Body() refreshTokenInput: RefreshTokenInput) {
+    return await this.authService.refreshToken(refreshTokenInput);
+  }
 
-  // @Post('/admin/login')
-  // loginManager(@Body(new LoginManagerPipe()) loginManagerInput: LoginManagerInput) {
-  //   return this.authService.loginManager(loginManagerInput);
-  // }
-
-  // @Post('/admin/refresh-token')
-  // async refreshTokenManager(@Body() refreshTokenInput: RefreshTokenInput) {
-  //   return await this.authService.refreshTokenManager(refreshTokenInput);
-  // }
-
-  // @Get('/me')
-  // @ApiBearerAuth()
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // getProfile(@GetUser('userId') customerId: string) {
-  //   return this.authService.getProfile(customerId);
-  // }
-
-  // @Get('admin/me')
-  // @ApiBearerAuth()
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // getProfileAdmin(@GetUser('employeeId') employeeId: string) {
-  //   return this.authService.getProfileAdmin(employeeId);
-  // }
+  @Get('/me')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async getProfile(@GetUser('userId') customerId: string) {
+    return await this.authService.getProfile(customerId);
+  }
 }
