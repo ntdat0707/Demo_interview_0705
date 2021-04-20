@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  vico_redis:
+  demo_redis:
     image: redis
     # command: redis-server --appendonly yes --requirepass ed5f884edd376efe6b792e93da90ad6d5b77ba509d4006e75ef141bf0e42d29a
     command: redis-server /usr/local/etc/redis/redis.conf
@@ -11,11 +11,11 @@ services:
       - ./redis:/data
       - ./redis/config/redis.conf:/usr/local/etc/redis/redis.conf
     networks:
-      - vico_backend_network
-  vico_backend_postgresql:
+      - demo_backend_network
+  demo_backend_postgresql:
     image: bitnami/postgresql:11
     ports:
-      - 5436:5432
+      - 5438:5432
     volumes:
       - postgresql_data:/bitnami/postgresql
       - ./database:/docker-entrypoint-initdb.d/create-data.sql
@@ -23,10 +23,10 @@ services:
       - DATABASE_HOST=127.0.0.1
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=vico
+      - POSTGRES_DB=demo
     networks:
-      - vico_backend_network
-  vico_backend:
+      - demo_backend_network
+  demo_backend:
     build:
       context: .
     ports:
@@ -35,13 +35,13 @@ services:
       - ./uploads:/home/node/uploads
     environment:
       NODE_ENV: development
-      DATABASE_HOST: vico_backend_postgresql
-      DATABASE_NAME: vico
+      DATABASE_HOST: demo_backend_postgresql
+      DATABASE_NAME: demo
       DATABASE_PASSWORD: postgres
       DATABASE_PORT: 5432
-      REDIS_HOST: vico_redis
+      REDIS_HOST: demo_redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: d18c1d49e7f01508a86a4dd2fd2ed1d557379f5a811e747c1c57513a5c0d6048
+      REDIS_PASSWORD: ed5f884edd376efe6b792e93da90ad6d5b77ba509d4006e75ef141bf0e42d29a
       IMAGE_PUBLIC_URL: /uploads
       IMAGE_LOCAL_PATH: uploads
       BANNER_IMAGE_PATH: uploads/banners
@@ -51,6 +51,7 @@ services:
       UPLOAD_COUNTRY_PATH: uploads/countries
       UPLOAD_DOCUMENT_PATH: uploads/documents
       UPLOAD_FOCUSED_MARKET_PATH: uploads/focused-markets
+      USER_IMAGE_PATH: uploads/users
       SOLUTION_IMAGE_PATH: uploads/solutions
       UPLOAD_CAREER_IMAGE_PATH: uploads/career
       MAX_NUMBER_FILE_UPLOAD: 10
@@ -67,13 +68,13 @@ services:
       CHECK_TOKEN_FB_URL: https://graph.facebook.com/{id}/?access_token=
       CHECK_TOKEN_GG_URL: https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=
     networks:
-      - vico_backend_network
+      - demo_backend_network
     links:
-      - vico_backend_postgresql
-      - vico_redis
+      - demo_backend_postgresql
+      - demo_redis
 
 volumes:
   postgresql_data:
     driver: local
 networks:
-  vico_backend_network:
+  demo_backend_network:

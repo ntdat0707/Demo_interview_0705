@@ -20,6 +20,10 @@ import { LanguageModule } from './language/language.module';
 import { DocumentModule } from './document/document.module';
 import { FocusedMarketModule } from './focused-market/focused-market.module';
 import { SolutionModule } from './solution/solution.module';
+import { PostMetaModule } from './post-meta/post-meta.module';
+import { PostModule } from './post/post.module';
+import { UserMetaModule } from './user-meta/user-meta.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -33,10 +37,10 @@ import { SolutionModule } from './solution/solution.module';
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DATABASE_HOST || 'localhost',
-      port: process.env.DATABASE_PORT ? parseInt(process.env.DATABASE_PORT, 10) : 5436,
+      port: process.env.DATABASE_PORT ? parseInt(process.env.DATABASE_PORT, 10) : 5438,
       username: process.env.DATABASE_USER_NAME || 'postgres',
       password: process.env.DATABASE_PASSWORD || 'postgres',
-      database: process.env.DATABASE_NAME || 'vico',
+      database: process.env.DATABASE_NAME || 'demo',
       entities: ['./dist/**/**.entity{.ts,.js}'],
       subscribers: ['./dist/**/**.subscriber{.ts,.js}'],
       synchronize: false,
@@ -71,6 +75,10 @@ import { SolutionModule } from './solution/solution.module';
     DocumentModule,
     FocusedMarketModule,
     SolutionModule,
+    UserModule,
+    UserMetaModule,
+    PostModule,
+    PostMetaModule,
   ],
   controllers: [AppController],
   providers: [AppService],

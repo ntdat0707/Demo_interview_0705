@@ -18,14 +18,13 @@ async function bootstrap() {
 
   const options = new DocumentBuilder()
     .addBearerAuth()
-    .setTitle('Vico')
-    .setDescription('The Vico API description')
+    .setTitle('Demo Api')
     .setVersion('3.0')
     .build();
   const document = SwaggerModule.createDocument(app, options, {
     ignoreGlobalPrefix: true,
   });
-  SwaggerModule.setup('vico', app, document);
+  SwaggerModule.setup('demo', app, document);
   await app.listen(3001);
 }
 bootstrap();

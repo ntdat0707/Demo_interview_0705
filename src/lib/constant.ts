@@ -1,3 +1,8 @@
+enum EUserStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+}
+
 enum EBannerStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
@@ -54,4 +59,5 @@ export {
   EDocumentFlag,
   ECategoryType,
   EFilterValue,
+  EUserStatus,
 };

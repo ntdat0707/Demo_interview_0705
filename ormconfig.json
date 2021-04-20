@@ -1,10 +1,10 @@
 {
   "type": "postgres",
   "host": "localhost",
-  "port": 5436,
+  "port": 5438,
   "username": "postgres",
   "password": "postgres",
-  "database": "vico",
+  "database": "demo",
   "entities": ["./dist/**/**.entity{.ts,.js}"],
   "subscribers": ["./dist/**/**.subscriber{.ts,.js}"],
   "synchronize": false,
