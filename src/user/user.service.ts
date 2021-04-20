@@ -48,10 +48,10 @@ export class UserService {
         'user_meta',
         '"user_meta"."user_id"="user".id and user_meta.deleted_at is null',
       )
-      .leftJoinAndMapMany('user.post', UserMetaEntity, 'post', '"post"."user_id"="user".id and post.deleted_at is null')
+      .leftJoinAndMapMany('user.post', PostEntity, 'post', '"post"."user_id"="user".id and post.deleted_at is null')
       .limit(limit)
       .offset((page - 1) * limit)
-      .orderBy('user."created_at"', 'DESC');
+      .orderBy('"user"."created_at"', 'DESC');
     if (filterValue) {
       cacheKey += `searchValue${filterValue}`;
       query.andWhere(`lower("user"."status") like :status`, {

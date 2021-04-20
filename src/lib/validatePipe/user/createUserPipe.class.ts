@@ -12,8 +12,8 @@ export class CreateUserPipe implements PipeTransform<any> {
     if (value.email && !checkEmail(value.email)) {
       throw new BadRequestException('EMAIL_INVALID');
     }
-    if (!value.userName) {
-      throw new BadRequestException('USER_NAME_REQUIRED');
+    if (!value.fullName) {
+      throw new BadRequestException('FULL_NAME_REQUIRED');
     }
 
     if (value.status) {

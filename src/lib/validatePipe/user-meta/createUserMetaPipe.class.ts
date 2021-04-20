@@ -12,7 +12,7 @@ export class CreateUserMetaPipe implements PipeTransform<any> {
       throw new BadRequestException('USER_ID_INVALID');
     }
     if (!value.value) {
-      throw new BadRequestException('CONTENT_REQUIRED');
+      throw new BadRequestException('VALUE_REQUIRED');
     }
     return value;
   }

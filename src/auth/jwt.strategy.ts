@@ -14,15 +14,13 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(payload: AuthPayload, done: Function) {
+  async validate(payload: AuthPayload) {
     try {
       // You could add a function to the authService to verify the claims of the token:
       // i.e. does the user still have the roles that are claimed by the token
-      const validClaims = await this.authService.verifyTokenClaims(payload);
+      const validClaims: any = await this.authService.verifyTokenClaims(payload);
 
-      if (!validClaims) return done(new UnauthorizedException('INVALID_TOKEN'), false);
-
-      done(null, payload);
+      if (!validClaims) throw new UnauthorizedException('INVALID_TOKEN');
     } catch (err) {
       throw new UnauthorizedException('UNAUTHORIZED', err.message);
     }

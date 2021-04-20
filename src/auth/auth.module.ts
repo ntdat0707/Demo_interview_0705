@@ -6,21 +6,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtConfig } from './jwtConfig.class';
 import { Role } from '../entities/role.entity';
-import { Permission } from '../entities/permission.entity';
-import { PermissionRole } from '../entities/permissionRole.entity';
-import { RoleService } from '../role/role.service';
-import { Customer } from '../entities/customer.entity';
-import { Employee } from '../entities/employee.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Role, Permission, PermissionRole, Customer, Employee]),
+    TypeOrmModule.forFeature([Role]),
     // PassportModule.register({ defaultStrategy: 'JwtStrategy' }),
     JwtModule.registerAsync({
       useClass: JwtConfig,
     }),
   ],
-  providers: [AuthService, JwtStrategy, RoleService],
+  providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
   // exports: [PassportModule],
 })

@@ -11,6 +11,7 @@ export class PostService {
   private readonly logger = new Logger(PostService.name);
   constructor(
     @InjectRepository(PostEntity) private postRepository: Repository<PostEntity>,
+    @InjectRepository(UserEntity) private userRepository: Repository<UserEntity>,
     private connection: Connection,
   ) {}
 
@@ -74,6 +75,10 @@ export class PostService {
     });
     if (existedPost) {
       throw new ConflictException('Post already exists');
+    }
+    const user = await this.userRepository.findOne({ where: { id: postInput.userId } });
+    if (!user) {
+      throw new NotFoundException(`User ${postInput.userId} not found`);
     }
     const newPost = new PostEntity();
     newPost.setAttributes(postInput);

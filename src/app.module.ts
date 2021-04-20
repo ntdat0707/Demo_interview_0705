@@ -6,20 +6,6 @@ import { ConfigModule } from '@nestjs/config';
 
 import { AuthModule } from './auth/auth.module';
 import * as redisStore from 'cache-manager-redis-store';
-import { RoleModule } from './role/role.module';
-import { CustomerModule } from './customer/customer.module';
-import { ResourceModule } from './resource/resource.module';
-import { BannerModule } from './banner/banner.module';
-import { LabelModule } from './label/label.module';
-import { CategoryModule } from './category/category.module';
-import { VideoModule } from './video/video.module';
-import { CareerModule } from './career/career.module';
-import { AgentModule } from './agent/agent.module';
-import { NetworkModule } from './network/network.module';
-import { LanguageModule } from './language/language.module';
-import { DocumentModule } from './document/document.module';
-import { FocusedMarketModule } from './focused-market/focused-market.module';
-import { SolutionModule } from './solution/solution.module';
 import { PostMetaModule } from './post-meta/post-meta.module';
 import { PostModule } from './post/post.module';
 import { UserMetaModule } from './user-meta/user-meta.module';
@@ -61,20 +47,6 @@ import { UserModule } from './user/user.module';
       },
     }),
     AuthModule,
-    RoleModule,
-    CustomerModule,
-    ResourceModule,
-    BannerModule,
-    LabelModule,
-    CategoryModule,
-    VideoModule,
-    CareerModule,
-    AgentModule,
-    NetworkModule,
-    LanguageModule,
-    DocumentModule,
-    FocusedMarketModule,
-    SolutionModule,
     UserModule,
     UserMetaModule,
     PostModule,
