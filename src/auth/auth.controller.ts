@@ -35,7 +35,7 @@ export class AuthController {
   @Get('/me')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async getProfile(@GetUser('userId') customerId: string) {
+  async getProfile(@GetUser('customerId') customerId: string) {
     return await this.authService.getProfile(customerId);
   }
 }
