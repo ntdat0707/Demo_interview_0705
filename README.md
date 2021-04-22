@@ -1,8 +1,8 @@
 ## for local : #############################
 create .env file, enter the config values for app
 # install
-npm i
-//
+- npm i or yarn
+- Read Setup_environment.pdf file
 # run miggration to sync with current database
 npm run typeorm:migration:run
 
@@ -11,16 +11,12 @@ npm start
 or npm run start:dev
 # #############################################
 
+##API DOCS:
+
+
 ## for cloud: #################################
 create directory:
 
-uploads -> products
-       -> categories
-       -> brands
-change permision of uploads to 757
-
-copy picture to these dirs
-
-config by modifying docker-compose.yaml
+uploads -> users
 
 docker-compose up --build
