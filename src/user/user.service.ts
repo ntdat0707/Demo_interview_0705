@@ -54,13 +54,13 @@ export class UserService {
       .orderBy('"user"."created_at"', 'DESC');
     if (filterValue) {
       cacheKey += `searchValue${filterValue}`;
-      query.andWhere(`lower("user"."status") like :status`, {
-        status: `%${filterValue}%`,
+      query.andWhere(`"user"."status" = :filterValue`, {
+        filterValue,
       });
     }
     if (from && to) {
       cacheKey += `from ${from} to ${to}`;
-      query.andWhere('"user"."created_at" BETWEEN :from AND :to', {
+      query.andWhere(`"user"."created_at" BETWEEN :from AND :to`, {
         from,
         to,
       });
@@ -82,16 +82,21 @@ export class UserService {
   async getUserById(id: string) {
     this.logger.debug('get user by id');
     await this.connection.queryResultCache.clear();
-    const user = this.userRepository
+    const user = await this.userRepository
       .createQueryBuilder('user')
-      .where('"user".id=:id', { id })
+      .where('"user"."id" = :id', { id })
       .leftJoinAndMapMany(
         'user.userMeta',
         UserMetaEntity,
         'user_meta',
-        '"user_meta"."user_id"="user".id and user.deleted_at is null',
+        '"user_meta"."user_id"="user"."id" and "user"."deleted_at" is null',
       )
-      .leftJoinAndMapMany('user.post', UserMetaEntity, 'post', '"post"."user_id"="user".id and post.deleted_at is null')
+      .leftJoinAndMapMany(
+        'user.post',
+        UserMetaEntity,
+        'post',
+        '"post"."user_id"="user".id and "post"."deleted_at" is null',
+      )
       .getOne();
     return {
       data: user,
@@ -112,6 +117,30 @@ export class UserService {
     if (existedData) {
       throw new ConflictException('User name or email already exists');
     }
+    if (!userInput.userName) {
+      let userCode = '';
+      while (true) {
+        const random =
+          Math.random()
+            .toString(36)
+            .substring(2, 4) +
+          Math.random()
+            .toString(36)
+            .substring(2, 8);
+        const randomCode = random.toUpperCase();
+        userCode = randomCode;
+        const userName = userInput.fullName + userCode;
+        const existCode = await this.userRepository.findOne({
+          where: {
+            userName: userName,
+          },
+        });
+        if (!existCode) {
+          Object.assign(userInput, { userName: userName });
+          break;
+        }
+      }
+    }
     const newUser = new UserEntity();
     newUser.setAttributes(userInput);
     await this.userRepository.save(newUser);
@@ -124,18 +153,21 @@ export class UserService {
     this.logger.debug('update user');
     await this.connection.queryResultCache.clear();
     const existedUser = await this.userRepository.findOne({
-      where: { id: id, email: userInput.email },
+      where: { id: id },
     });
     if (!existedUser) {
       throw new NotFoundException('User does not exist');
     }
+    if (existedUser.email !== userInput.email) {
+      throw new NotFoundException('Can not update email');
+    }
     existedUser.setAttributes(userInput);
-    await this.userRepository.update({ id: id, email: userInput.email }, existedUser);
+    await this.userRepository.update({ id: id }, existedUser);
     return { data: existedUser };
   }
 
   async deleteUser(id: string) {
-    this.logger.debug('update user');
+    this.logger.debug('delete user');
     await this.connection.queryResultCache.clear();
     const existedUser = await this.userRepository.findOne({
       where: { id: id },
@@ -148,13 +180,19 @@ export class UserService {
     const postMetaList = [];
     for (const item of post) {
       const postsMeta = await this.postMetaRepository.findOne({ where: { postId: item.id } });
-      postMetaList.push(postsMeta);
+      if (postsMeta) {
+        postMetaList.push(postsMeta);
+      }
     }
     await getManager().transaction(async transactionalEntityManager => {
       await transactionalEntityManager.softRemove<UserEntity>(existedUser);
       await transactionalEntityManager.softRemove<UserMetaEntity[]>(usersMeta);
-      await transactionalEntityManager.softRemove<PostEntity[]>(post);
-      await transactionalEntityManager.softRemove<PostMetaEntity[]>(postMetaList);
+      if (post.length > 0) {
+        await transactionalEntityManager.softRemove<PostEntity[]>(post);
+      }
+      if (postMetaList.length > 0) {
+        await transactionalEntityManager.softRemove<PostMetaEntity[]>(postMetaList);
+      }
     });
     return {};
   }

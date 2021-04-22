@@ -37,7 +37,7 @@ export class CustomerEntity {
 
   @BeforeInsert()
   async hashPassword() {
-    this.password = await bcrypt.hash(this.password, 10);
+    this.password = bcrypt.hashSync(this.password, 10);
   }
 
   setAttributes(object: any) {

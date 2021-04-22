@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
   UseFilters,
@@ -19,6 +20,7 @@ import { jwtConstants } from './constants';
 @UseFilters(new HttpExceptionFilter())
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     @InjectRepository(CustomerEntity) private customerRepository: Repository<CustomerEntity>,
     private jwtService: JwtService,
@@ -26,6 +28,8 @@ export class AuthService {
   ) {}
 
   async verifyTokenClaims(payload: AuthPayload) {
+    this.logger.debug('verify token auth');
+    await this.connection.queryResultCache.clear();
     const customer = await this.customerRepository.findOne({
       where: { id: payload.id, email: payload.email, code: payload.code },
     });
@@ -36,6 +40,8 @@ export class AuthService {
   }
 
   async login(loginUserInput: LoginCustomerInput) {
+    this.logger.debug('login auth');
+    await this.connection.queryResultCache.clear();
     const refreshTokenExpireIn = process.env.REFRESH_TOKEN_EXPIRE_IN || '7d';
     const customer = await this.customerRepository.findOne({ where: { email: loginUserInput.email } });
     if (!customer) {
@@ -64,6 +70,8 @@ export class AuthService {
   }
 
   async register(registerAccountInput: RegisterAccountInput) {
+    this.logger.debug('register auth');
+    await this.connection.queryResultCache.clear();
     const existCustomer = await this.customerRepository.findOne({
       where: {
         email: registerAccountInput.email,
@@ -105,6 +113,7 @@ export class AuthService {
 
   async refreshToken(refreshTokenInput: RefreshTokenInput) {
     const refreshTokenExpireIn = process.env.REFRESH_TOKEN_EXPIRE_IN || '7d';
+    await this.connection.queryResultCache.clear();
     try {
       const refreshTokenPayload: any = jwt.verify(refreshTokenInput.refreshToken, jwtConstants.secret);
       if (refreshTokenInput.token !== refreshTokenPayload.token) {
@@ -136,6 +145,8 @@ export class AuthService {
   }
 
   async getProfile(customerId: string) {
+    this.logger.debug('get profile customer login');
+    await this.connection.queryResultCache.clear();
     const existCustomer = await this.customerRepository.findOne({
       where: {
         id: customerId,

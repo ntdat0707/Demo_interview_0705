@@ -32,7 +32,7 @@ export class UserEntity {
 
   setAttributes(object: any) {
     this.email = object.email;
-    this.userName = object.userName ? object.userName : object.fullName;
+    this.userName = object.userName;
     this.fullName = object.fullName;
     this.avatar = object.avatar ? object.avatar : '';
     this.status = object.status ? object.status : EUserStatus.INACTIVE;

@@ -39,3 +39,11 @@ export class UpdateUserInput {
   @ApiProperty({ enum: Object.values(EUserStatus), required: false })
   readonly status: string;
 }
+
+export class GetUserInput {
+  @ApiProperty({ required: false })
+  readonly from: string;
+
+  @ApiProperty({ required: false })
+  readonly to: string;
+}

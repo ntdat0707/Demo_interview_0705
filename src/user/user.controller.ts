@@ -1,9 +1,23 @@
-import { Body, Controller, Get, Param, Post, Put, UploadedFile, UseFilters, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UploadedFile,
+  UseFilters,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
+import { CheckUnSignIntPipe } from '../lib/validatePipe/checkIntegerPipe.class';
 import { CreateUserPipe } from '../lib/validatePipe/user/createUserPipe.class';
 import { UpdateUserPipe } from '../lib/validatePipe/user/updateUserPipe.class';
+import { CheckUUID } from '../lib/validatePipe/uuidPipe.class';
 import { AvatarInput, CreateUserInput, UpdateUserInput } from './user.dto';
 import { UserService } from './user.service';
 
@@ -24,12 +38,23 @@ export class UserController {
   }
 
   @Get()
-  async getAllUser() {
-    return await this.userService.getAllUser();
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'filterValue', required: false })
+  @ApiQuery({ name: 'from', required: false })
+  @ApiQuery({ name: 'to', required: false })
+  async getAllUser(
+    @Query('page', new CheckUnSignIntPipe()) page: number,
+    @Query('limit', new CheckUnSignIntPipe()) limit: number,
+    @Query('filterValue') filterValue: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    return await this.userService.getAllUser(page, limit, filterValue, from, to);
   }
 
   @Get('/:id')
-  async getUserById(@Param('id') id: string) {
+  async getUserById(@Param('id', new CheckUUID()) id: string) {
     return await this.userService.getUserById(id);
   }
 
@@ -40,9 +65,13 @@ export class UserController {
   }
 
   @Put('/:id')
-  @ApiQuery({ name: 'id', required: true, type: String })
   @ApiBody({ type: UpdateUserInput })
-  async updateUser(@Param('id') id: string, @Body(new UpdateUserPipe()) userInput: UpdateUserInput) {
+  async updateUser(@Param('id', new CheckUUID()) id: string, @Body(new UpdateUserPipe()) userInput: UpdateUserInput) {
     return await this.userService.updateUser(id, userInput);
+  }
+
+  @Delete('/:id')
+  async deleteUser(@Param('id', new CheckUUID()) id: string) {
+    return await this.userService.deleteUser(id);
   }
 }

@@ -30,7 +30,7 @@ export class PostService {
       .leftJoinAndMapOne('post.user', UserEntity, 'user', '"post"."user_id"="user".id and post.deleted_at is null')
       .limit(limit)
       .offset((page - 1) * limit)
-      .orderBy('user."created_at"', 'DESC');
+      .orderBy('"post"."created_at"', 'DESC');
 
     let count: any = 0;
     count = await query.cache(`${cacheKey}_count_page${page}_limit${limit}`).getCount();
@@ -49,9 +49,9 @@ export class PostService {
   async getPostById(id: string) {
     this.logger.debug('get post by id');
     await this.connection.queryResultCache.clear();
-    const post = this.postRepository
+    const post = await this.postRepository
       .createQueryBuilder('post')
-      .where('"post".id=:id', { id })
+      .where(`"post"."id" = :id`, { id })
       .leftJoinAndMapMany(
         'post.postMeta',
         PostMetaEntity,
@@ -96,6 +96,10 @@ export class PostService {
     });
     if (!existedPost) {
       throw new NotFoundException('Post does not exist');
+    }
+    const user = await this.userRepository.findOne({ where: { id: postInput.userId } });
+    if (!user) {
+      throw new NotFoundException(`User ${postInput.userId} does not exist`);
     }
     existedPost.setAttributes(postInput);
     await this.postRepository.update({ id: id }, existedPost);
