@@ -32,6 +32,6 @@ COPY --from=builder /home/node/key.p8 /home/node/key.p8
 # COPY --from=builder /home/node/.env.example /home/node/.env
 
 
-RUN npm ci
+RUN npm ci 
 
 CMD ["node", "dist/main.js"]

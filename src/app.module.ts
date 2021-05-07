@@ -6,9 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 
 import { AuthModule } from './auth/auth.module';
 import * as redisStore from 'cache-manager-redis-store';
-import { PostMetaModule } from './post-meta/post-meta.module';
 import { PostModule } from './post/post.module';
-import { UserMetaModule } from './user-meta/user-meta.module';
 import { UserModule } from './user/user.module';
 import { CustomerModule } from './customer/customer.module';
 
@@ -49,9 +47,7 @@ import { CustomerModule } from './customer/customer.module';
     }),
     AuthModule,
     UserModule,
-    UserMetaModule,
     PostModule,
-    PostMetaModule,
     CustomerModule,
   ],
   controllers: [AppController],

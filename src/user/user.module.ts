@@ -7,13 +7,10 @@ import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { basename, extname, resolve } from 'path';
 import shortid = require('shortid');
-import { UserMetaEntity } from '../entities/userMeta.entity';
 import { PostEntity } from '../entities/post.entity';
-import { PostMetaEntity } from '../entities/postMeta.entity';
-
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserEntity, UserMetaEntity, PostEntity, PostMetaEntity]),
+    TypeOrmModule.forFeature([UserEntity, PostEntity]),
     MulterModule.registerAsync({
       useFactory: () => ({
         storage: diskStorage({

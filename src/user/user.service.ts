@@ -2,9 +2,7 @@ import { BadRequestException, ConflictException, Injectable, Logger, NotFoundExc
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, getManager, Repository } from 'typeorm';
 import { PostEntity } from '../entities/post.entity';
-import { PostMetaEntity } from '../entities/postMeta.entity';
 import { UserEntity } from '../entities/user.entity';
-import { UserMetaEntity } from '../entities/userMeta.entity';
 import { CreateUserInput, UpdateUserInput } from './user.dto';
 
 @Injectable()
@@ -12,9 +10,7 @@ export class UserService {
   private readonly logger = new Logger(UserService.name);
   constructor(
     @InjectRepository(UserEntity) private userRepository: Repository<UserEntity>,
-    @InjectRepository(UserMetaEntity) private userMetaRepository: Repository<UserMetaEntity>,
     @InjectRepository(PostEntity) private postRepository: Repository<PostEntity>,
-    @InjectRepository(PostMetaEntity) private postMetaRepository: Repository<PostMetaEntity>,
     private connection: Connection,
   ) {}
 
@@ -42,12 +38,6 @@ export class UserService {
     let cacheKey = 'get_all_user';
     const userQuery = this.userRepository.createQueryBuilder('user');
     const query = userQuery
-      .leftJoinAndMapMany(
-        'user.userMeta',
-        UserMetaEntity,
-        'user_meta',
-        '"user_meta"."user_id"="user".id and user_meta.deleted_at is null',
-      )
       .leftJoinAndMapMany('user.post', PostEntity, 'post', '"post"."user_id"="user".id and post.deleted_at is null')
       .limit(limit)
       .offset((page - 1) * limit)
@@ -85,18 +75,7 @@ export class UserService {
     const user = await this.userRepository
       .createQueryBuilder('user')
       .where('"user"."id" = :id', { id })
-      .leftJoinAndMapMany(
-        'user.userMeta',
-        UserMetaEntity,
-        'user_meta',
-        '"user_meta"."user_id"="user"."id" and "user"."deleted_at" is null',
-      )
-      .leftJoinAndMapMany(
-        'user.post',
-        UserMetaEntity,
-        'post',
-        '"post"."user_id"="user".id and "post"."deleted_at" is null',
-      )
+      .leftJoinAndMapMany('user.post', PostEntity, 'post', '"post"."user_id"="user".id and "post"."deleted_at" is null')
       .getOne();
     return {
       data: user,
@@ -175,23 +154,11 @@ export class UserService {
     if (!existedUser) {
       throw new NotFoundException('User does not exist');
     }
-    const usersMeta = await this.userMetaRepository.find({ where: { userId: existedUser.id } });
     const post = await this.postRepository.find({ where: { userId: existedUser.id } });
-    const postMetaList = [];
-    for (const item of post) {
-      const postsMeta = await this.postMetaRepository.findOne({ where: { postId: item.id } });
-      if (postsMeta) {
-        postMetaList.push(postsMeta);
-      }
-    }
     await getManager().transaction(async transactionalEntityManager => {
       await transactionalEntityManager.softRemove<UserEntity>(existedUser);
-      await transactionalEntityManager.softRemove<UserMetaEntity[]>(usersMeta);
       if (post.length > 0) {
         await transactionalEntityManager.softRemove<PostEntity[]>(post);
-      }
-      if (postMetaList.length > 0) {
-        await transactionalEntityManager.softRemove<PostMetaEntity[]>(postMetaList);
       }
     });
     return {};

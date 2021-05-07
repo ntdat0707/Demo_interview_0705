@@ -2,7 +2,6 @@ import { ConflictException, Injectable, Logger, NotFoundException } from '@nestj
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import { PostEntity } from '../entities/post.entity';
-import { PostMetaEntity } from '../entities/postMeta.entity';
 import { UserEntity } from '../entities/user.entity';
 import { CreatePostInput, UpdatePostInput } from './post.dto';
 
@@ -21,12 +20,6 @@ export class PostService {
     const cacheKey = 'get_all_post';
     const postQuery = this.postRepository.createQueryBuilder('post');
     const query = postQuery
-      .leftJoinAndMapMany(
-        'post.postMeta',
-        PostMetaEntity,
-        'post_meta',
-        '"post_meta"."post_id"="post".id and post_meta.deleted_at is null',
-      )
       .leftJoinAndMapOne('post.user', UserEntity, 'user', '"post"."user_id"="user".id and post.deleted_at is null')
       .limit(limit)
       .offset((page - 1) * limit)
@@ -52,12 +45,6 @@ export class PostService {
     const post = await this.postRepository
       .createQueryBuilder('post')
       .where(`"post"."id" = :id`, { id })
-      .leftJoinAndMapMany(
-        'post.postMeta',
-        PostMetaEntity,
-        'post_meta',
-        '"post_meta"."post_id"="post".id and post_meta.deleted_at is null',
-      )
       .leftJoinAndMapOne('post.user', UserEntity, 'user', '"post"."user_id"="user".id and post.deleted_at is null')
       .getOne();
     return {
