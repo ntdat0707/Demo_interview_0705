@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class LoginCustomerInput {
+export class LoginUserInput {
   @ApiProperty()
   readonly email: string;
 

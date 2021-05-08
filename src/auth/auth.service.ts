@@ -12,17 +12,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Connection } from 'typeorm';
 import { HttpExceptionFilter } from '../exception/httpException.filter';
 import { AuthPayload } from './payload';
-import { CustomerEntity } from '../entities/customer.entity';
-import { LoginCustomerInput, RefreshTokenInput, RegisterAccountInput } from './auth.dto';
+import { LoginUserInput, RefreshTokenInput, RegisterAccountInput } from './auth.dto';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { jwtConstants } from './constants';
+import { UserEntity } from '../entities/user.entity';
 @UseFilters(new HttpExceptionFilter())
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   constructor(
-    @InjectRepository(CustomerEntity) private customerRepository: Repository<CustomerEntity>,
+    @InjectRepository(UserEntity) private userRepository: Repository<UserEntity>,
     private jwtService: JwtService,
     private connection: Connection,
   ) {}
@@ -30,59 +30,59 @@ export class AuthService {
   async verifyTokenClaims(payload: AuthPayload) {
     this.logger.debug('verify token auth');
     await this.connection.queryResultCache.clear();
-    const customer = await this.customerRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: { id: payload.id, email: payload.email, code: payload.code },
     });
-    if (!customer) {
+    if (!user) {
       return false;
     }
     return true;
   }
 
-  async login(loginUserInput: LoginCustomerInput) {
+  async login(loginUserInput: LoginUserInput) {
     this.logger.debug('login auth');
     await this.connection.queryResultCache.clear();
     const refreshTokenExpireIn = process.env.REFRESH_TOKEN_EXPIRE_IN || '7d';
-    const customer = await this.customerRepository.findOne({ where: { email: loginUserInput.email } });
-    if (!customer) {
-      throw new NotFoundException('CUSTOMER_NOT_EXIST');
+    const user = await this.userRepository.findOne({ where: { email: loginUserInput.email } });
+    if (!user) {
+      throw new NotFoundException('USER_NOT_EXIST');
     }
-    if (!customer.password) {
-      throw new NotFoundException('CUSTOMER_NOT_EXIST');
+    if (!user.password) {
+      throw new NotFoundException('USER_NOT_EXIST');
     }
-    const passwordIsValid = bcrypt.compareSync(loginUserInput.password, customer.password);
+    const passwordIsValid = bcrypt.compareSync(loginUserInput.password, user.password);
     if (!passwordIsValid) {
       throw new BadRequestException('INVALID_PASSWORD');
     }
-    const payloadToken = { id: customer.id, email: customer.email, code: customer.code };
+    const payloadToken = { id: user.id, email: user.email, code: user.code };
     const token = this.jwtService.sign(payloadToken);
     const payloadRefreshToken = {
-      id: customer.id,
-      email: customer.email,
-      code: customer.code,
+      id: user.id,
+      email: user.email,
+      code: user.code,
       token: token,
     };
 
     const refreshToken = jwt.sign(payloadRefreshToken, jwtConstants.secret, {
       expiresIn: refreshTokenExpireIn,
     });
-    return { customerId: customer.id, token: token, refreshToken: refreshToken };
+    return { userId: user.id, token: token, refreshToken: refreshToken };
   }
 
   async register(registerAccountInput: RegisterAccountInput) {
     this.logger.debug('register auth');
     await this.connection.queryResultCache.clear();
-    const existCustomer = await this.customerRepository.findOne({
+    const existUser = await this.userRepository.findOne({
       where: {
         email: registerAccountInput.email,
       },
     });
-    if (existCustomer) {
+    if (existUser) {
       throw new ConflictException('EMAIL_EXISTED');
     }
-    let newCustomer = new CustomerEntity();
-    newCustomer.setAttributes(registerAccountInput);
-    let customerCode = '';
+    const newUser = new UserEntity();
+    newUser.setAttributes(registerAccountInput);
+    let userCode = '';
     while (true) {
       const random =
         Math.random()
@@ -92,22 +92,21 @@ export class AuthService {
           .toString(36)
           .substring(2, 8);
       const randomCode = random.toUpperCase();
-      customerCode = randomCode;
-      const existCode = await this.customerRepository.findOne({
+      userCode = randomCode;
+      const existCode = await this.userRepository.findOne({
         where: {
-          code: customerCode,
+          code: userCode,
         },
       });
       if (!existCode) {
         break;
       }
     }
-    newCustomer.code = customerCode;
+    newUser.code = userCode;
     //clear cache
-    await this.connection.queryResultCache.clear();
-    newCustomer = await this.customerRepository.save(newCustomer);
+    await this.userRepository.save(newUser);
     return {
-      data: newCustomer,
+      data: newUser,
     };
   }
 
@@ -119,45 +118,45 @@ export class AuthService {
       if (refreshTokenInput.token !== refreshTokenPayload.token) {
         throw new BadRequestException('INVALID_TOKEN');
       }
-      const existCustomer = await this.customerRepository.findOne({
+      const existUser = await this.userRepository.findOne({
         where: {
           id: refreshTokenPayload.id,
         },
       });
-      if (!existCustomer) {
-        throw new NotFoundException('Customer not found');
+      if (!existUser) {
+        throw new NotFoundException('User not found');
       }
-      const payloadToken = { id: existCustomer.id, email: existCustomer.email, code: existCustomer.code };
+      const payloadToken = { id: existUser.id, email: existUser.email, code: existUser.code };
       const token = this.jwtService.sign(payloadToken);
       const payloadRefreshToken = {
-        id: existCustomer.id,
-        email: existCustomer.email,
-        code: existCustomer.code,
+        id: existUser.id,
+        email: existUser.email,
+        code: existUser.code,
         token: token,
       };
       const refreshToken = jwt.sign(payloadRefreshToken, jwtConstants.secret, {
         expiresIn: refreshTokenExpireIn,
       });
-      return { customerId: existCustomer.id, token: token, refreshToken: refreshToken };
+      return { userId: existUser.id, token: token, refreshToken: refreshToken };
     } catch (error) {
       throw new UnauthorizedException('INVALID_TOKEN');
     }
   }
 
-  async getProfile(customerId: string) {
-    this.logger.debug('get profile customer login');
+  async getProfile(userId: string) {
+    this.logger.debug('get profile user login');
     await this.connection.queryResultCache.clear();
-    const existCustomer = await this.customerRepository.findOne({
+    const existUser = await this.userRepository.findOne({
       where: {
-        id: customerId,
+        id: userId,
       },
     });
 
-    if (!existCustomer) {
-      throw new NotFoundException('CUSTOMER_NOT_EXIST');
+    if (!existUser) {
+      throw new NotFoundException('USER_NOT_EXIST');
     }
     return {
-      data: existCustomer,
+      data: existUser,
     };
   }
 }

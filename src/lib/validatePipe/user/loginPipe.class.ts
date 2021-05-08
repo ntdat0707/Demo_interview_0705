@@ -1,11 +1,11 @@
 import { PipeTransform, Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { checkEmail } from '../../../lib/pipeUtils/emailValidate';
 import { checkPassword } from '../../../lib/pipeUtils/passwordValidate';
-import { LoginCustomerInput } from '../../../auth/auth.dto';
+import { LoginUserInput } from '../../../auth/auth.dto';
 
 @Injectable()
 export class LoginPipe implements PipeTransform<any> {
-  async transform(value: LoginCustomerInput) {
+  async transform(value: LoginUserInput) {
     if (!value.email) {
       throw new HttpException(
         {

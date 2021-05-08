@@ -8,7 +8,6 @@ import { AuthModule } from './auth/auth.module';
 import * as redisStore from 'cache-manager-redis-store';
 import { PostModule } from './post/post.module';
 import { UserModule } from './user/user.module';
-import { CustomerModule } from './customer/customer.module';
 
 @Module({
   imports: [
@@ -48,7 +47,6 @@ import { CustomerModule } from './customer/customer.module';
     AuthModule,
     UserModule,
     PostModule,
-    CustomerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

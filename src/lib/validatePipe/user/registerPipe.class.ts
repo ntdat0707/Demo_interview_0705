@@ -1,6 +1,6 @@
 import { PipeTransform, Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { checkEmail } from '../../../lib/pipeUtils/emailValidate';
-import { checkPassword } from '../../../lib/pipeUtils/passwordValidate';
+import { checkEmail } from '../../pipeUtils/emailValidate';
+import { checkPassword } from '../../pipeUtils/passwordValidate';
 import { RegisterAccountInput } from '../../../auth/auth.dto';
 
 @Injectable()

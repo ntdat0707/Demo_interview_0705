@@ -26,6 +26,5 @@ export class PostEntity {
   setAttributes(object: any) {
     this.title = object.title;
     this.content = object.content;
-    this.userId = object.userId;
   }
 }

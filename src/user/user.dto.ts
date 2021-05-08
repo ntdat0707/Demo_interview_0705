@@ -36,6 +36,9 @@ export class UpdateUserInput {
   @ApiProperty({ required: false })
   readonly avatar: string;
 
+  @ApiProperty({ required: false })
+  readonly password: string;
+
   @ApiProperty({ enum: Object.values(EUserStatus), required: false })
   readonly status: string;
 }
